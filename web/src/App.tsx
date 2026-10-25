@@ -1,3 +1,4 @@
+import { lazy, Suspense, type ComponentType } from "react";
 import { Navigate, Outlet, Route, Routes, useLocation } from "react-router";
 import type { Role } from "../../shared/domain";
 import { AppShell } from "./components/AppShell";
@@ -18,21 +19,32 @@ import { NotesPage } from "./pages/learner/Notes";
 import { CertificatePage, ProgressPage } from "./pages/learner/Progress";
 import { LibraryPage } from "./pages/learner/Library";
 import { HelpPage, NotificationsPage, ProfilePage } from "./pages/learner/Misc";
-import { LeaderDashboardPage, MemberPage } from "./pages/leader/LeaderDashboard";
-import { GradeAttemptPage, ValidationsPage } from "./pages/leader/Validations";
-import { LeaderQuestionsPage, RequestsPage } from "./pages/leader/Requests";
-import { AdminHomePage } from "./pages/admin/AdminHome";
-import { UserDetailPage, UsersPage } from "./pages/admin/Users";
-import { OrganizationPage } from "./pages/admin/Organization";
-import { ContentTreePage } from "./pages/admin/ContentTree";
-import { TrackEditorPage } from "./pages/admin/TrackEditor";
-import { ContentEditorPage } from "./pages/admin/ContentEditor";
-import { AssessmentEditorPage, AssessmentResultsPage, QuestionBankPage } from "./pages/admin/AssessmentEditor";
-import { PermissionsPage } from "./pages/admin/Permissions";
-import { AuditPage, ReportsPage } from "./pages/admin/Reports";
-import { SecurityPage } from "./pages/admin/Security";
-import { SettingsPage } from "./pages/admin/Settings";
-import { LibraryAdminPage } from "./pages/admin/LibraryAdmin";
+
+// Áreas de liderança e administração são carregadas sob demanda (menos código para o colaborador).
+const lazyPage = <M extends Record<string, unknown>>(load: () => Promise<M>, name: keyof M) =>
+  lazy(() => load().then((m) => ({ default: m[name] as ComponentType })));
+const LeaderDashboardPage = lazyPage(() => import("./pages/leader/LeaderDashboard"), "LeaderDashboardPage");
+const MemberPage = lazyPage(() => import("./pages/leader/LeaderDashboard"), "MemberPage");
+const ValidationsPage = lazyPage(() => import("./pages/leader/Validations"), "ValidationsPage");
+const GradeAttemptPage = lazyPage(() => import("./pages/leader/Validations"), "GradeAttemptPage");
+const RequestsPage = lazyPage(() => import("./pages/leader/Requests"), "RequestsPage");
+const LeaderQuestionsPage = lazyPage(() => import("./pages/leader/Requests"), "LeaderQuestionsPage");
+const AdminHomePage = lazyPage(() => import("./pages/admin/AdminHome"), "AdminHomePage");
+const UsersPage = lazyPage(() => import("./pages/admin/Users"), "UsersPage");
+const UserDetailPage = lazyPage(() => import("./pages/admin/Users"), "UserDetailPage");
+const OrganizationPage = lazyPage(() => import("./pages/admin/Organization"), "OrganizationPage");
+const ContentTreePage = lazyPage(() => import("./pages/admin/ContentTree"), "ContentTreePage");
+const TrackEditorPage = lazyPage(() => import("./pages/admin/TrackEditor"), "TrackEditorPage");
+const ContentEditorPage = lazyPage(() => import("./pages/admin/ContentEditor"), "ContentEditorPage");
+const AssessmentEditorPage = lazyPage(() => import("./pages/admin/AssessmentEditor"), "AssessmentEditorPage");
+const AssessmentResultsPage = lazyPage(() => import("./pages/admin/AssessmentEditor"), "AssessmentResultsPage");
+const QuestionBankPage = lazyPage(() => import("./pages/admin/AssessmentEditor"), "QuestionBankPage");
+const PermissionsPage = lazyPage(() => import("./pages/admin/Permissions"), "PermissionsPage");
+const ReportsPage = lazyPage(() => import("./pages/admin/Reports"), "ReportsPage");
+const AuditPage = lazyPage(() => import("./pages/admin/Reports"), "AuditPage");
+const SecurityPage = lazyPage(() => import("./pages/admin/Security"), "SecurityPage");
+const SettingsPage = lazyPage(() => import("./pages/admin/Settings"), "SettingsPage");
+const LibraryAdminPage = lazyPage(() => import("./pages/admin/LibraryAdmin"), "LibraryAdminPage");
 
 function RequireAuth() {
   const { me, loading, expired } = useAuth();
@@ -48,7 +60,13 @@ function RequireAuth() {
 function RequireRole({ roles, contentManager }: { roles: Role[]; contentManager?: boolean }) {
   const { me } = useAuth();
   const allowed = !!me && (roles.includes(me.user.role) || (contentManager && me.canManageContent));
-  return allowed ? <Outlet /> : <AccessDeniedPage />;
+  return allowed ? (
+    <Suspense fallback={<PageLoader />}>
+      <Outlet />
+    </Suspense>
+  ) : (
+    <AccessDeniedPage />
+  );
 }
 
 export function App() {

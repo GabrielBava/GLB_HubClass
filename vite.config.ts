@@ -18,5 +18,16 @@ export default defineConfig({
     outDir: "../dist/web",
     emptyOutDir: true,
     sourcemap: false,
+    rollupOptions: {
+      output: {
+        // Bibliotecas em pacotes separados: melhor cache entre versões da aplicação.
+        manualChunks(id) {
+          if (!id.includes("node_modules")) return undefined;
+          if (/recharts|d3-|victory-vendor/.test(id)) return "charts";
+          if (/react-dom|react-router|scheduler|@tanstack/.test(id)) return "vendor";
+          return undefined;
+        },
+      },
+    },
   },
 });

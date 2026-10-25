@@ -256,7 +256,7 @@ export async function adminAssessmentRoutes(app: FastifyInstance) {
       .limit(500);
     return rows
       .filter((r) => canManageArea(scope, r.areaId, "view"))
-      .map((r) => ({ id: r.q.id, type: r.q.type, prompt: r.q.prompt, points: r.q.points, assessmentTitle: r.assessmentTitle, trackTitle: r.trackTitle, areaName: r.areaName }));
+      .map((r) => ({ id: r.q.id, type: r.q.type, prompt: r.q.prompt, points: r.q.points, assessmentId: r.q.assessmentId, assessmentTitle: r.assessmentTitle, trackTitle: r.trackTitle, areaName: r.areaName }));
   });
 
   app.post("/api/admin/questions/:id/copy", async (req) => {

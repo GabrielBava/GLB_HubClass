@@ -24,6 +24,7 @@ import { badRequest, forbidden, notFound } from "../../lib/errors.js";
 import { audit, requireRole } from "../../lib/http.js";
 import { detectImage, readSingleFile } from "../../lib/upload.js";
 import { parse } from "../../lib/validate.js";
+import { estimateReadingMinutes } from "../../../shared/reading.js";
 import { ingestDocument, storePrivateFile } from "../../services/documents/pipeline.js";
 import { applyWatermark } from "../../services/documents/watermark.js";
 import { notify } from "../../services/notifications.js";
@@ -453,8 +454,22 @@ export async function adminContentRoutes(app: FastifyInstance) {
       .where(eq(contentVersions.contentId, id))
       .orderBy(desc(contentVersions.versionNumber));
     const siblings = await db.select({ id: contents.id, title: contents.title }).from(contents).where(and(eq(contents.moduleId, m.id), ne(contents.id, id)));
+    const [area] = await db.select().from(knowledgeAreas).where(eq(knowledgeAreas.id, t.areaId));
+    const reading = await app.ctx.settings.get("reading");
+    const currentVersion = versions.find(({ v }) => v.id === c.currentVersionId)?.v;
+    const wordsPerMinute = area?.settings.wordsPerMinute ?? reading.wordsPerMinute;
     return {
       content: c,
+      reading: {
+        wordsPerMinute,
+        automaticMinutes: estimateReadingMinutes({
+          wordCount: currentVersion?.wordCount ?? 0,
+          pageCount: currentVersion?.pageCount ?? 0,
+          wordsPerMinute,
+          minutesPerPageFallback: reading.minutesPerPageFallback,
+          factor: c.readingFactor,
+        }),
+      },
       module: { id: m.id, title: m.title },
       track: { id: t.id, title: t.title, areaId: t.areaId },
       permissions: { canEdit: canManageArea(scope, t.areaId, "edit"), canPublish: canManageArea(scope, t.areaId, "publish") },
