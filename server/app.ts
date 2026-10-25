@@ -178,10 +178,9 @@ export async function buildApp(config: AppConfig, opts: { database?: Database } 
       root: webDir,
       wildcard: false,
       index: false,
-      setHeaders(res, filePath) {
-        const raw = res as unknown as { setHeader(name: string, value: string): void };
-        if (filePath.includes(`${path.sep}assets${path.sep}`)) raw.setHeader("Cache-Control", "public, max-age=31536000, immutable");
-        else raw.setHeader("Cache-Control", "no-cache");
+      // Nesta versão do plugin, o primeiro argumento é a resposta do Fastify (não a do Node).
+      setHeaders(reply, filePath) {
+        reply.header("Cache-Control", filePath.includes(`${path.sep}assets${path.sep}`) ? "public, max-age=31536000, immutable" : "no-cache");
       },
     });
   }
