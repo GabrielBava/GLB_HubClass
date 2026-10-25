@@ -1,0 +1,163 @@
+@import "tailwindcss";
+
+/* O modo escuro é controlado pela classe .dark no <html> (ou em um contêiner, como nas telas de acesso). */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * Variáveis globais de design. As cores da marca (primária, superfície institucional e destaque)
+ * e as fontes são definidas em tempo de execução pela identidade visual configurada pelo
+ * administrador (lib/branding.tsx). Trocar a identidade não exige alterar componentes.
+ */
+:root {
+  --primary: #1fb873;
+  --primary-fg: #04140c;
+  --accent: #0e6b4a;
+  --surface: #0b1210;
+  --font-heading: "Bricolage Grotesque", "Inter", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  --bg: #f5f7f6;
+  --card: #ffffff;
+  --fg: #0e1512;
+  --muted: #5b6763;
+  --border: #e2e8e5;
+  --subtle: #eef2f0;
+  --input: #ffffff;
+  --success: #15803d;
+  --warning: #b45309;
+  --danger: #c0262d;
+  --info: #1d4ed8;
+  --ring: color-mix(in oklab, var(--primary) 55%, transparent);
+  /* Séries dos gráficos (paleta validada para daltonismo e contraste, por modo). */
+  --chart-1: #2f6fd6;
+  --chart-2: #159a5e;
+  --chart-grid: #e6ebe8;
+  color-scheme: light;
+}
+
+.dark {
+  --bg: #070b0a;
+  --card: #0d1311;
+  --fg: #ecf2ef;
+  --muted: #94a39d;
+  --border: #1f2a26;
+  --subtle: #141c19;
+  --input: #111816;
+  --success: #34d399;
+  --warning: #fbbf24;
+  --danger: #f87171;
+  --info: #60a5fa;
+  --chart-1: #3f7fe3;
+  --chart-2: #1ea868;
+  --chart-grid: #1f2a26;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-card: var(--card);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-subtle: var(--subtle);
+  --color-input: var(--input);
+  --color-primary: var(--primary);
+  --color-primary-fg: var(--primary-fg);
+  --color-accent: var(--accent);
+  --color-surface: var(--surface);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --color-info: var(--info);
+  --font-heading: var(--font-heading);
+  --font-body: var(--font-body);
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3,
+.font-heading {
+  font-family: var(--font-heading);
+  letter-spacing: -0.02em;
+}
+
+:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: color-mix(in oklab, var(--primary) 30%, transparent);
+}
+
+.brand-glow {
+  box-shadow: 0 10px 30px -10px color-mix(in oklab, var(--primary) 70%, transparent);
+}
+
+.brand-backdrop {
+  background:
+    radial-gradient(900px 520px at 0% 0%, color-mix(in oklab, var(--primary) 26%, transparent), transparent 70%),
+    radial-gradient(700px 420px at 100% 100%, color-mix(in oklab, var(--accent) 18%, transparent), transparent 70%),
+    var(--surface);
+}
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+}
+.skip-link:focus {
+  left: 1rem;
+  top: 1rem;
+  z-index: 100;
+}
+
+/* Leitor protegido: a página não é selecionável e some na impressão. */
+.protected-page {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+.watermark-overlay {
+  pointer-events: none;
+  background-repeat: repeat;
+}
+@media print {
+  .no-print,
+  .protected-page,
+  .reader-root {
+    display: none !important;
+  }
+  .print-blocked-message {
+    display: block !important;
+  }
+}
+.print-blocked-message {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+.scrollbar-thin {
+  scrollbar-width: thin;
+}
