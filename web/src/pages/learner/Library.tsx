@@ -61,9 +61,9 @@ export function LibraryPage() {
             return (
               <Card as="article" key={item.id} className="flex gap-4 p-4">
                 {item.coverFileId ? (
-                  <img src={`/api/files/${item.coverFileId}/image`} alt={`Capa de ${item.title}`} className="h-40 w-28 shrink-0 rounded-lg object-cover shadow-sm" />
+                  <img src={`/api/files/${item.coverFileId}/image`} alt={`Capa de ${item.title}`} className="h-40 w-28 shrink-0 rounded-[10px] border border-border object-cover shadow-soft" />
                 ) : (
-                  <div className="grid h-40 w-28 shrink-0 place-items-center rounded-lg text-white/90" style={{ background: item.coverColor ?? "var(--surface-2)" }} aria-hidden>
+                  <div className="grid h-40 w-28 shrink-0 place-items-center rounded-[10px] border border-border text-white/90" style={{ background: item.coverColor ?? "#201e1e" }} aria-hidden>
                     <Icon className="h-8 w-8" />
                   </div>
                 )}

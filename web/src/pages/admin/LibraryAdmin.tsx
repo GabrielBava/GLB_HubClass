@@ -54,7 +54,7 @@ const blank: Form = {
   estimatedMinutes: null,
   type: "book",
   license: "own",
-  coverColor: "#252522",
+  coverColor: "#201E1E",
   externalUrl: "",
   allowDownload: true,
   areaId: null,
@@ -161,9 +161,9 @@ export function LibraryAdminPage() {
 function Cover({ item, className, preview }: { item: Pick<Item, "coverFileId" | "coverColor">; className: string; preview?: string | null }) {
   const src = preview ?? (item.coverFileId ? `/api/files/${item.coverFileId}/image` : null);
   return src ? (
-    <img src={src} alt="" className={`${className} shrink-0 rounded object-cover`} />
+    <img src={src} alt="" className={`${className} shrink-0 rounded-md border border-border object-cover`} />
   ) : (
-    <span className={`${className} grid shrink-0 place-items-center rounded text-white/80`} style={{ background: item.coverColor ?? "var(--surface-2)" }} aria-hidden>
+    <span className={`${className} grid shrink-0 place-items-center rounded-md border border-border text-white/80`} style={{ background: item.coverColor ?? "#201e1e" }} aria-hidden>
       <BookMarked className="h-4 w-4" />
     </span>
   );
@@ -274,7 +274,7 @@ function ItemModal({ initial, item, onClose }: { initial: Form; item: Item | nul
           </div>
           <p className="mt-1 text-xs text-muted">PNG, JPEG ou WebP, até 3 MB. Proporção de livro (3:4).</p>
           <Field label="Cor sem capa" htmlFor="l-color" className="mt-3">
-            <Input id="l-color" type="color" className="h-10 p-1" value={form.coverColor ?? "#252522"} onChange={(e) => setForm({ ...form, coverColor: e.target.value })} />
+            <Input id="l-color" type="color" className="h-10 p-1" value={form.coverColor ?? "#201E1E"} onChange={(e) => setForm({ ...form, coverColor: e.target.value })} />
           </Field>
         </div>
 

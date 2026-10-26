@@ -2,7 +2,7 @@
 
 Universidade corporativa do Grupo Life Brasil: trilhas de formação, apostilas protegidas, exercícios, avaliações, aplicação prática acompanhada pelo líder e indicadores de capacitação.
 
-O visual segue o guia de identidade do Grupo Life Brasil (carvão, papel e laranja, Newsreader e DM Sans, logotipo oficial), com ajustes para manter o contraste acessível.
+O visual segue o "Modelo Life" do simulador de consórcio do Grupo Life Brasil: preto ou branco com o laranja Life, fonte Klavika (Titillium Web quando a Klavika não está instalada), títulos em caixa alta com a palavra-chave em laranja, cartões de cantos arredondados e botões em pílula. O tema acompanha o sistema de cada pessoa (claro ou escuro), e o contraste segue o WCAG AA.
 
 Esta é a **Fase 1 (MVP operacional)**: autenticação real, banco de dados relacional, regras de permissão verificadas no servidor e persistência de todo o histórico. Os dados de demonstração são fictícios.
 

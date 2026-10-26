@@ -49,10 +49,10 @@ export function LoginPage() {
       )}
       <form onSubmit={submit} className="space-y-5" noValidate>
         <Field label="E-mail" htmlFor="email">
-          <Input id="email" type="email" autoComplete="username" placeholder="seu@email.com.br" value={email} onChange={(e) => setEmail(e.target.value)} required className="h-12 bg-white/[0.04] border-white/10" />
+          <Input id="email" type="email" autoComplete="username" placeholder="seu@email.com.br" value={email} onChange={(e) => setEmail(e.target.value)} required className="h-12" />
         </Field>
         <Field label="Senha" htmlFor="password">
-          <PasswordInput id="password" autoComplete="current-password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required className="h-12 bg-white/[0.04] border-white/10" />
+          <PasswordInput id="password" autoComplete="current-password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required className="h-12" />
         </Field>
         <div>
           <Link to="/recuperar-acesso" className="text-sm font-medium text-primary hover:underline">
@@ -69,7 +69,7 @@ export function LoginPage() {
           Entrar
         </Button>
       </form>
-      <div className="mt-8 text-center text-sm text-white/60">
+      <div className="mt-8 text-center text-sm text-muted">
         <p>Ainda não tem acesso?</p>
         <Link to="/primeiro-acesso/manual" className="font-medium text-primary hover:underline">
           Manual de primeiro acesso e ativação por convite

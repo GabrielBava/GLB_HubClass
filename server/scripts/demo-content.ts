@@ -261,9 +261,9 @@ export async function renderDemoCover(title: string, subtitle: string): Promise<
   const H = 800;
   const canvas = createCanvas(W, H);
   const ctx = canvas.getContext("2d");
-  ctx.fillStyle = "#171716";
+  ctx.fillStyle = "#111111";
   ctx.fillRect(0, 0, W, H);
-  ctx.fillStyle = "#F36B22";
+  ctx.fillStyle = "#F05A00";
   ctx.fillRect(0, 0, 18, H);
   // Linhas finas, como nos materiais do guia de identidade.
   ctx.strokeStyle = "rgba(255,255,255,0.08)";
@@ -274,7 +274,7 @@ export async function renderDemoCover(title: string, subtitle: string): Promise<
     ctx.lineTo(420 + i * 60, H);
     ctx.stroke();
   }
-  ctx.fillStyle = "#F36B22";
+  ctx.fillStyle = "#F05A00";
   ctx.font = "bold 22px LCCoverBold";
   ctx.fillText(subtitle.toUpperCase(), 60, 120);
   ctx.fillStyle = "#FFFFFF";
@@ -291,7 +291,7 @@ export async function renderDemoCover(title: string, subtitle: string): Promise<
     } else line = test;
   }
   if (line) ctx.fillText(line, 60, y);
-  ctx.fillStyle = "#F36B22";
+  ctx.fillStyle = "#F05A00";
   ctx.fillRect(60, y + 40, 90, 6);
   ctx.fillStyle = "rgba(255,255,255,0.6)";
   ctx.font = "22px LCCover";

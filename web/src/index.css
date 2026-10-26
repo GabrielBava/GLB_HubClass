@@ -1,97 +1,181 @@
 @import "tailwindcss";
 
-/* O modo escuro é controlado pela classe .dark no <html> (ou em um contêiner, como nas telas de acesso). */
+/* O modo escuro é controlado pela classe .dark no <html> (ou em um contêiner). */
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* Fonte da marca (comercial): usada quando a Klavika está instalada no computador.
+   Sem ela, vale a Titillium Web (Google Fonts), de desenho próximo — o mesmo critério do simulador. */
+@font-face { font-family: "Klavika"; src: local("Klavika Light"), local("Klavika-Light"); font-weight: 300; font-style: normal; font-display: swap; }
+@font-face { font-family: "Klavika"; src: local("Klavika Regular"), local("Klavika-Regular"); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: "Klavika"; src: local("Klavika Medium"), local("Klavika-Medium"); font-weight: 500; font-style: normal; font-display: swap; }
+@font-face { font-family: "Klavika"; src: local("Klavika Bold"), local("Klavika-Bold"); font-weight: 600 700; font-style: normal; font-display: swap; }
+
 /*
- * Variáveis globais de design (padrão: identidade do Grupo Life Brasil).
+ * Tokens de design no "Modelo Life" do simulador de consórcio do Grupo Life Brasil:
+ * preto ou branco com laranja Life, cartões de cantos bem arredondados, títulos em caixa alta e finos
+ * com a palavra-chave em negrito e laranja, botões em pílula.
  * As cores da marca e as fontes são aplicadas em tempo de execução a partir da identidade visual
- * configurada pelo administrador (lib/branding.tsx). Trocar a identidade não exige alterar componentes.
+ * configurada pelo administrador (lib/branding.tsx); as variantes *-light/*-dark vêm de lá.
  *
- * --brand          laranja da marca, para elementos gráficos (barras, ícones, traços, destaques)
- * --primary        laranja acessível para texto e botões (escurecido no modo claro, contraste mínimo 4,5:1)
- * --surface        carvão: menu lateral e telas de acesso
+ * --brand      laranja Life: preenchimentos, gráficos, palavra-chave dos títulos, item selecionado
+ * --primary    laranja para texto e links (escurecido no claro, clareado no escuro: contraste de 6:1 ou mais)
+ * --btn        laranja do botão principal, com texto branco
+ * --icon       laranja dos ícones
+ * --on-brand   texto sobre o laranja (contraste acima de 6:1)
  */
 :root {
-  --brand: #f36b22;
-  --primary-light: #b44f19;
-  --primary-fg-light: #ffffff;
-  --primary-dark: #f36b22;
-  --primary-fg-dark: #171716;
-  --primary: var(--primary-light);
-  --primary-fg: var(--primary-fg-light);
-  --accent: #ff9c42;
-  --surface: #171716;
-  --surface-2: #252522;
-  --font-heading: "Newsreader", Georgia, "Times New Roman", serif;
-  --font-body: "DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --brand: #f05a00;
+  --accent: #f7a23a;
+  --on-brand: #1a0e05;
+  --primary-light: #b03d00;
+  --primary-dark: #ff7a2e;
+  --icon-light: #e05200;
+  --icon-dark: #ff7a2e;
+  --btn: #cc4800;
+  --btn-hover: #b84100;
+  --btn-fg: #ffffff;
+  --grad-brand: linear-gradient(135deg, var(--accent) 0%, var(--brand) 100%);
+  --font-heading: "Klavika", "Titillium Web", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-body: "Klavika", "Titillium Web", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 
-  --bg: #f6f3ed;
+  /* Fundo do tema escuro (cor institucional configurável) e as camadas derivadas dele. */
+  --bg-dark: #000000;
+  --sidebar-dark: #0b0b0b;
+  --card-dark: #111111;
+  --card-top-dark: #151515;
+  --subtle-dark: #181818;
+
+  /* ----- Tema claro: branco com laranja ----- */
+  --primary: var(--primary-light);
+  --primary-fg: #ffffff;
+  --icon: var(--icon-light);
+  --bg: #ece9e5;
+  --shell: #f7f5f2;
+  --sidebar: #f2efeb;
   --card: #ffffff;
-  --fg: #171716;
-  --muted: #6b6a63;
-  --border: #e3ddd2;
-  --subtle: #efebe3;
-  --input: #ffffff;
-  --success: #2f7d4f;
-  --warning: #a8560c;
-  --danger: #c83c35;
-  --info: #3d5a80;
-  --ring: color-mix(in oklab, var(--brand) 60%, transparent);
-  /* Séries dos gráficos (validadas para daltonismo e contraste em cada modo):
-     laranja para o foco e azul-ardósia para a comparação (guia: "uma cor para o foco"). */
-  --chart-1: #e0601c;
-  --chart-2: #2f6fd6;
-  --chart-grid: #e6e1d8;
+  --card-top: #ffffff;
+  --subtle: #f7f5f2;
+  --input: #f7f5f2;
+  --fg: #201e1e;
+  --muted: #67615c;
+  --faint: #9c958f;
+  --border: rgba(32, 30, 30, 0.12);
+  --border-soft: rgba(32, 30, 30, 0.07);
+  --border-strong: rgba(32, 30, 30, 0.45);
+  --active: rgba(240, 90, 0, 0.09);
+  --pill: rgba(32, 30, 30, 0.04);
+  --pill-hover: rgba(32, 30, 30, 0.07);
+  --track: rgba(32, 30, 30, 0.08);
+  --success: #1f7a4d;
+  --warning: #a35f00;
+  --danger: #b83232;
+  --danger-btn: #b83232;
+  --info: #1f63c0;
+  --ring: rgba(240, 90, 0, 0.3);
+  --glow-1: rgba(240, 90, 0, 0.1);
+  --glow-2: rgba(200, 32, 58, 0.06);
+  --veil: rgba(32, 30, 30, 0.4);
+  --shadow-sm: 0 1px 2px rgba(32, 30, 30, 0.08);
+  --shadow-md: 0 1px 2px rgba(32, 30, 30, 0.05), 0 10px 24px -10px rgba(32, 30, 30, 0.18);
+  --shadow-lg: 0 2px 4px rgba(32, 30, 30, 0.06), 0 22px 44px -14px rgba(32, 30, 30, 0.26);
+  --shadow-float: 0 30px 60px -20px rgba(32, 30, 30, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.9);
+  /* Séries dos gráficos (paleta do simulador, validada para daltonismo e contraste em cada modo):
+     laranja Life para o foco e azul para a comparação. */
+  --chart-1: #e85500;
+  --chart-2: #1f63c0;
+  --chart-grid: rgba(32, 30, 30, 0.08);
   color-scheme: light;
 }
 
+/* ----- Tema escuro: preto com laranja ----- */
 .dark {
   --primary: var(--primary-dark);
-  --primary-fg: var(--primary-fg-dark);
-  --bg: #171716;
-  --card: #201f1e;
-  --fg: #f6f3ed;
+  --primary-fg: var(--on-brand);
+  --icon: var(--icon-dark);
+  --bg: var(--bg-dark);
+  --shell: var(--bg-dark);
+  --sidebar: var(--sidebar-dark);
+  --card: var(--card-dark);
+  --card-top: var(--card-top-dark);
+  --subtle: var(--subtle-dark);
+  --input: var(--subtle-dark);
+  --fg: #f7f5f2;
   --muted: #a39e99;
-  --border: #353430;
-  --subtle: #2a2927;
-  --input: #1c1b1a;
-  --success: #5cc48a;
-  --warning: #ffb066;
+  --faint: #6e6964;
+  --border: rgba(255, 255, 255, 0.12);
+  --border-soft: rgba(255, 255, 255, 0.07);
+  --border-strong: rgba(255, 255, 255, 0.55);
+  --active: rgba(240, 90, 0, 0.14);
+  --pill: rgba(255, 255, 255, 0.04);
+  --pill-hover: rgba(255, 255, 255, 0.1);
+  --track: rgba(255, 255, 255, 0.08);
+  --success: #5cc98a;
+  --warning: #f2b33d;
   --danger: #ff6b6b;
-  --info: #9db7dc;
-  --chart-1: #e8611c;
-  --chart-2: #3f7fe3;
-  --chart-grid: #353430;
+  --info: #6fa3ee;
+  --ring: rgba(240, 90, 0, 0.38);
+  --glow-1: rgba(240, 90, 0, 0.14);
+  --glow-2: rgba(200, 32, 58, 0.1);
+  --veil: rgba(0, 0, 0, 0.76);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.45), 0 2px 6px rgba(0, 0, 0, 0.35);
+  --shadow-md: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 2px 4px rgba(0, 0, 0, 0.4), 0 12px 28px -8px rgba(0, 0, 0, 0.65);
+  --shadow-lg: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 4px 8px rgba(0, 0, 0, 0.4), 0 24px 48px -12px rgba(0, 0, 0, 0.75);
+  --shadow-float: 0 30px 60px -18px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  --chart-1: #f05a00;
+  --chart-2: #3a86e8;
+  --chart-grid: rgba(255, 255, 255, 0.08);
   color-scheme: dark;
 }
 
 /* Área sempre clara dentro do tema escuro (ex.: prévia do logotipo para fundo claro). */
 .light-scope {
   --primary: var(--primary-light);
-  --primary-fg: var(--primary-fg-light);
+  --fg: #201e1e;
+  --muted: #67615c;
+  --border: rgba(32, 30, 30, 0.12);
 }
 
 @theme inline {
   --color-bg: var(--bg);
+  --color-shell: var(--shell);
+  --color-sidebar: var(--sidebar);
   --color-card: var(--card);
   --color-fg: var(--fg);
   --color-muted: var(--muted);
+  --color-faint: var(--faint);
   --color-border: var(--border);
+  --color-border-soft: var(--border-soft);
+  --color-border-strong: var(--border-strong);
   --color-subtle: var(--subtle);
   --color-input: var(--input);
+  --color-active: var(--active);
+  --color-pill: var(--pill);
+  --color-pill-hover: var(--pill-hover);
+  --color-track: var(--track);
   --color-primary: var(--primary);
   --color-primary-fg: var(--primary-fg);
   --color-brand: var(--brand);
-  --color-surface-2: var(--surface-2);
+  --color-on-brand: var(--on-brand);
+  --color-icon: var(--icon);
+  --color-btn: var(--btn);
+  --color-btn-hover: var(--btn-hover);
+  --color-btn-fg: var(--btn-fg);
   --color-accent: var(--accent);
-  --color-surface: var(--surface);
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-danger: var(--danger);
+  --color-danger-btn: var(--danger-btn);
   --color-info: var(--info);
   --font-heading: var(--font-heading);
   --font-body: var(--font-body);
+  --radius-card: 22px;
+  --radius-panel: 24px;
+  --radius-field: 10px;
+  --radius-box: 14px;
+  --shadow-card: var(--shadow-md);
+  --shadow-lift: var(--shadow-lg);
+  --shadow-float: var(--shadow-float);
+  --shadow-soft: var(--shadow-sm);
 }
 
 html,
@@ -100,10 +184,16 @@ body,
   min-height: 100%;
 }
 
+/* Fundo com a luz ambiente do simulador: laranja no alto e carmim (do coração do logotipo) embaixo. */
 body {
-  background: var(--bg);
+  background:
+    radial-gradient(ellipse 60% 55% at 58% 8%, var(--glow-1) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 40% at 6% 100%, var(--glow-2) 0%, transparent 70%),
+    var(--bg);
+  background-attachment: fixed;
   color: var(--fg);
   font-family: var(--font-body);
+  line-height: 1.45;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
@@ -116,8 +206,15 @@ h3,
   letter-spacing: -0.01em;
 }
 
+/* Números de destaque: fonte de títulos, seminegrito e algarismos de largura fixa. */
+.num {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
 :focus-visible {
-  outline: 2px solid var(--ring);
+  outline: 2px solid var(--primary);
   outline-offset: 2px;
 }
 
@@ -127,29 +224,63 @@ h3,
 }
 
 ::selection {
-  background: color-mix(in oklab, var(--brand) 28%, transparent);
+  background: var(--active);
+}
+
+* {
+  scrollbar-color: color-mix(in oklab, var(--brand) 55%, transparent) transparent;
+}
+
+@layer components {
+/* Cartão do Modelo Life: cantos de 22 px, borda sutil e leve degradê do topo. */
+.lc-card {
+  border-radius: 22px;
+  border: 1px solid var(--border);
+  background: linear-gradient(160deg, var(--card-top) 0%, var(--card) 55%);
+  box-shadow: var(--shadow-md);
+}
+
+/* Indicador em destaque: degradê laranja com texto escuro (como "Crédito" e "Parcela" no simulador). */
+.lc-highlight {
+  border-color: transparent;
+  background: var(--grad-brand);
+  color: var(--on-brand);
 }
 
 .brand-glow {
   box-shadow: 0 10px 28px -12px color-mix(in oklab, var(--brand) 75%, transparent);
 }
 
-/* Telas de acesso: base carvão com faixa laranja à esquerda e linhas finas (guia: "impacto escuro"). */
-.brand-backdrop {
-  background:
-    linear-gradient(90deg, var(--brand) 0 6px, transparent 6px),
-    radial-gradient(760px 460px at 100% 0%, color-mix(in oklab, var(--brand) 16%, transparent), transparent 70%),
-    var(--surface);
+/* Título no Modelo Life: caixa alta e fino, com a palavra-chave em negrito e laranja, e um traço fino abaixo. */
+.life-title {
+  font-family: var(--font-heading);
+  font-weight: 300;
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  line-height: 1.08;
+  text-wrap: balance;
+}
+.life-title .acento {
+  color: var(--brand);
+  font-weight: 700;
+}
+.life-rule {
+  display: block;
+  width: min(100%, 360px);
+  height: 1px;
+  background: var(--fg);
+  opacity: 0.35;
 }
 
-/* Rótulo editorial: caixa alta pequena em laranja (ex.: "01 / PRINCÍPIOS"). */
+/* Rótulo acima dos títulos (ex.: "VISÃO GERAL"). */
 .eyebrow {
   font-family: var(--font-body);
-  font-size: 0.72rem;
-  font-weight: 700;
+  font-size: 0.76rem;
+  font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--primary);
+  color: var(--muted);
+}
 }
 
 .skip-link {

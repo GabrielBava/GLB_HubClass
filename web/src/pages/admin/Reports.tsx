@@ -127,7 +127,7 @@ export function ReportsPage() {
               Engajamento
             </h2>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
-              <StatCard label="Usuários ativos" value={data.engagement.activeUsers} icon={UsersIcon} />
+              <StatCard highlight label="Usuários ativos" value={data.engagement.activeUsers} icon={UsersIcon} />
               <StatCard label="Acessaram nos últimos 30 dias" value={data.engagement.engagedLast30Days} icon={Activity} hint={data.engagement.activeUsers ? `${Math.round((data.engagement.engagedLast30Days / data.engagement.activeUsers) * 100)}% dos ativos` : undefined} />
               <StatCard label="Trilhas iniciadas" value={data.engagement.tracksStarted} icon={BookOpenCheck} hint="no período" />
               <StatCard label="Trilhas concluídas" value={data.engagement.tracksCompleted} icon={Award} tone="success" hint="no período" />
@@ -146,7 +146,7 @@ export function ReportsPage() {
               Aprendizagem
             </h2>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-              <StatCard label="Nota média" value={num(data.learning.averageScore, "%")} icon={Target} />
+              <StatCard highlight label="Nota média" value={num(data.learning.averageScore, "%")} icon={Target} />
               <StatCard label="Aprovação" value={num(data.learning.passRate, "%")} icon={Award} tone="success" />
               <StatCard label="Tentativas por avaliação" value={num(data.learning.attemptsPerAssessment)} icon={Activity} />
               <StatCard label="Validações pendentes" value={data.learning.pendingValidations} icon={Hourglass} tone="warning" hint="atividades e correções manuais" />
@@ -195,7 +195,7 @@ export function ReportsPage() {
               Desenvolvimento
             </h2>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-              <StatCard label="Competências demonstradas" value={data.development.competenciesDemonstrated} icon={Hammer} />
+              <StatCard highlight label="Competências demonstradas" value={data.development.competenciesDemonstrated} icon={Hammer} />
               <StatCard label="Aplicações validadas" value={data.development.practiceValidated} icon={UserCheck} tone="success" />
               <StatCard label="Dias até concluir uma trilha" value={num(data.development.avgDaysToComplete)} icon={Hourglass} hint="média" />
               <StatCard label="Dias até a 1ª execução supervisionada" value={num(data.development.avgDaysToFirstSupervisedExecution)} icon={Target} hint="média, desde o primeiro estudo" />

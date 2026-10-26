@@ -1,0 +1,1 @@
+ALTER TABLE "knowledge_areas" ALTER COLUMN "color" SET DEFAULT '#F05A00';

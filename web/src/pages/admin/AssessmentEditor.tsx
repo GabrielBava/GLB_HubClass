@@ -482,7 +482,7 @@ export function AssessmentEditorPage() {
                 <li key={x.id}>
                   <Card className={`p-4 ${x.isActive ? "" : "opacity-60"}`}>
                     <div className="flex flex-wrap items-start gap-3">
-                      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-subtle text-sm font-semibold">{i + 1}</span>
+                      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-border text-sm font-semibold">{i + 1}</span>
                       <div className="min-w-0 flex-1">
                         <p className="font-medium">{x.prompt}</p>
                         <p className="mt-1 flex flex-wrap gap-1.5 text-xs text-muted">
@@ -721,8 +721,8 @@ export function AssessmentResultsPage() {
       </Link>
       <PageHeader eyebrow="Resultados" title={data.assessment.title} description={`Nota mínima para aprovação: ${data.assessment.passingScore}%.`} />
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard label="Participantes" value={s.participants} hint={`${s.attempts} tentativa(s)`} />
-        <StatCard label="Média das notas" value={s.averageScore !== null ? `${s.averageScore.toLocaleString("pt-BR")}%` : "—"} />
+        <StatCard highlight label="Participantes" value={s.participants} hint={`${s.attempts} tentativa(s)`} />
+        <StatCard highlight label="Média das notas" value={s.averageScore !== null ? `${s.averageScore.toLocaleString("pt-BR")}%` : "—"} />
         <StatCard label="Taxa de aprovação" value={s.passRate !== null ? `${s.passRate}%` : "—"} tone="success" />
         <StatCard label="Aguardando correção" value={s.pendingReview} tone="warning" hint={s.attemptsPerParticipant ? `${s.attemptsPerParticipant.toLocaleString("pt-BR")} tentativa(s) por pessoa` : undefined} />
       </div>

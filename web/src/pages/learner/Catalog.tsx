@@ -34,16 +34,16 @@ export function AreasPage() {
       ) : (
         <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 xl:grid-cols-4">
           {data.map((a) => (
-            <Card key={a.id} as="article" className="group transition hover:border-brand/60 hover:shadow-md">
+            <Card key={a.id} as="article" className="group transition hover:-translate-y-0.5 hover:border-brand/60 hover:shadow-lift">
               <Link
                 to={a.slug.includes("biblioteca") && a.trackCount === 0 ? "/biblioteca" : `/trilhas?area=${a.slug}`}
                 className="flex h-full flex-col items-start gap-4 p-5"
                 aria-label={`${a.name}: ver trilhas`}
               >
-                <span className="grid h-12 w-12 place-items-center rounded-xl bg-brand/10 text-brand transition group-hover:bg-brand group-hover:text-white">
+                <span className="grid h-12 w-12 place-items-center rounded-full border border-border-strong text-icon transition group-hover:border-transparent group-hover:bg-brand group-hover:text-on-brand">
                   <AreaIcon name={a.icon} className="h-6 w-6" />
                 </span>
-                <h2 className="font-heading text-lg font-medium leading-snug">{a.name}</h2>
+                <h2 className="font-heading text-[1.12rem] font-semibold leading-snug">{a.name}</h2>
               </Link>
             </Card>
           ))}

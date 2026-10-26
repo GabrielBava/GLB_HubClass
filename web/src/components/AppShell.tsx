@@ -18,7 +18,6 @@ import {
   LogOut,
   Menu,
   MessagesSquare,
-  Monitor,
   Moon,
   NotebookPen,
   ScrollText,
@@ -110,13 +109,13 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
     <nav aria-label="Navegação principal" className="flex h-full flex-col">
       <div className="px-5 pb-5 pt-6">
         <Link to="/" onClick={onNavigate} aria-label="Ir para o início" className="block">
-          <Brand size="sm" onDark />
+          <Brand size="sm" />
         </Link>
       </div>
       <div className="flex-1 space-y-5 overflow-y-auto px-3 pb-6 scrollbar-thin">
         {sections.map((s) => (
           <div key={s.title}>
-            <p className="px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-white/40">{s.title}</p>
+            <p className="eyebrow px-3 pb-1.5 text-[11px]">{s.title}</p>
             <ul className="space-y-0.5">
               {s.items.map((item) => (
                 <li key={item.to}>
@@ -126,20 +125,14 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
                     onClick={onNavigate}
                     className={({ isActive }) =>
                       cx(
-                        "relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition",
-                        // Item ativo: traço laranja à esquerda, como os marcadores do guia de identidade.
-                        isActive
-                          ? "bg-white/[0.07] font-medium text-white before:absolute before:inset-y-1.5 before:left-0 before:w-[3px] before:rounded-full before:bg-brand"
-                          : "text-white/65 hover:bg-white/5 hover:text-white",
+                        "flex items-center gap-3 rounded-[12px] px-3 py-2 text-sm transition",
+                        // Item ativo com o realce laranja do simulador; ícones em laranja, como na apresentação.
+                        isActive ? "bg-active font-semibold text-fg" : "text-muted hover:bg-pill-hover hover:text-fg",
                       )
                     }
                   >
-                    {({ isActive }) => (
-                      <>
-                        <item.icon className={cx("h-4 w-4 shrink-0", isActive && "text-brand")} aria-hidden />
-                        {item.label}
-                      </>
-                    )}
+                    <item.icon className="h-[18px] w-[18px] shrink-0 text-icon" strokeWidth={1.7} aria-hidden />
+                    {item.label}
                   </NavLink>
                 </li>
               ))}
@@ -147,9 +140,9 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
           </div>
         ))}
       </div>
-      <div className="border-t border-white/10 px-3 py-3">
-        <NavLink to="/ajuda" onClick={onNavigate} className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-white/65 hover:bg-white/5 hover:text-white">
-          <HelpCircle className="h-4 w-4" aria-hidden />
+      <div className="border-t border-border-soft px-3 py-3">
+        <NavLink to="/ajuda" onClick={onNavigate} className="flex items-center gap-3 rounded-[12px] px-3 py-2 text-sm text-muted hover:bg-pill-hover hover:text-fg">
+          <HelpCircle className="h-[18px] w-[18px] text-icon" strokeWidth={1.7} aria-hidden />
           Ajuda e suporte
         </NavLink>
       </div>
@@ -175,10 +168,17 @@ function Popover({ button, children, label }: { button: (open: boolean) => React
   }, [open]);
   return (
     <div className="relative" ref={ref}>
-      <button aria-haspopup="true" aria-expanded={open} aria-label={label} data-tooltip={label} onClick={() => setOpen((o) => !o)} className="rounded-xl p-2 text-muted hover:bg-subtle hover:text-fg">
+      <button
+        aria-haspopup="true"
+        aria-expanded={open}
+        aria-label={label}
+        data-tooltip={label}
+        onClick={() => setOpen((o) => !o)}
+        className={cx("grid h-9 min-w-9 place-items-center rounded-full border border-border bg-pill text-muted transition hover:bg-pill-hover hover:text-fg", open && "bg-pill-hover text-fg")}
+      >
         {button(open)}
       </button>
-      {open && <div className="absolute right-0 top-full z-50 mt-2 w-80 max-w-[calc(100vw-2rem)] rounded-2xl border border-border bg-card shadow-xl">{children(() => setOpen(false))}</div>}
+      {open && <div className="absolute right-0 top-full z-50 mt-2 w-80 max-w-[calc(100vw-2rem)] overflow-hidden rounded-[22px] border border-border bg-card shadow-float">{children(() => setOpen(false))}</div>}
     </div>
   );
 }
@@ -198,8 +198,8 @@ function NotificationsBell() {
       label={`Notificações${unread ? ` (${unread} não lidas)` : ""}`}
       button={() => (
         <span className="relative block">
-          <Bell className="h-5 w-5" />
-          {unread > 0 && <span className="absolute -right-1 -top-1 grid h-4 min-w-4 place-items-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-fg">{unread > 9 ? "9+" : unread}</span>}
+          <Bell className="h-[18px] w-[18px]" strokeWidth={1.7} />
+          {unread > 0 && <span className="absolute -right-2 -top-2 grid h-4 min-w-4 place-items-center rounded-full bg-brand px-1 text-[10px] font-bold text-on-brand">{unread > 9 ? "9+" : unread}</span>}
         </span>
       )}
     >
@@ -250,36 +250,31 @@ function NotificationsBell() {
   );
 }
 
-function ThemeMenu() {
-  const { theme, setTheme, isDark } = useBranding();
+/** Tema em pílulas "Claro | Escuro", como no simulador. Sem escolha, vale o padrão da plataforma. */
+function ThemeToggle() {
+  const { setTheme, isDark } = useBranding();
   const options = [
-    { id: "light" as const, label: "Claro", icon: Sun },
-    { id: "dark" as const, label: "Escuro", icon: Moon },
-    { id: "system" as const, label: "Igual ao sistema", icon: Monitor },
+    { id: "light" as const, label: "Claro", icon: Sun, active: !isDark },
+    { id: "dark" as const, label: "Escuro", icon: Moon, active: isDark },
   ];
   return (
-    <Popover label="Tema de cores" button={() => (isDark ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />)}>
-      {(close) => (
-        <ul className="p-1.5" role="menu">
-          {options.map((o) => (
-            <li key={o.id}>
-              <button
-                role="menuitemradio"
-                aria-checked={theme === o.id}
-                onClick={() => {
-                  setTheme(o.id);
-                  close();
-                }}
-                className={cx("flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-subtle", theme === o.id && "font-medium text-primary")}
-              >
-                <o.icon className="h-4 w-4" aria-hidden />
-                {o.label}
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-    </Popover>
+    <div className="inline-grid grid-cols-2 gap-0.5 rounded-full border border-border bg-pill p-[3px]" role="group" aria-label="Tema de cores">
+      {options.map((o) => (
+        <button
+          key={o.id}
+          type="button"
+          aria-pressed={o.active}
+          onClick={() => setTheme(o.id)}
+          className={cx(
+            "flex h-[30px] items-center justify-center gap-1.5 rounded-full px-3 text-xs transition",
+            o.active ? "bg-brand font-semibold text-on-brand shadow-soft" : "text-muted hover:text-fg",
+          )}
+        >
+          <o.icon className="h-3.5 w-3.5" aria-hidden />
+          <span className="max-sm:sr-only">{o.label}</span>
+        </button>
+      ))}
+    </div>
   );
 }
 
@@ -288,7 +283,7 @@ function UserMenu() {
   const { logout } = useAuth();
   const navigate = useNavigate();
   return (
-    <Popover label="Menu do usuário" button={() => <Avatar name={me.user.name} size={32} />}>
+    <Popover label="Menu do usuário" button={() => <Avatar name={me.user.name} size={34} className="-m-px" />}>
       {(close) => (
         <div>
           <div className="border-b border-border px-4 py-3">
@@ -300,12 +295,12 @@ function UserMenu() {
           </div>
           <ul className="p-1.5">
             <li>
-              <Link to="/perfil" onClick={close} className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-subtle">
+              <Link to="/perfil" onClick={close} className="flex items-center gap-2 rounded-[12px] px-3 py-2 text-sm hover:bg-pill-hover">
                 <User className="h-4 w-4" aria-hidden /> Meu perfil e segurança
               </Link>
             </li>
             <li>
-              <Link to="/ajuda" onClick={close} className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-subtle">
+              <Link to="/ajuda" onClick={close} className="flex items-center gap-2 rounded-[12px] px-3 py-2 text-sm hover:bg-pill-hover">
                 <HelpCircle className="h-4 w-4" aria-hidden /> Ajuda
               </Link>
             </li>
@@ -316,7 +311,7 @@ function UserMenu() {
                   await logout();
                   navigate("/entrar", { replace: true });
                 }}
-                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-danger hover:bg-subtle"
+                className="flex w-full items-center gap-2 rounded-[12px] px-3 py-2 text-sm text-danger hover:bg-pill-hover"
               >
                 <LogOut className="h-4 w-4" aria-hidden /> Sair
               </button>
@@ -342,30 +337,32 @@ export function AppShell() {
       <a href="#conteudo" className="skip-link rounded-lg bg-primary px-3 py-2 text-primary-fg">
         Pular para o conteúdo
       </a>
-      <aside className="dark no-print fixed inset-y-0 left-0 z-40 hidden w-64 bg-surface lg:block">
+      {/* Menu flutuante à esquerda, como o painel do simulador. */}
+      <aside className="no-print fixed bottom-4 left-4 top-4 z-40 hidden w-64 overflow-hidden rounded-[24px] border border-border bg-sidebar shadow-card lg:block">
         <Sidebar />
       </aside>
       {mobileOpen && (
         <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Menu">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setMobileOpen(false)} />
-          <aside className="dark absolute inset-y-0 left-0 w-72 max-w-[85vw] bg-surface shadow-2xl">
-            <button onClick={() => setMobileOpen(false)} className="absolute right-3 top-4 rounded-lg p-1.5 text-white/70 hover:text-white" aria-label="Fechar menu">
+          <div className="absolute inset-0 bg-[var(--veil)] backdrop-blur-[6px]" onClick={() => setMobileOpen(false)} />
+          <aside className="absolute bottom-3 left-3 top-3 w-72 max-w-[85vw] overflow-hidden rounded-[24px] border border-border bg-sidebar shadow-float">
+            <button onClick={() => setMobileOpen(false)} className="absolute right-3 top-4 rounded-full p-1.5 text-muted hover:bg-pill-hover hover:text-fg" aria-label="Fechar menu">
               <X className="h-5 w-5" />
             </button>
             <Sidebar onNavigate={() => setMobileOpen(false)} />
           </aside>
         </div>
       )}
-      <div className="lg:pl-64">
-        <header className="no-print sticky top-0 z-30 flex h-16 items-center gap-2 border-b border-border bg-bg/85 px-4 backdrop-blur sm:px-6">
-          <button className="rounded-xl p-2 text-muted hover:bg-subtle lg:hidden" onClick={() => setMobileOpen(true)} aria-label="Abrir menu">
-            <Menu className="h-5 w-5" />
+      <div className="lg:pl-[288px]">
+        {/* Barra do topo: fixa só no celular; no computador rola com a página, como no simulador (sem cortar a luz do fundo). */}
+        <header className="no-print relative z-30 flex h-16 items-center gap-2 px-4 max-lg:sticky max-lg:top-0 max-lg:bg-[color-mix(in_oklab,var(--bg)_82%,transparent)] max-lg:backdrop-blur-md sm:px-6 lg:pr-8">
+          <button className="grid h-9 w-9 place-items-center rounded-full border border-border bg-pill text-muted hover:bg-pill-hover hover:text-fg lg:hidden" onClick={() => setMobileOpen(true)} aria-label="Abrir menu">
+            <Menu className="h-[18px] w-[18px]" />
           </button>
-          <div className="lg:hidden">
-            <Brand size="sm" />
+          <div className="min-w-0 lg:hidden">
+            <Brand size="sm" product={false} />
           </div>
-          <div className="ml-auto flex items-center gap-1">
-            <ThemeMenu />
+          <div className="ml-auto flex items-center gap-2">
+            <ThemeToggle />
             <NotificationsBell />
             <UserMenu />
           </div>

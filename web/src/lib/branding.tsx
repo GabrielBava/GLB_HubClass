@@ -21,9 +21,9 @@ export const FALLBACK_BRANDING: Branding = {
   organizationName: "Grupo Life Brasil",
   tagline: "Universidade corporativa do Grupo Life Brasil. Aprender, praticar e executar.",
   loginMessage: "Acesse seu ambiente de aprendizado e desenvolvimento.",
-  colors: { primary: "#F36B22", brandSurface: "#171716", accent: "#FF9C42" },
-  fonts: { heading: "Newsreader", body: "DM Sans" },
-  defaultMode: "light",
+  colors: { primary: "#F05A00", brandSurface: "#000000", accent: "#F7A23A" },
+  fonts: { heading: "Titillium Web", body: "Titillium Web" },
+  defaultMode: "system",
   logoUrl: null,
   logoDarkUrl: null,
 };
@@ -39,8 +39,15 @@ interface BrandingContextValue {
 
 const BrandingContext = createContext<BrandingContextValue | null>(null);
 
-const INK = "#171716";
+const INK = "#1A0E05";
 const SERIF_FONTS = new Set(["Newsreader", "Fraunces"]);
+/** Laranja Life: com ele, valem exatamente os tons do simulador. */
+const LIFE_ORANGE = "#f05a00";
+/** Pesos de cada fonte no Google Fonts (pedir um peso inexistente faz a folha de estilos falhar). */
+const FONT_AXES: Record<string, string> = {
+  "Titillium Web": "ital,wght@0,300;0,400;0,600;0,700;1,300",
+  Lato: "wght@300;400;700;900",
+};
 
 function rgb(hex: string): [number, number, number] | null {
   const m = /^#?([0-9a-f]{6})$/i.exec(hex);
@@ -87,28 +94,60 @@ export function readableOn(hex: string): string {
   return contrastRatio(hex, "#ffffff") >= contrastRatio(hex, INK) ? "#ffffff" : INK;
 }
 
+/**
+ * Tons derivados da cor da marca. Com o laranja Life valem exatamente os do simulador;
+ * com outra cor, são calculados para manter o contraste.
+ */
+export function brandTones(brand: string) {
+  const life = brand.toLowerCase() === LIFE_ORANGE;
+  const btn = life ? "#cc4800" : untilContrast(brand, "#000000", ["#ffffff"], 4.5);
+  return {
+    // Texto e links: 6:1 sobre branco no claro; clareado sobre os cartões pretos no escuro.
+    textLight: life ? "#b03d00" : untilContrast(brand, "#000000", ["#ffffff", "#f7f5f2"], 6),
+    textDark: life ? "#ff7a2e" : untilContrast(brand, "#ffffff", ["#111111", "#181818"], 6),
+    // Botão principal com texto branco (4,5:1) e ícones (3:1, elemento gráfico).
+    btn,
+    btnHover: life ? "#b84100" : mix(btn, "#000000", 0.1),
+    iconLight: life ? "#e05200" : untilContrast(brand, "#000000", ["#ffffff"], 3),
+    iconDark: life ? "#ff7a2e" : untilContrast(brand, "#ffffff", ["#111111"], 3),
+    onBrand: readableOn(brand),
+  };
+}
+
 export function applyBrandingVars(b: Branding, target: HTMLElement = document.documentElement) {
   const brand = b.colors.primary;
-  // Modo claro: laranja escurecido para texto e botões legíveis sobre papel/branco (e texto branco no botão).
-  const light = untilContrast(brand, "#000000", ["#ffffff", "#f6f3ed"]);
-  // Modo escuro: a cor da marca como está, clareada só se faltar contraste sobre o carvão.
-  const dark = untilContrast(brand, "#ffffff", ["#171716", "#201f1e"]);
-  target.style.setProperty("--brand", brand);
-  target.style.setProperty("--primary-light", light);
-  target.style.setProperty("--primary-fg-light", readableOn(light));
-  target.style.setProperty("--primary-dark", dark);
-  target.style.setProperty("--primary-fg-dark", readableOn(dark));
-  target.style.setProperty("--surface", b.colors.brandSurface);
-  if (rgb(b.colors.brandSurface)) target.style.setProperty("--surface-2", mix(b.colors.brandSurface, "#ffffff", 0.06));
-  target.style.setProperty("--accent", b.colors.accent);
-  const fallback = (f: string) => (SERIF_FONTS.has(f) ? `Georgia, "Times New Roman", serif` : `system-ui, -apple-system, "Segoe UI", sans-serif`);
-  target.style.setProperty("--font-heading", `"${b.fonts.heading}", ${fallback(b.fonts.heading)}`);
-  target.style.setProperty("--font-body", `"${b.fonts.body}", ${fallback(b.fonts.body)}`);
+  const t = brandTones(brand);
+  const set = (k: string, v: string) => target.style.setProperty(k, v);
+  set("--brand", brand);
+  set("--accent", b.colors.accent);
+  set("--primary-light", t.textLight);
+  set("--primary-dark", t.textDark);
+  set("--btn", t.btn);
+  set("--btn-hover", t.btnHover);
+  set("--icon-light", t.iconLight);
+  set("--icon-dark", t.iconDark);
+  set("--on-brand", t.onBrand);
+  // Cor institucional: fundo do tema escuro; menu, cartões e campos clareiam a partir dela.
+  // Só cores bem escuras servem de fundo escuro; outras mantêm o preto do simulador.
+  const surface = rgb(b.colors.brandSurface) && luminance(b.colors.brandSurface) <= 0.03 ? b.colors.brandSurface : "#000000";
+  set("--bg-dark", surface);
+  set("--sidebar-dark", mix(surface, "#ffffff", 0.043));
+  set("--card-dark", mix(surface, "#ffffff", 0.067));
+  set("--card-top-dark", mix(surface, "#ffffff", 0.082));
+  set("--subtle-dark", mix(surface, "#ffffff", 0.094));
+  set("--font-heading", fontStack(b.fonts.heading));
+  set("--font-body", fontStack(b.fonts.body));
+}
+
+/** A Titillium Web entra depois da Klavika (fonte comercial da marca), como no simulador. */
+function fontStack(f: string) {
+  if (f === "Titillium Web") return `"Klavika", "Titillium Web", "Segoe UI", Roboto, Helvetica, Arial, sans-serif`;
+  return `"${f}", ${SERIF_FONTS.has(f) ? `Georgia, "Times New Roman", serif` : `system-ui, -apple-system, "Segoe UI", sans-serif`}`;
 }
 
 function loadFonts(b: Branding) {
   const families = [...new Set([b.fonts.heading, b.fonts.body])]
-    .map((f) => `family=${encodeURIComponent(f).replace(/%20/g, "+")}:wght@400;500;600;700;800`)
+    .map((f) => `family=${encodeURIComponent(f).replace(/%20/g, "+")}:${FONT_AXES[f] ?? "wght@300;400;500;600;700"}`)
     .join("&");
   const href = `https://fonts.googleapis.com/css2?${families}&display=swap`;
   let link = document.getElementById("lc-fonts") as HTMLLinkElement | null;

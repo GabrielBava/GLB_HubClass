@@ -1,5 +1,5 @@
 import { useBranding } from "../lib/branding";
-import { cx } from "./ui";
+import { cx, LifeTitle } from "./ui";
 import defaultLogoForLight from "../assets/brand/glb-logo-claro.png";
 import defaultLogoForDark from "../assets/brand/glb-logo-escuro.png";
 
@@ -8,7 +8,7 @@ const HEIGHTS = { sm: "h-7", md: "h-8", lg: "h-12", xl: "h-16" } as const;
 /**
  * Assinatura da plataforma: logotipo da organização (versão para fundo claro ou escuro, configurável
  * pelo administrador; padrão do Grupo Life Brasil) e o nome do produto (ex.: LIFE CLASS) como rótulo.
- * `onDark` indica um contêiner sempre escuro (menu lateral, telas de acesso); fora dele, segue o tema.
+ * `onDark` indica um contêiner sempre escuro; fora dele, segue o tema (claro ou escuro).
  */
 export function Brand({
   size = "md",
@@ -34,18 +34,17 @@ export function Brand({
   return (
     <span className={cx("inline-flex min-w-0", stacked ? cx("flex-col gap-3", align === "start" ? "items-start" : "items-center") : "items-center gap-3", className)}>
       <img src={src} alt={branding.organizationName} className={cx(HEIGHTS[size], "w-auto shrink-0 object-contain")} draggable={false} />
-      {product && (
-        <span
-          className={cx(
-            "whitespace-nowrap font-body font-bold uppercase leading-none",
-            dark ? "text-brand" : "text-primary",
-            stacked ? (size === "xl" ? "text-lg tracking-[0.32em]" : "text-sm tracking-[0.28em]") : "border-l pl-3 text-[11px] tracking-[0.18em]",
-            !stacked && (dark ? "border-white/20" : "border-border"),
-          )}
-        >
-          {branding.platformName}
-        </span>
-      )}
+      {product &&
+        (stacked ? (
+          // Nome do produto no Modelo Life: caixa alta fina com a palavra-chave em laranja (LIFE **CLASS**).
+          <span className={cx("life-title whitespace-nowrap tracking-[0.06em]", size === "xl" ? "text-[1.6rem]" : "text-xl")}>
+            <LifeTitle text={branding.platformName} />
+          </span>
+        ) : (
+          <span className="whitespace-nowrap border-l border-border pl-3 font-body text-[11px] font-semibold uppercase leading-none tracking-[0.16em] text-muted">
+            {branding.platformName}
+          </span>
+        ))}
     </span>
   );
 }

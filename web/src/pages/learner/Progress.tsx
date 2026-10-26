@@ -26,8 +26,8 @@ export function ProgressPage() {
     <div className="space-y-8">
       <PageHeader title="Minha evolução" description="Acompanhe separadamente o que foi estudado, avaliado, demonstrado e validado na prática." />
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <StatCard label="Conteúdos concluídos" value={data.totals.contentsCompleted} icon={BookOpenCheck} />
-        <StatCard label="Avaliações aprovadas" value={data.totals.assessmentsPassed} icon={ClipboardCheck} />
+        <StatCard highlight label="Conteúdos concluídos" value={data.totals.contentsCompleted} icon={BookOpenCheck} />
+        <StatCard highlight label="Avaliações aprovadas" value={data.totals.assessmentsPassed} icon={ClipboardCheck} />
         <StatCard label="Atividades práticas aprovadas" value={data.totals.practicalApproved} icon={Sparkles} />
         <StatCard label="Tempo ativo de estudo" value={formatMinutes(data.totals.activeMinutes) || "0 min"} hint="Apenas leitura com interação" icon={Clock} />
       </div>

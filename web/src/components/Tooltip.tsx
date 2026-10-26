@@ -79,7 +79,7 @@ export function TooltipLayer() {
   return (
     <div
       aria-hidden
-      className="pointer-events-none fixed z-[300] max-w-[220px] rounded-lg bg-[#171716] px-2.5 py-1.5 text-center text-xs font-medium leading-snug text-white shadow-lg"
+      className="pointer-events-none fixed z-[300] max-w-[220px] rounded-[10px] border border-white/10 bg-[#201e1e] px-2.5 py-1.5 text-center text-xs font-medium leading-snug text-[#f7f5f2] shadow-float"
       style={{ left, top: tip.y, transform: `translate(-50%, ${tip.below ? "0" : "-100%"})` }}
     >
       {tip.text}

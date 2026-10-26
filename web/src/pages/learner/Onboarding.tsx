@@ -183,7 +183,7 @@ export function OnboardingPage() {
           )}
           {step === 4 && (
             <div className="mx-auto max-w-xl py-6 text-center">
-              <span className="mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-primary/15 text-primary">
+              <span className="mx-auto grid h-16 w-16 place-items-center rounded-full border border-border-strong text-icon">
                 <Rocket className="h-8 w-8" aria-hidden />
               </span>
               <h1 className="mt-6 font-heading text-3xl font-bold">Tudo pronto!</h1>

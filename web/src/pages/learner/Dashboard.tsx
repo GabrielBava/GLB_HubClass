@@ -1,7 +1,7 @@
 import { Link } from "react-router";
 import { Award, BookOpen, CalendarClock, ClipboardList, Clock, MessageSquareQuote, PlayCircle, Sparkles, Target, Timer } from "lucide-react";
 import { DueBadge, StatusBadge } from "../../components/learning";
-import { Alert, Badge, Button, Card, CardHeader, EmptyState, ErrorState, PageLoader, Progress, ProgressRing, cx } from "../../components/ui";
+import { Alert, Badge, Button, Card, CardHeader, EmptyState, ErrorState, LifeTitle, PageLoader, Progress, ProgressRing, cx } from "../../components/ui";
 import { useAuth } from "../../lib/auth";
 import { LIBRARY_TYPE_LABEL, type LearnerTrackStatus, type LibraryType } from "../../../../shared/domain";
 import { formatDate, formatMinutes, greeting, relativeTime } from "../../lib/format";
@@ -75,11 +75,12 @@ export function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <header className="flex flex-col gap-1">
-        <p className="text-sm text-muted">{[data.user.jobTitle, data.user.department].filter(Boolean).join(" · ") || "Colaborador"}</p>
-        <h1 className="font-heading text-3xl font-medium sm:text-[34px]">
-          {greeting()}, {firstName}!
+      <header>
+        <p className="eyebrow mb-2">{[data.user.jobTitle, data.user.department].filter(Boolean).join(" · ") || "Colaborador"}</p>
+        <h1 className="life-title text-[28px] sm:text-[2.1rem]">
+          <LifeTitle text={`${greeting()}, ${firstName}!`} />
         </h1>
+        <span className="life-rule mt-3" aria-hidden />
       </header>
 
       {firstAccessPending && (
@@ -93,14 +94,16 @@ export function DashboardPage() {
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <Card className="relative overflow-hidden lg:col-span-2">
-          <div className="brand-backdrop dark absolute inset-0" aria-hidden />
-          <div className="dark relative flex h-full flex-col justify-between gap-6 p-6 pl-8 text-white sm:p-7 sm:pl-9">
+          <div className="relative flex h-full flex-col justify-between gap-6 p-[22px] sm:p-7">
             {data.continue ? (
               <>
                 <div>
                   <p className="eyebrow">Continuar de onde parei</p>
-                  <h2 className="mt-2 font-heading text-[28px] font-medium leading-tight">{data.continue.title}</h2>
-                  <p className="mt-1 text-sm text-white/65">
+                  <h2 className="life-title mt-2 text-[1.6rem] text-brand sm:text-[1.85rem]">
+                    <LifeTitle text={data.continue.title} />
+                  </h2>
+                  <span className="life-rule mt-3" aria-hidden />
+                  <p className="mt-3 text-sm text-muted">
                     {data.continue.trackTitle} · página {data.continue.lastPage} · {data.continue.percent}% lido
                   </p>
                 </div>
@@ -119,8 +122,11 @@ export function DashboardPage() {
               <>
                 <div>
                   <p className="eyebrow">Próxima atividade recomendada</p>
-                  <h2 className="mt-2 font-heading text-[28px] font-medium leading-tight">{data.next.title}</h2>
-                  <p className="mt-1 text-sm text-white/65">
+                  <h2 className="life-title mt-2 text-[1.6rem] text-brand sm:text-[1.85rem]">
+                    <LifeTitle text={data.next.title} />
+                  </h2>
+                  <span className="life-rule mt-3" aria-hidden />
+                  <p className="mt-3 text-sm text-muted">
                     {nextLabel[data.next.kind]} · {data.next.trackTitle}
                   </p>
                 </div>
@@ -133,8 +139,11 @@ export function DashboardPage() {
             ) : (
               <div>
                 <p className="eyebrow">Seu ambiente de aprendizado</p>
-                <h2 className="mt-2 font-heading text-[28px] font-medium leading-tight">Explore o catálogo de trilhas</h2>
-                <p className="mt-1 text-sm text-white/65">Quando você iniciar um conteúdo, ele aparecerá aqui para retomar.</p>
+                <h2 className="life-title mt-2 text-[1.6rem] text-brand sm:text-[1.85rem]">
+                  <LifeTitle text="Explore o catálogo de trilhas" />
+                </h2>
+                <span className="life-rule mt-3" aria-hidden />
+                <p className="mt-3 text-sm text-muted">Quando você iniciar um conteúdo, ele aparecerá aqui para retomar.</p>
                 <Link to="/trilhas" className="mt-5 inline-block">
                   <Button size="lg" glow icon={BookOpen}>
                     Ver trilhas
@@ -148,7 +157,7 @@ export function DashboardPage() {
         <Card className="flex items-center gap-5 p-6">
           <ProgressRing value={data.summary.overallPercent} size={104} label={`Evolução geral: ${data.summary.overallPercent}%`} />
           <div className="space-y-1.5 text-sm">
-            <p className="font-heading text-base font-semibold">Evolução geral</p>
+            <p className="font-heading text-[1.05rem] font-semibold">Evolução geral</p>
             <p className="text-muted">
               <strong className="text-fg">{data.summary.inProgress}</strong> em andamento · <strong className="text-fg">{data.summary.completed}</strong> concluídas
             </p>
@@ -167,11 +176,11 @@ export function DashboardPage() {
       {data.next && data.continue && (
         <Card className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
-            <span className="grid h-10 w-10 place-items-center rounded-xl bg-primary/12 text-primary">
-              <Sparkles className="h-5 w-5" aria-hidden />
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-border-strong text-icon">
+              <Sparkles className="h-5 w-5" strokeWidth={1.7} aria-hidden />
             </span>
             <div>
-              <p className="text-xs font-medium uppercase tracking-wide text-muted">Próxima atividade recomendada</p>
+              <p className="eyebrow">Próxima atividade recomendada</p>
               <p className="font-medium">
                 {data.next.title} <span className="text-muted">· {nextLabel[data.next.kind]} em {data.next.trackTitle}</span>
               </p>
@@ -271,7 +280,7 @@ export function DashboardPage() {
               <CardHeader title="Feedback do líder" icon={MessageSquareQuote} />
               <ul className="space-y-3 p-5 pt-3">
                 {data.feedback.slice(0, 3).map((f) => (
-                  <li key={f.id} className="rounded-xl bg-subtle p-3 text-sm">
+                  <li key={f.id} className="rounded-[14px] bg-subtle p-3 text-sm">
                     <p>{f.body}</p>
                     <p className="mt-1 text-xs text-muted">
                       {f.author ?? "Líder"} · {relativeTime(f.createdAt)}

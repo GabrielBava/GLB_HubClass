@@ -119,7 +119,7 @@ const catalog: { code: string; name: string; icon: string; color: string; descri
     code: "A",
     name: "Institucional — Grupo Life Brasil",
     icon: "Landmark",
-    color: "#F36B22",
+    color: "#F05A00",
     description: "Cultura, estrutura, processos, ferramentas, conduta e segurança da informação.",
     tracks: [
       "Boas-vindas e onboarding",
@@ -138,7 +138,7 @@ const catalog: { code: string; name: string; icon: string; color: string; descri
     code: "B",
     name: "Planejamento Financeiro",
     icon: "LineChart",
-    color: "#252522",
+    color: "#201E1E",
     description: "Da qualificação ao plano financeiro e ao relacionamento de longo prazo.",
     tracks: [
       "Formação de Planejador Financeiro",
@@ -157,7 +157,7 @@ const catalog: { code: string; name: string; icon: string; color: string; descri
     code: "C",
     name: "Consórcios",
     icon: "Building2",
-    color: "#C83C35",
+    color: "#C8203A",
     description: "Conhecimento técnico e comercial para recomendar consórcios com segurança.",
     tracks: [
       "Formação de Especialista de Consórcios",
@@ -178,7 +178,7 @@ const catalog: { code: string; name: string; icon: string; color: string; descri
     code: "D",
     name: "Seguros e Proteção",
     icon: "ShieldCheck",
-    color: "#B44F19",
+    color: "#B84300",
     description: "Análise de necessidades, produtos de proteção e pós-venda.",
     tracks: [
       "Formação de Especialista de Seguros",
@@ -197,7 +197,7 @@ const catalog: { code: string; name: string; icon: string; color: string; descri
     code: "E",
     name: "Investimentos",
     icon: "TrendingUp",
-    color: "#3A3935",
+    color: "#2B2927",
     description: "Mercado financeiro, produtos, suitability e responsabilidade profissional.",
     tracks: [
       "Formação de Assessor de Investimentos",
@@ -215,7 +215,7 @@ const catalog: { code: string; name: string; icon: string; color: string; descri
     code: "F",
     name: "Academia Comercial",
     icon: "Target",
-    color: "#E0601C",
+    color: "#FF5A24",
     description: "Prospecção, discovery, negociação, CRM e fidelização.",
     tracks: [
       "Rampagem Comercial — 7 dias",
@@ -238,7 +238,7 @@ const catalog: { code: string; name: string; icon: string; color: string; descri
     code: "G",
     name: "Liderança e Gestão",
     icon: "Users",
-    color: "#8A3A12",
+    color: "#EE3F31",
     description: "Gestão de pessoas, indicadores e desenvolvimento de equipes.",
     tracks: [
       "Formação de Líderes",
@@ -254,7 +254,7 @@ const catalog: { code: string; name: string; icon: string; color: string; descri
     code: "H",
     name: "Biblioteca e Desenvolvimento",
     icon: "Library",
-    color: "#77766F",
+    color: "#6E6964",
     description: "Leituras, artigos, podcasts e materiais de desenvolvimento pessoal e profissional.",
     tracks: [],
   },
@@ -567,13 +567,13 @@ await addActivity(ramp, mRamp.id, "Registre a primeira atividade comercial no CR
 const library = await db
   .insert(libraryItems)
   .values([
-    { title: "A Psicologia Financeira", author: "Morgan Housel", category: "Finanças pessoais", theme: "Comportamento e dinheiro", type: "book", license: "external_only", level: "basico", estimatedMinutes: 360, description: "Indicação de leitura: como emoções e hábitos influenciam decisões financeiras. Consulte a obra em livrarias ou bibliotecas.", coverColor: "#252522", sortOrder: 2 },
-    { title: "Rápido e Devagar", author: "Daniel Kahneman", category: "Comportamento", theme: "Tomada de decisão", type: "book", license: "external_only", level: "intermediario", estimatedMinutes: 720, description: "Indicação de leitura sobre os dois sistemas de pensamento e vieses que afetam escolhas — útil para conversas com clientes.", coverColor: "#3A3935", sortOrder: 3 },
-    { title: "Alcançando Excelência em Vendas: SPIN Selling", author: "Neil Rackham", category: "Vendas", theme: "Venda consultiva", type: "book", license: "external_only", level: "intermediario", estimatedMinutes: 420, description: "Indicação de leitura sobre perguntas de Situação, Problema, Implicação e Necessidade de solução.", coverColor: "#B44F19", sortOrder: 4 },
-    { title: "O Investidor Inteligente", author: "Benjamin Graham", category: "Investimentos", theme: "Investimento em valor", type: "book", license: "external_only", level: "avancado", estimatedMinutes: 900, description: "Indicação clássica sobre disciplina e margem de segurança em investimentos.", coverColor: "#77766F", sortOrder: 5 },
-    { title: "Checklist de discovery", author: "Academia Comercial", category: "Vendas", theme: "Discovery", type: "article", license: "own", level: "basico", estimatedMinutes: 8, description: "Material interno (fictício) com perguntas de discovery para a primeira conversa. Disponível para download.", coverColor: "#171716", sortOrder: 0 },
-    { title: "Guia de boas-vindas", author: "Grupo Life Brasil", category: "Institucional", theme: "Integração", type: "publication", license: "own", level: "basico", estimatedMinutes: 10, description: "Publicação interna (fictícia) para os primeiros dias na empresa. Disponível para download.", coverColor: "#171716", sortOrder: 1 },
-    { title: "Podcast: rotina do planejador", author: "Grupo Life Brasil", category: "Desenvolvimento", theme: "Rotina profissional", type: "podcast", license: "own", level: "basico", estimatedMinutes: 25, description: "Episódio interno (fictício) sobre organização da agenda e acompanhamento de clientes.", coverColor: "#C83C35", sortOrder: 6 },
+    { title: "A Psicologia Financeira", author: "Morgan Housel", category: "Finanças pessoais", theme: "Comportamento e dinheiro", type: "book", license: "external_only", level: "basico", estimatedMinutes: 360, description: "Indicação de leitura: como emoções e hábitos influenciam decisões financeiras. Consulte a obra em livrarias ou bibliotecas.", coverColor: "#201E1E", sortOrder: 2 },
+    { title: "Rápido e Devagar", author: "Daniel Kahneman", category: "Comportamento", theme: "Tomada de decisão", type: "book", license: "external_only", level: "intermediario", estimatedMinutes: 720, description: "Indicação de leitura sobre os dois sistemas de pensamento e vieses que afetam escolhas — útil para conversas com clientes.", coverColor: "#2B2927", sortOrder: 3 },
+    { title: "Alcançando Excelência em Vendas: SPIN Selling", author: "Neil Rackham", category: "Vendas", theme: "Venda consultiva", type: "book", license: "external_only", level: "intermediario", estimatedMinutes: 420, description: "Indicação de leitura sobre perguntas de Situação, Problema, Implicação e Necessidade de solução.", coverColor: "#B84300", sortOrder: 4 },
+    { title: "O Investidor Inteligente", author: "Benjamin Graham", category: "Investimentos", theme: "Investimento em valor", type: "book", license: "external_only", level: "avancado", estimatedMinutes: 900, description: "Indicação clássica sobre disciplina e margem de segurança em investimentos.", coverColor: "#6E6964", sortOrder: 5 },
+    { title: "Checklist de discovery", author: "Academia Comercial", category: "Vendas", theme: "Discovery", type: "article", license: "own", level: "basico", estimatedMinutes: 8, description: "Material interno (fictício) com perguntas de discovery para a primeira conversa. Disponível para download.", coverColor: "#111111", sortOrder: 0 },
+    { title: "Guia de boas-vindas", author: "Grupo Life Brasil", category: "Institucional", theme: "Integração", type: "publication", license: "own", level: "basico", estimatedMinutes: 10, description: "Publicação interna (fictícia) para os primeiros dias na empresa. Disponível para download.", coverColor: "#111111", sortOrder: 1 },
+    { title: "Podcast: rotina do planejador", author: "Grupo Life Brasil", category: "Desenvolvimento", theme: "Rotina profissional", type: "podcast", license: "own", level: "basico", estimatedMinutes: 25, description: "Episódio interno (fictício) sobre organização da agenda e acompanhamento de clientes.", coverColor: "#C8203A", sortOrder: 6 },
   ])
   .returning();
 for (const [title, subtitle, doc] of [

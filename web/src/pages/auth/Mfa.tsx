@@ -2,7 +2,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { Navigate, useNavigate, useSearchParams } from "react-router";
 import { Copy, Download, KeyRound, ShieldCheck, Smartphone } from "lucide-react";
 import { AuthLayout, AuthTitle } from "../../components/AuthLayout";
-import { Button, Checkbox, Field, Input, Spinner } from "../../components/ui";
+import { Button, Checkbox, Field, Input, LifeTitle, Spinner } from "../../components/ui";
 import { api, errorMessage, safeNext } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
 import { useToast } from "../../components/toast";
@@ -61,7 +61,7 @@ export function MfaVerifyPage() {
             placeholder={useRecovery ? "xxxx-xxxx" : "000000"}
             value={code}
             onChange={(e) => setCode(useRecovery ? e.target.value : e.target.value.replace(/\D/g, "").slice(0, 6))}
-            className="h-14 bg-white/[0.04] border-white/10 text-center text-2xl tracking-[0.4em]"
+            className="h-14 text-center text-2xl tracking-[0.4em]"
           />
         </Field>
         <Button type="submit" size="lg" glow className="w-full" loading={loading} disabled={useRecovery ? code.length < 8 : code.length !== 6}>
@@ -72,7 +72,7 @@ export function MfaVerifyPage() {
         <button className="text-primary hover:underline" onClick={() => { setUseRecovery((v) => !v); setCode(""); setError(null); }}>
           {useRecovery ? "Usar o código do aplicativo" : "Perdi o acesso ao aplicativo — usar código de recuperação"}
         </button>
-        <button className="text-white/50 hover:text-white" onClick={async () => { await logout(); navigate("/entrar", { replace: true }); }}>
+        <button className="text-muted hover:text-fg" onClick={async () => { await logout(); navigate("/entrar", { replace: true }); }}>
           Entrar com outra conta
         </button>
       </div>
@@ -106,7 +106,7 @@ export function MfaSetupPage() {
     return (
       <AuthLayout>
         <AuthTitle title="Guarde seus códigos de recuperação" subtitle="Cada código funciona uma única vez, caso você perca o acesso ao aplicativo autenticador." />
-        <ul className="grid grid-cols-2 gap-2 rounded-2xl border border-white/10 bg-white/[0.04] p-4 font-mono text-sm text-white">
+        <ul className="grid grid-cols-2 gap-2 rounded-[14px] border border-border bg-subtle p-4 font-mono text-sm text-fg">
           {codes.map((c) => <li key={c}>{c}</li>)}
         </ul>
         <div className="mt-3 flex gap-2">
@@ -143,15 +143,17 @@ export function MfaSetupPage() {
   return (
     <AuthLayout
       aside={
-        <div className="space-y-5 text-white/75">
+        <div className="space-y-5 text-muted">
           <ShieldCheck className="h-10 w-10 text-primary" aria-hidden />
-          <h2 className="font-heading text-2xl font-bold text-white">Ative a verificação em duas etapas</h2>
+          <h2 className="life-title text-[1.6rem]">
+            <LifeTitle text="Ative a verificação em duas etapas" />
+          </h2>
           <ol className="space-y-3 text-[15px] leading-relaxed">
             <li className="flex gap-3"><Smartphone className="mt-0.5 h-5 w-5 shrink-0 text-primary" aria-hidden />1. Instale um aplicativo autenticador (Google Authenticator, Microsoft Authenticator, 1Password ou similar).</li>
             <li className="flex gap-3"><KeyRound className="mt-0.5 h-5 w-5 shrink-0 text-primary" aria-hidden />2. Escaneie o QR code ao lado ou digite a chave manualmente.</li>
             <li className="flex gap-3"><ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-primary" aria-hidden />3. Informe o código de 6 dígitos exibido no aplicativo.</li>
           </ol>
-          <p className="text-sm text-white/50">Obrigatório para administradores e líderes: protege as informações das equipes e os conteúdos da empresa.</p>
+          <p className="text-sm text-muted">Obrigatório para administradores e líderes: protege as informações das equipes e os conteúdos da empresa.</p>
         </div>
       }
     >
@@ -160,13 +162,13 @@ export function MfaSetupPage() {
         error ? <p role="alert" className="text-danger">{error}</p> : <Spinner label="Gerando chave..." />
       ) : (
         <form onSubmit={submit} className="space-y-5">
-          <div className="flex flex-col items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.04] p-5">
+          <div className="flex flex-col items-center gap-3 rounded-[14px] border border-border bg-subtle p-5">
             <img src={setup.qrDataUrl} alt="QR code para configurar o aplicativo autenticador" className="h-48 w-48 rounded-xl bg-white p-2" />
-            <p className="text-center text-xs text-white/55">Chave para digitação manual:</p>
-            <code className="select-all break-all rounded-lg bg-black/40 px-3 py-1.5 text-center text-sm text-white">{setup.secret}</code>
+            <p className="text-center text-xs text-muted">Chave para digitação manual:</p>
+            <code className="select-all break-all rounded-lg bg-pill-hover px-3 py-1.5 text-center text-sm text-fg">{setup.secret}</code>
           </div>
           <Field label="Código de 6 dígitos" htmlFor="code" error={error}>
-            <Input id="code" inputMode="numeric" autoComplete="one-time-code" placeholder="000000" value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))} className="h-14 bg-white/[0.04] border-white/10 text-center text-2xl tracking-[0.4em]" />
+            <Input id="code" inputMode="numeric" autoComplete="one-time-code" placeholder="000000" value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))} className="h-14 text-center text-2xl tracking-[0.4em]" />
           </Field>
           <Button type="submit" size="lg" glow className="w-full" loading={loading} disabled={code.length !== 6}>Ativar e continuar</Button>
         </form>

@@ -48,8 +48,8 @@ export function AdminHomePage() {
         </Alert>
       )}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
-        <StatCard label="Usuários ativos" value={data.users.active} hint={`${data.users.invited} convite(s) pendente(s)`} icon={Users} />
-        <StatCard label="Trilhas publicadas" value={data.tracks.published} hint={`${data.tracks.draft} rascunho(s) · ${data.tracks.review} em revisão`} icon={BookOpen} />
+        <StatCard highlight label="Usuários ativos" value={data.users.active} hint={`${data.users.invited} convite(s) pendente(s)`} icon={Users} />
+        <StatCard highlight label="Trilhas publicadas" value={data.tracks.published} hint={`${data.tracks.draft} rascunho(s) · ${data.tracks.review} em revisão`} icon={BookOpen} />
         <StatCard label="Sessões ativas" value={data.activeSessions} icon={Monitor} tone="info" />
         <StatCard label="Validações pendentes" value={data.pendingValidations} icon={ShieldCheck} tone="warning" />
         <StatCard label="Solicitações abertas" value={data.openRequests} icon={Inbox} tone="warning" />

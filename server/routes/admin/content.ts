@@ -107,7 +107,7 @@ export async function adminContentRoutes(app: FastifyInstance) {
     code: z.string().trim().max(10).nullable().optional(),
     description: z.string().trim().max(2000).default(""),
     icon: z.string().trim().max(40).default("BookOpen"),
-    color: z.string().regex(/^#[0-9a-fA-F]{6}$/).default("#F36B22"),
+    color: z.string().regex(/^#[0-9a-fA-F]{6}$/).default("#F05A00"),
     isVisible: z.boolean().default(true),
     settings: z
       .object({

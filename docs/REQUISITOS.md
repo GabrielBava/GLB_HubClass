@@ -87,7 +87,7 @@ Atualizado com o código deste repositório. Três listas, conforme pedido na es
   - desenvolvimento: competências demonstradas, aplicações validadas, dias até concluir e até a primeira execução supervisionada, por cargo e por área;
   - exportações em CSV.
 - Auditoria com filtros e CSV, sessões ativas, política de sessão e senha, versões dos termos, retenção (LGPD) e status do ambiente.
-- **Identidade visual do Grupo Life Brasil** aplicada como padrão (carvão, papel e laranja, títulos em Newsreader e interface em DM Sans, logotipo oficial) e configurável sem alterar código: nome, frase, cores com verificação de contraste, fontes, logotipo para fundo claro e para fundo escuro, e modo claro ou escuro (claro como padrão, cada pessoa pode trocar).
+- **Identidade visual no "Modelo Life" do simulador de consórcio** aplicada como padrão (laranja Life sobre preto ou branco, Klavika/Titillium Web, títulos em caixa alta com a palavra-chave em laranja, cartões arredondados, indicadores em destaque com degradê, botões em pílula, logotipo oficial) e configurável sem alterar código: nome, frase, cores com verificação de contraste, fontes, logotipo para fundo claro e para fundo escuro, e modo claro, escuro ou igual ao sistema (padrão), que cada pessoa pode trocar no topo da tela.
 - Botões só com ícone mostram o nome da função ao passar o mouse ou com foco pelo teclado.
 
 ### Dados e qualidade

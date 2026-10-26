@@ -5,7 +5,7 @@ import { FONT_CHOICES, type AllSettings } from "../../../../shared/settings";
 import { Brand } from "../../components/Brand";
 import { Alert, Button, Card, CardHeader, Checkbox, ErrorState, Field, Input, PageHeader, PageLoader, Select, Switch, Tabs, Textarea, cx } from "../../components/ui";
 import { api } from "../../lib/api";
-import { readableOn } from "../../lib/branding";
+import { brandTones, readableOn } from "../../lib/branding";
 import { useAction, useApi, useDocumentTitle } from "../../lib/hooks";
 import { NumberFields, SaveBar, useSettingsGroup, type SettingsResponse } from "./Security";
 
@@ -61,7 +61,7 @@ function ColorField({ id, label, hint, value, onChange }: { id: string; label: s
   return (
     <Field label={label} htmlFor={id} hint={hint}>
       <div className="flex gap-2">
-        <input type="color" aria-label={`${label} (seletor)`} value={value} onChange={(e) => onChange(e.target.value.toUpperCase())} className="h-11 w-14 cursor-pointer rounded-xl border border-border bg-input p-1" />
+        <input type="color" aria-label={`${label} (seletor)`} value={value} onChange={(e) => onChange(e.target.value.toUpperCase())} className="h-10 w-14 cursor-pointer rounded-[10px] border border-border bg-input p-1" />
         <Input id={id} value={value} maxLength={7} onChange={(e) => onChange(e.target.value)} className="font-mono uppercase" />
       </div>
     </Field>
@@ -85,6 +85,7 @@ function BrandingTab({ data }: { data: SettingsResponse }) {
   const colorsOk = validHex(value.colors.primary) && validHex(value.colors.brandSurface) && validHex(value.colors.accent);
   const onSurface = colorsOk ? contrast(value.colors.primary, value.colors.brandSurface) : 0;
   const onWhite = colorsOk ? contrast(value.colors.primary, "#FFFFFF") : 0;
+  const tones = colorsOk ? brandTones(value.colors.primary) : null;
 
   const { logoFileId: _logo, logoDarkFileId: _logoDark, ...payload } = value;
   void _logo;
@@ -107,9 +108,9 @@ function BrandingTab({ data }: { data: SettingsResponse }) {
           <Field label="Mensagem da tela de login" htmlFor="b-login" className="sm:col-span-2">
             <Input id="b-login" value={value.loginMessage} onChange={(e) => setValue({ ...value, loginMessage: e.target.value })} />
           </Field>
-          <ColorField id="b-primary" label="Cor principal" hint="Botões, links e progresso." value={value.colors.primary} onChange={(v) => setValue({ ...value, colors: { ...value.colors, primary: v } })} />
-          <ColorField id="b-accent" label="Cor secundária" hint="Detalhes e gradientes." value={value.colors.accent} onChange={(v) => setValue({ ...value, colors: { ...value.colors, accent: v } })} />
-          <ColorField id="b-surface" label="Cor institucional" hint="Menu lateral e painel das telas de acesso." value={value.colors.brandSurface} onChange={(v) => setValue({ ...value, colors: { ...value.colors, brandSurface: v } })} />
+          <ColorField id="b-primary" label="Cor da marca" hint="Destaques, títulos, gráficos e botões. Os tons de texto e de botão são ajustados para manter o contraste." value={value.colors.primary} onChange={(v) => setValue({ ...value, colors: { ...value.colors, primary: v } })} />
+          <ColorField id="b-accent" label="Cor do degradê" hint="Início do degradê dos indicadores em destaque." value={value.colors.accent} onChange={(v) => setValue({ ...value, colors: { ...value.colors, accent: v } })} />
+          <ColorField id="b-surface" label="Fundo do tema escuro" hint="Preto no padrão do simulador; menu e cartões clareiam a partir dela. Use uma cor bem escura." value={value.colors.brandSurface} onChange={(v) => setValue({ ...value, colors: { ...value.colors, brandSurface: v } })} />
           <Field label="Modo padrão" htmlFor="b-mode" hint="Cada pessoa pode trocar no próprio menu.">
             <Select id="b-mode" value={value.defaultMode} onChange={(e) => setValue({ ...value, defaultMode: e.target.value as AllSettings["branding"]["defaultMode"] })} options={[{ value: "light", label: "Claro" }, { value: "dark", label: "Escuro" }, { value: "system", label: "Seguir o sistema" }]} />
           </Field>
@@ -130,19 +131,28 @@ function BrandingTab({ data }: { data: SettingsResponse }) {
 
       <div className="space-y-5">
         <Card className="p-5">
-          <CardHeader flush title="Prévia" description="Como o painel institucional e os botões ficarão." />
-          <div className="mt-4 overflow-hidden rounded-2xl p-5" style={{ background: colorsOk ? `radial-gradient(400px 220px at 0% 0%, ${value.colors.primary}44, transparent 70%), ${value.colors.brandSurface}` : undefined }}>
-            <p className="text-lg font-semibold text-white" style={{ fontFamily: `"${value.fonts.heading}", system-ui` }}>
-              {value.platformName}
+          <CardHeader flush title="Prévia" description="Cartão, indicador em destaque e botão no tema escuro." />
+          {colorsOk && (
+            <div className="dark mt-4 overflow-hidden rounded-[22px] border border-border p-5 text-fg" style={{ background: `radial-gradient(400px 220px at 0% 0%, ${value.colors.primary}33, transparent 70%), ${value.colors.brandSurface}` }}>
+              <p className="eyebrow">Visão geral</p>
+              <p className="life-title mt-1 text-2xl" style={{ fontFamily: `"${value.fonts.heading}", system-ui` }}>
+                {value.platformName.split(" ").slice(0, -1).join(" ")}{" "}
+                <span className="font-bold" style={{ color: value.colors.primary }}>{value.platformName.split(" ").slice(-1)[0]}</span>
+              </p>
+              <div className="mt-4 rounded-[18px] p-4" style={{ background: `linear-gradient(135deg, ${value.colors.accent} 0%, ${value.colors.primary} 100%)`, color: readableOn(value.colors.primary) }}>
+                <p className="text-xs">Conclusão</p>
+                <p className="num text-2xl">86%</p>
+              </div>
+              <button type="button" tabIndex={-1} className="mt-4 rounded-full px-5 py-2 text-sm font-medium text-white" style={{ background: tones!.btn, fontFamily: `"${value.fonts.body}", system-ui` }}>
+                Entrar
+              </button>
+            </div>
+          )}
+          {colorsOk && (
+            <p className="mt-2 text-xs text-muted">
+              Texto branco no botão: {contrast(tones!.btn, "#FFFFFF").toFixed(1)}:1 · laranja sobre o fundo escuro: {onSurface.toFixed(1)}:1
             </p>
-            <p className="mt-1 text-sm text-white/70" style={{ fontFamily: `"${value.fonts.body}", system-ui` }}>
-              {value.tagline}
-            </p>
-            <button type="button" tabIndex={-1} className="mt-4 rounded-full px-5 py-2 text-sm font-semibold" style={{ background: value.colors.primary, color: colorsOk ? readableOn(value.colors.primary) : undefined }}>
-              Entrar
-            </button>
-          </div>
-          {colorsOk && <p className="mt-2 text-xs text-muted">Contraste da cor principal sobre a cor institucional: {onSurface.toFixed(1)}:1</p>}
+          )}
         </Card>
         <Card className="p-5">
           <CardHeader flush title="Logotipo" description="PNG, JPEG ou WebP de até 1 MB, com fundo transparente. Sem envio, vale o logotipo padrão do Grupo Life Brasil." />
@@ -177,7 +187,7 @@ function LogoSlot({ variant, label, custom, uploading, onUpload, onReset }: { va
   return (
     <div>
       <p className="mb-1.5 text-sm font-medium">{label}</p>
-      <div className={cx("flex min-h-[76px] items-center justify-center rounded-xl border p-4", variant === "dark" ? "border-transparent bg-surface" : "light-scope border-border bg-[#f6f3ed]")}>
+      <div className={cx("flex min-h-[76px] items-center justify-center rounded-[14px] border p-4", variant === "dark" ? "dark border-transparent bg-[var(--bg-dark)]" : "light-scope border-border bg-[#f7f5f2]")}>
         {/* Prévia fixa de cada versão, independente do tema atual. */}
         <Brand variant={variant} />
       </div>

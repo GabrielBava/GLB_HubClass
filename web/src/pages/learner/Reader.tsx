@@ -569,7 +569,7 @@ export function ReaderPage() {
               {textMode && <div className="watermark-overlay absolute inset-0" style={watermarkStyle(watermark)} aria-hidden />}
             </div>
             {quote && (
-              <div className="no-print fixed bottom-20 left-1/2 z-30 flex -translate-x-1/2 items-center gap-2 rounded-2xl border border-border bg-card px-3 py-2 shadow-xl">
+              <div className="no-print fixed bottom-20 left-1/2 z-30 flex -translate-x-1/2 items-center gap-2 rounded-full border border-border bg-card px-3 py-2 shadow-xl">
                 <span className="max-w-[200px] truncate text-xs text-muted">“{quote}”</span>
                 <Button size="sm" variant="outline" icon={Highlighter} loading={addHighlight.isPending} onClick={() => addHighlight.mutate(quote)}>
                   Destacar

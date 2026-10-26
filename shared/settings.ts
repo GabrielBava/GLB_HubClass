@@ -112,17 +112,18 @@ export const DEFAULT_SETTINGS: AllSettings = {
     loginMessage: "Acesse seu ambiente de aprendizado e desenvolvimento.",
     logoFileId: null,
     logoDarkFileId: null,
-    // Identidade do Grupo Life Brasil (guia de identidade visual, edição 02): laranja, carvão e âmbar.
+    // "Modelo Life" do simulador de consórcio: laranja Life, preto ou branco, Klavika/Titillium Web.
     colors: {
-      primary: "#F36B22",
-      brandSurface: "#171716",
-      accent: "#FF9C42",
+      primary: "#F05A00",
+      brandSurface: "#000000",
+      accent: "#F7A23A",
     },
     fonts: {
-      heading: "Newsreader",
-      body: "DM Sans",
+      heading: "Titillium Web",
+      body: "Titillium Web",
     },
-    defaultMode: "light",
+    // Como no simulador: segue o tema do sistema de cada pessoa (claro ou escuro), que pode trocar no menu.
+    defaultMode: "system",
   },
   catalog: {
     lockedVisibility: "locked",
@@ -176,6 +177,7 @@ export const DEFAULT_SETTINGS: AllSettings = {
 
 /** Fontes disponíveis no seletor de identidade visual (carregadas do Google Fonts). */
 export const FONT_CHOICES = [
+  "Titillium Web",
   "DM Sans",
   "Newsreader",
   "Inter",

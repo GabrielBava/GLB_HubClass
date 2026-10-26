@@ -120,8 +120,8 @@ export function LeaderDashboardPage() {
         }
       />
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-7">
-        <StatCard label="Colaboradores" value={k.members} icon={Users} />
-        <StatCard label="Conclusão média" value={`${k.avgCompletion}%`} icon={Target} />
+        <StatCard highlight label="Colaboradores" value={k.members} icon={Users} />
+        <StatCard highlight label="Conclusão média" value={`${k.avgCompletion}%`} icon={Target} />
         <StatCard label="Obrigatórias pendentes" value={k.mandatoryPending} icon={ClipboardCheck} tone="warning" />
         <StatCard label="Prazos vencidos" value={k.overdue} icon={CalendarX} tone="danger" />
         <StatCard label="Validações pendentes" value={k.pendingValidations} icon={ShieldCheck} tone="info" />

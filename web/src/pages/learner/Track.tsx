@@ -282,7 +282,7 @@ export function TrackPage() {
         </Link>
         <Card className="p-6 sm:p-8">
           <div className="flex items-center gap-3">
-            <span className="grid h-11 w-11 place-items-center rounded-xl bg-subtle text-muted">
+            <span className="grid h-11 w-11 place-items-center rounded-full border border-border-strong text-muted">
               <Lock className="h-5 w-5" aria-hidden />
             </span>
             <div>
@@ -512,7 +512,7 @@ export function ModulePage() {
             <li key={step.key}>
               <Card>
                 <div className="flex items-start gap-4 px-5 pt-5">
-                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary/12 font-heading font-bold text-primary">{i + 1}</span>
+                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-border-strong font-heading font-semibold text-primary">{i + 1}</span>
                   <div>
                     <h2 className="flex items-center gap-2 font-heading text-lg font-semibold">
                       <step.icon className="h-4 w-4 text-primary" aria-hidden /> {step.title}

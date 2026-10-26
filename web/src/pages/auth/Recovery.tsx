@@ -3,11 +3,11 @@ import { Link, useNavigate, useParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { CheckCircle2, MailCheck } from "lucide-react";
 import { AuthLayout, AuthTitle } from "../../components/AuthLayout";
-import { Button, Field, Input, PasswordInput, Spinner } from "../../components/ui";
+import { Button, Field, Input, LifeTitle, PasswordInput, Spinner } from "../../components/ui";
 import { api, errorMessage } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
 
-const dark = "h-12 bg-white/[0.04] border-white/10";
+const authField = "h-12";
 
 export function passwordHint(min: number) {
   return `Mínimo de ${min} caracteres, com letras e números. Não use nomes, datas ou senhas já utilizadas.`;
@@ -36,7 +36,7 @@ export function ForgotPasswordPage() {
       <AuthTitle title="Recuperar acesso" subtitle="Informe o e-mail corporativo cadastrado. Enviaremos um link seguro, válido por tempo limitado, para criar uma nova senha." />
       {sent ? (
         <div className="space-y-6">
-          <p className="flex gap-3 rounded-2xl border border-primary/30 bg-primary/10 p-4 text-sm text-white" role="status">
+          <p className="flex gap-3 rounded-[14px] border border-brand/40 bg-active p-4 text-sm text-fg" role="status">
             <MailCheck className="h-5 w-5 shrink-0 text-primary" aria-hidden />
             {sent}
           </p>
@@ -45,10 +45,10 @@ export function ForgotPasswordPage() {
       ) : (
         <form onSubmit={submit} className="space-y-5">
           <Field label="E-mail" htmlFor="email" error={error}>
-            <Input id="email" type="email" autoComplete="email" placeholder="seu@email.com.br" value={email} onChange={(e) => setEmail(e.target.value)} className={dark} />
+            <Input id="email" type="email" autoComplete="email" placeholder="seu@email.com.br" value={email} onChange={(e) => setEmail(e.target.value)} className={authField} />
           </Field>
           <Button type="submit" size="lg" glow className="w-full" loading={loading} disabled={!email}>Enviar link de recuperação</Button>
-          <Link to="/entrar" className="block text-center text-sm text-white/60 hover:text-white">Voltar para o login</Link>
+          <Link to="/entrar" className="block text-center text-sm text-muted hover:text-fg">Voltar para o login</Link>
         </form>
       )}
     </AuthLayout>
@@ -78,10 +78,10 @@ function PasswordForm({ min, onSubmit, submitLabel, fields }: { min: number; onS
     <form onSubmit={submit} className="space-y-5">
       {fields}
       <Field label="Nova senha" htmlFor="pwd" hint={passwordHint(min)} error={error}>
-        <PasswordInput id="pwd" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} className={dark} />
+        <PasswordInput id="pwd" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} className={authField} />
       </Field>
       <Field label="Confirme a senha" htmlFor="pwd2" error={mismatch ? "As senhas não coincidem." : null}>
-        <PasswordInput id="pwd2" autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} className={dark} invalid={mismatch} />
+        <PasswordInput id="pwd2" autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} className={authField} invalid={mismatch} />
       </Field>
       <Button type="submit" size="lg" glow className="w-full" loading={loading} disabled={password.length < min || password !== confirm}>
         {submitLabel}
@@ -105,14 +105,14 @@ export function ResetPasswordPage() {
         <Spinner />
       ) : done ? (
         <div className="space-y-6">
-          <p className="flex gap-3 rounded-2xl border border-primary/30 bg-primary/10 p-4 text-sm text-white" role="status">
+          <p className="flex gap-3 rounded-[14px] border border-brand/40 bg-active p-4 text-sm text-fg" role="status">
             <CheckCircle2 className="h-5 w-5 shrink-0 text-primary" aria-hidden />
             Senha alterada. Por segurança, todas as sessões abertas foram encerradas.
           </p>
           <Link to="/entrar" className="block text-center font-medium text-primary hover:underline">Entrar com a nova senha</Link>
         </div>
       ) : !data?.valid ? (
-        <div className="space-y-4 text-white/70">
+        <div className="space-y-4 text-muted">
           <p>Este link é inválido, já foi usado ou expirou.</p>
           <Link to="/recuperar-acesso" className="font-medium text-primary hover:underline">Solicitar um novo link</Link>
         </div>
@@ -141,12 +141,15 @@ const steps = [
 export function OnboardingStepsAside({ title }: { title: string }) {
   return (
     <div className="space-y-6">
-      <h2 className="font-heading text-2xl font-bold text-white sm:text-3xl">{title}</h2>
-      <p className="text-lg text-white/70">Seja bem-vindo(a)! Siga os passos abaixo para ativar seu acesso:</p>
-      <ol className="space-y-4 text-[15px] leading-relaxed text-white/75">
+      <h2 className="life-title text-[1.6rem] sm:text-[1.85rem]">
+        <LifeTitle text={title} />
+      </h2>
+      <span className="life-rule" aria-hidden />
+      <p className="text-lg text-muted">Seja bem-vindo(a)! Siga os passos abaixo para ativar seu acesso:</p>
+      <ol className="space-y-4 text-[15px] leading-relaxed text-muted">
         {steps.map((s, i) => (
           <li key={i}>
-            <span className="font-semibold text-white">{i + 1}.</span> {s}
+            <span className="font-semibold text-fg">{i + 1}.</span> {s}
           </li>
         ))}
       </ol>
@@ -159,7 +162,7 @@ export function FirstAccessManualPage() {
   return (
     <AuthLayout aside={<OnboardingStepsAside title="Como ativar seu acesso ao LIFE CLASS?" />}>
       <AuthTitle title="Primeiro acesso" subtitle="O acesso ao LIFE CLASS é liberado por convite. Se você ainda não recebeu, fale com seu líder ou com a área de Pessoas." />
-      <div className="space-y-3 text-sm text-white/65">
+      <div className="space-y-3 text-sm text-muted">
         <p>Já recebeu o convite? Abra o link do e-mail para criar sua senha.</p>
         <p>Esqueceu a senha de uma conta já ativa? Use a recuperação de acesso.</p>
       </div>
@@ -186,7 +189,7 @@ export function AcceptInvitePage() {
       {isLoading ? (
         <Spinner />
       ) : error || !data ? (
-        <div className="space-y-4 text-white/70">
+        <div className="space-y-4 text-muted">
           <p role="alert">{errorMessage(error)}</p>
           <Link to="/entrar" className="font-medium text-primary hover:underline">Ir para o login</Link>
         </div>
@@ -197,10 +200,10 @@ export function AcceptInvitePage() {
           fields={
             <>
               <Field label="Nome completo" htmlFor="name">
-                <Input id="name" value={data.name} readOnly className={dark} />
+                <Input id="name" value={data.name} readOnly className={authField} />
               </Field>
               <Field label="E-mail" htmlFor="inv-email">
-                <Input id="inv-email" value={data.email} readOnly className={dark} />
+                <Input id="inv-email" value={data.email} readOnly className={authField} />
               </Field>
             </>
           }
@@ -211,7 +214,7 @@ export function AcceptInvitePage() {
           }}
         />
       )}
-      <p className="mt-8 text-center text-sm text-white/60">
+      <p className="mt-8 text-center text-sm text-muted">
         Já tem uma conta? <Link to="/entrar" className="font-medium text-primary hover:underline">Entrar</Link>
       </p>
     </AuthLayout>

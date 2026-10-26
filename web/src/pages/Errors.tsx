@@ -8,7 +8,7 @@ import { useAuth } from "../lib/auth";
 export function AccessDeniedPage({ message }: { message?: string }) {
   return (
     <div className="mx-auto max-w-lg py-16 text-center">
-      <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-danger/10 text-danger">
+      <span className="mx-auto grid h-14 w-14 place-items-center rounded-full border border-danger/40 text-danger">
         <ShieldAlert className="h-7 w-7" aria-hidden />
       </span>
       <h1 className="mt-5 font-heading text-2xl font-bold">Acesso negado</h1>
@@ -23,7 +23,7 @@ export function AccessDeniedPage({ message }: { message?: string }) {
 export function NotFoundPage() {
   return (
     <div className="mx-auto max-w-lg py-16 text-center">
-      <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-subtle text-muted">
+      <span className="mx-auto grid h-14 w-14 place-items-center rounded-full border border-border-strong text-muted">
         <Compass className="h-7 w-7" aria-hidden />
       </span>
       <h1 className="mt-5 font-heading text-2xl font-bold">Página não encontrada</h1>
@@ -45,11 +45,11 @@ export function AwaitingApprovalPage() {
   const firstName = me?.user.name.split(" ")[0] ?? "";
   return (
     <AuthLayout>
-      <span className="mb-6 grid h-12 w-12 place-items-center rounded-xl bg-brand/15 text-brand">
+      <span className="mb-6 grid h-12 w-12 place-items-center rounded-full border border-border-strong text-icon">
         <Hourglass className="h-6 w-6" aria-hidden />
       </span>
       <AuthTitle title={`Quase lá, ${firstName}!`} subtitle="Seu acesso foi ativado e aguarda a liberação do administrador." />
-      <div className="space-y-4 text-sm leading-relaxed text-white/70">
+      <div className="space-y-4 text-sm leading-relaxed text-muted">
         <p>Assim que o acesso for liberado, você recebe um aviso e as trilhas aparecem automaticamente nesta tela.</p>
         {!me?.onboardingCompleted && <p>Enquanto isso, você já pode conhecer a plataforma e registrar a ciência dos termos no primeiro acesso.</p>}
       </div>
@@ -59,7 +59,7 @@ export function AwaitingApprovalPage() {
             <Button size="lg" glow>Fazer o primeiro acesso</Button>
           </Link>
         )}
-        <Button size="lg" variant="ghost" className="text-white hover:bg-white/10" icon={LogOut} onClick={() => void logout()}>
+        <Button size="lg" variant="ghost" className="text-fg hover:bg-pill-hover" icon={LogOut} onClick={() => void logout()}>
           Sair
         </Button>
       </div>

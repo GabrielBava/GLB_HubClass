@@ -169,7 +169,7 @@ export const knowledgeAreas = pgTable("knowledge_areas", {
   name: text("name").notNull(),
   description: text("description").notNull().default(""),
   icon: text("icon").notNull().default("BookOpen"),
-  color: text("color").notNull().default("#F36B22"),
+  color: text("color").notNull().default("#F05A00"),
   sortOrder: integer("sort_order").notNull().default(0),
   isVisible: boolean("is_visible").notNull().default(true),
   /** Configurações por área: palavras por minuto, nota mínima padrão etc. */
