@@ -61,7 +61,7 @@ export function ProgressPage() {
         ))}
       </section>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <section className="space-y-3">
           <h2 className="font-heading text-lg font-semibold">Avaliações</h2>
           {data.attempts.length === 0 ? (
@@ -109,13 +109,13 @@ export function ProgressPage() {
         </section>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <section className="space-y-3">
           <h2 className="font-heading text-lg font-semibold">Certificações</h2>
           {data.certificates.length === 0 ? (
             <p className="text-sm text-muted">Conclua trilhas com certificado para conquistá-los.</p>
           ) : (
-            <ul className="grid gap-2 sm:grid-cols-2">
+            <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               {data.certificates.map((c) => (
                 <li key={c.code}>
                   <Link to={`/certificados/${c.code}`}>

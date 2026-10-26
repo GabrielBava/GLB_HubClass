@@ -12,7 +12,7 @@ const ITEMS = [
 
 export function HowToUse({ supportContact }: { supportContact?: string }) {
   return (
-    <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+    <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
       {ITEMS.map(({ icon: Icon, title, text }) => (
         <li key={title} className="rounded-xl border border-border p-4">
           <Icon className="h-5 w-5 text-primary" aria-hidden />

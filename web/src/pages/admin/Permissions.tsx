@@ -54,7 +54,7 @@ function ResourcePicker({ value, onChange, idPrefix, maxLevel = "content" }: { v
   const area = tree?.find((a) => a.id === value.areaId);
   const mod = track?.modules.find((m) => m.id === value.moduleId);
   return (
-    <div className="grid gap-3 sm:grid-cols-2">
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
       <Field label="Área" htmlFor={`${idPrefix}-area`}>
         <Select id={`${idPrefix}-area`} value={value.areaId} placeholder="Selecione..." onChange={(e) => onChange({ ...emptyResource, areaId: e.target.value })} options={(tree ?? []).map((a) => ({ value: a.id, label: a.name }))} />
       </Field>
@@ -98,7 +98,7 @@ function SubjectPicker({ type, id, onChange, types, idPrefix }: { type: AccessSu
               ? ROLES.map((r) => ({ value: r, label: ROLE_LABEL[r] }))
               : [];
   return (
-    <div className="grid gap-3 sm:grid-cols-2">
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
       <Field label="Aplicar a" htmlFor={`${idPrefix}-stype`}>
         <Select id={`${idPrefix}-stype`} value={type} onChange={(e) => onChange(e.target.value as AccessSubject, "")} options={types.map((s) => ({ value: s, label: ACCESS_SUBJECT_LABEL[s] }))} />
       </Field>
@@ -255,7 +255,7 @@ function RulesTab() {
             </Field>
             <SubjectPicker idPrefix="r" type={form.subjectType} id={form.subjectId} types={ACCESS_SUBJECTS} onChange={(subjectType, subjectId) => setForm({ ...form, subjectType, subjectId })} />
             <ResourcePicker idPrefix="r" value={form.resource} onChange={(resource) => setForm({ ...form, resource })} />
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <Field label="Válida até (opcional)" htmlFor="r-exp">
                 <Input id="r-exp" type="date" value={form.expiresAt} onChange={(e) => setForm({ ...form, expiresAt: e.target.value })} />
               </Field>
@@ -286,7 +286,7 @@ function BulkTab() {
       <div className="mt-5 space-y-5">
         <SubjectPicker idPrefix="b" type={state.subjectType} id={state.subjectId} types={["job_title", "team", "department", "role", "everyone"]} onChange={(subjectType, subjectId) => setState({ ...state, subjectType, subjectId })} />
         <ResourcePicker idPrefix="b" maxLevel="track" value={state.resource} onChange={(resource) => setState({ ...state, resource })} />
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <Field label="Prazo (opcional)" htmlFor="b-due">
             <Input id="b-due" type="date" value={state.dueDate} onChange={(e) => setState({ ...state, dueDate: e.target.value })} />
           </Field>
@@ -316,7 +316,7 @@ function CheckTab() {
   const list = useApi<{ id: string; name: string; role: Role; explanation: string }[]>(whoOpen && whoRes ? `/api/admin/access/resource?resourceType=${whoRes.resourceType}&resourceId=${whoRes.resourceId}` : null);
 
   return (
-    <div className="grid gap-5 xl:grid-cols-2">
+    <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
       <Card className="p-5">
         <CardHeader flush title="Este usuário pode acessar?" description="Mostra a decisão e o motivo, exatamente como o servidor avalia." />
         <div className="mt-4 space-y-4">

@@ -121,6 +121,11 @@ h3,
   outline-offset: 2px;
 }
 
+/* Alvos de foco programático (conteúdo principal, diálogos) não recebem contorno. */
+[tabindex="-1"]:focus {
+  outline: none;
+}
+
 ::selection {
   background: color-mix(in oklab, var(--brand) 28%, transparent);
 }

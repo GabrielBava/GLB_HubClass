@@ -172,10 +172,10 @@ export function ContentEditorPage() {
         </div>
       )}
 
-      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_380px]">
+      <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_380px]">
         <Card className="p-5">
           <CardHeader flush title="Dados do conteúdo" description="Título, objetivo, nível, responsável e regras de acesso." />
-          <fieldset disabled={!p.canEdit} className="mt-4 grid gap-4 sm:grid-cols-2">
+          <fieldset disabled={!p.canEdit} className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="Título" htmlFor="c-title" required className="sm:col-span-2">
               <Input id="c-title" value={form.title} onChange={(e) => set({ title: e.target.value })} />
             </Field>

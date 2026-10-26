@@ -45,7 +45,7 @@ export function ActivityPage() {
         <ArrowLeft className="h-4 w-4" aria-hidden /> {data.module.title}
       </Link>
       <Card className="p-6 sm:p-8">
-        <Badge tone="primary" icon={a.stage === "execute" ? Hammer : Sparkles}>Da teoria à prática · {PRACTICE_STAGE_LABEL[a.stage]}</Badge>
+        <Badge tone="primary" className="max-w-full whitespace-normal!" icon={a.stage === "execute" ? Hammer : Sparkles}>Da teoria à prática · {PRACTICE_STAGE_LABEL[a.stage]}</Badge>
         <h1 className="mt-3 font-heading text-2xl font-bold">{a.title}</h1>
         {a.competency && <p className="mt-1 text-sm text-muted">Competência: {a.competency}</p>}
         <div className="mt-4 whitespace-pre-line leading-relaxed">{a.instructions}</div>

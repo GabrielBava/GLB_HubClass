@@ -155,7 +155,7 @@ export function ProfilePage() {
   return (
     <div className="space-y-6">
       <PageHeader title="Meu perfil" description="Dados da conta, segurança, sessões, notificações e privacidade." />
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader title="Dados da conta" />
           <div className="p-5">

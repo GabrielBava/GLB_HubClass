@@ -81,7 +81,7 @@ export function OrganizationPage() {
   return (
     <div>
       <PageHeader title="Organização" description="Departamentos, equipes e cargos usados nas permissões, nos relatórios e na atribuição de trilhas. Líderes de equipe são definidos no cadastro do usuário (escopo do líder)." />
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <OrgList title="Departamentos" icon={Building} path="departments" items={data.departments} />
         <OrgList
           title="Equipes"

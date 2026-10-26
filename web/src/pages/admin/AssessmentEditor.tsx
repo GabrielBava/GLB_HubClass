@@ -276,7 +276,7 @@ function QuestionFields({ f, set }: { f: QForm; set: (p: Partial<QForm>) => void
       );
     case "numeric":
       return (
-        <div className="grid gap-4 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <Field label="Resultado correto" htmlFor="q-num" required>
             <Input id="q-num" inputMode="decimal" value={f.numValue} onChange={(e) => set({ numValue: e.target.value })} />
           </Field>
@@ -290,7 +290,7 @@ function QuestionFields({ f, set }: { f: QForm; set: (p: Partial<QForm>) => void
       );
     case "essay":
       return (
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Mínimo de palavras" htmlFor="q-min">
             <Input id="q-min" type="number" min={0} value={f.minWords} onChange={(e) => set({ minWords: e.target.value })} />
           </Field>
@@ -399,7 +399,7 @@ export function AssessmentEditorPage() {
         </div>
       )}
 
-      <div className="grid gap-5 xl:grid-cols-[400px_minmax(0,1fr)]">
+      <div className="grid grid-cols-1 gap-5 xl:grid-cols-[400px_minmax(0,1fr)]">
         <Card className="h-fit p-5">
           <CardHeader flush title="Configurações" description="Nota mínima, tentativas, tempo, embaralhamento e devolutiva." />
           <fieldset disabled={!p.canEdit} className="mt-4 space-y-4">
@@ -536,7 +536,7 @@ export function AssessmentEditorPage() {
       >
         {q && (
           <div className="space-y-4">
-            <div className="grid gap-4 sm:grid-cols-[1fr_140px]">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_140px]">
               <Field label="Tipo de questão" htmlFor="q-type">
                 <Select
                   id="q-type"
@@ -601,7 +601,7 @@ function useBank(filters: { areaId: string; type: string; q: string }) {
 function BankFilters({ value, onChange }: { value: { areaId: string; type: string; q: string }; onChange: (v: { areaId: string; type: string; q: string }) => void }) {
   const { data: areas } = useApi<{ id: string; name: string }[]>("/api/admin/content/tree");
   return (
-    <div className="grid gap-3 sm:grid-cols-3">
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
       <Input aria-label="Buscar no enunciado" placeholder="Buscar no enunciado..." value={value.q} onChange={(e) => onChange({ ...value, q: e.target.value })} />
       <Select aria-label="Área" value={value.areaId} placeholder="Todas as áreas" onChange={(e) => onChange({ ...value, areaId: e.target.value })} options={(areas ?? []).map((a) => ({ value: a.id, label: a.name }))} />
       <Select aria-label="Tipo" value={value.type} placeholder="Todos os tipos" onChange={(e) => onChange({ ...value, type: e.target.value })} options={QUESTION_TYPES.map((t) => ({ value: t, label: QUESTION_TYPE_LABEL[t] }))} />
@@ -720,14 +720,14 @@ export function AssessmentResultsPage() {
         <ArrowLeft className="h-4 w-4" /> Voltar à avaliação
       </Link>
       <PageHeader eyebrow="Resultados" title={data.assessment.title} description={`Nota mínima para aprovação: ${data.assessment.passingScore}%.`} />
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard label="Participantes" value={s.participants} hint={`${s.attempts} tentativa(s)`} />
         <StatCard label="Média das notas" value={s.averageScore !== null ? `${s.averageScore.toLocaleString("pt-BR")}%` : "—"} />
         <StatCard label="Taxa de aprovação" value={s.passRate !== null ? `${s.passRate}%` : "—"} tone="success" />
         <StatCard label="Aguardando correção" value={s.pendingReview} tone="warning" hint={s.attemptsPerParticipant ? `${s.attemptsPerParticipant.toLocaleString("pt-BR")} tentativa(s) por pessoa` : undefined} />
       </div>
 
-      <div className="mt-5 grid gap-5 xl:grid-cols-2">
+      <div className="mt-5 grid grid-cols-1 gap-5 xl:grid-cols-2">
         <Card className="p-5">
           <CardHeader flush title="Índice de acerto por questão" description="Questões com menor acerto aparecem primeiro e indicam pontos do conteúdo a reforçar." />
           {hardest.length === 0 ? (

@@ -40,9 +40,9 @@ import {
   tracks,
   users,
 } from "../db/schema.js";
-import { ingestDocument } from "../services/documents/pipeline.js";
+import { ingestDocument, storePrivateFile } from "../services/documents/pipeline.js";
 import { refreshEnrollment } from "../services/progress.js";
-import { BOAS_VINDAS, CONSORCIO_FUNDAMENTOS, CONSORCIO_TAXAS, LGPD, RAMPAGEM, renderDemoPdf, type DemoDocument } from "./demo-content.js";
+import { BOAS_VINDAS, CONSORCIO_FUNDAMENTOS, CONSORCIO_TAXAS, LGPD, RAMPAGEM, renderDemoCover, renderDemoPdf, type DemoDocument } from "./demo-content.js";
 
 const config = loadConfig();
 if (config.env === "production" && !process.argv.includes("--force")) {
@@ -341,7 +341,14 @@ const bruno = await addUser({ name: "Bruno Carvalho", email: "bruno.carvalho@exe
 const carla = await addUser({ name: "Carla Mendes", email: "carla.mendes@exemplo.com.br", role: "collaborator", job: "Especialista de Consórcios", dept: "Consórcios", team: "Consórcios" });
 const diego = await addUser({ name: "Diego Rocha", email: "diego.rocha@exemplo.com.br", role: "collaborator", job: "Planejador Financeiro", dept: "Planejamento Financeiro", team: "Planejamento" });
 const elisa = await addUser({ name: "Elisa Martins", email: "elisa.martins@exemplo.com.br", role: "collaborator", job: "Planejador Financeiro", dept: "Planejamento Financeiro", team: "Planejamento" });
-await addUser({ name: "Felipe Nunes", email: "felipe.nunes@exemplo.com.br", role: "collaborator", job: "Executivo Comercial", dept: "Comercial", team: "Comercial" });
+const felipe = await addUser({ name: "Felipe Nunes", email: "felipe.nunes@exemplo.com.br", role: "collaborator", job: "Executivo Comercial", dept: "Comercial", team: "Comercial" });
+// Exemplos dos controles de acesso: desligamento agendado e pessoa aguardando liberação após o primeiro acesso.
+await db
+  .update(users)
+  .set({ offboardAt: new Date(Date.now() + 15 * 86_400_000), offboardReason: "Término de contrato (exemplo fictício)", offboardedBy: admin.id })
+  .where(eq(users.id, felipe.id));
+const gabriela = await addUser({ name: "Gabriela Ramos", email: "gabriela.ramos@exemplo.com.br", role: "collaborator", job: "Especialista de Consórcios", dept: "Consórcios", team: "Consórcios" });
+await db.update(users).set({ status: "pending_approval", approvalRequired: true, onboardingCompletedAt: null }).where(eq(users.id, gabriela.id));
 
 await db.insert(leaderAreas).values([
   { userId: leaderCons.id, areaId: areaIds.C! },
@@ -556,14 +563,28 @@ await addDocument(mRamp.id, RAMPAGEM, { sort: 0, objective: "Organizar a primeir
 await addActivity(ramp, mRamp.id, "Registre a primeira atividade comercial no CRM", "execute", "Faça uma ligação acompanhada pelo líder e registre a atividade no CRM. Envie o link do registro.", "Registrar atividade comercial");
 
 // ---------------------------------------------------------------- Biblioteca
-await db.insert(libraryItems).values([
-  { title: "A Psicologia Financeira", author: "Morgan Housel", category: "Finanças pessoais", theme: "Comportamento e dinheiro", type: "book", license: "external_only", level: "basico", estimatedMinutes: 360, description: "Indicação de leitura: como emoções e hábitos influenciam decisões financeiras. Consulte a obra em livrarias ou bibliotecas.", coverColor: "#252522", sortOrder: 0 },
-  { title: "Rápido e Devagar", author: "Daniel Kahneman", category: "Comportamento", theme: "Tomada de decisão", type: "book", license: "external_only", level: "intermediario", estimatedMinutes: 720, description: "Indicação de leitura sobre os dois sistemas de pensamento e vieses que afetam escolhas — útil para conversas com clientes.", coverColor: "#1E3A8A", sortOrder: 1 },
-  { title: "Alcançando Excelência em Vendas: SPIN Selling", author: "Neil Rackham", category: "Vendas", theme: "Venda consultiva", type: "book", license: "external_only", level: "intermediario", estimatedMinutes: 420, description: "Indicação de leitura sobre perguntas de Situação, Problema, Implicação e Necessidade de solução.", coverColor: "#9A3412", sortOrder: 2 },
-  { title: "O Investidor Inteligente", author: "Benjamin Graham", category: "Investimentos", theme: "Investimento em valor", type: "book", license: "external_only", level: "avancado", estimatedMinutes: 900, description: "Indicação clássica sobre disciplina e margem de segurança em investimentos.", coverColor: "#374151", sortOrder: 3 },
-  { title: "Checklist de discovery (artigo interno)", author: "Academia Comercial", category: "Vendas", theme: "Discovery", type: "article", license: "own", level: "basico", estimatedMinutes: 8, description: "Artigo interno fictício com perguntas de discovery para a primeira conversa.", coverColor: "#B91C1C", sortOrder: 4 },
-  { title: "Podcast: rotina do planejador", author: "Grupo Life Brasil", category: "Desenvolvimento", theme: "Rotina profissional", type: "podcast", license: "own", level: "basico", estimatedMinutes: 25, description: "Episódio interno (fictício) sobre organização da agenda e acompanhamento de clientes.", coverColor: "#6D28D9", sortOrder: 5 },
-]);
+// Obras de terceiros entram só como indicação; materiais próprios têm capa e arquivo para download.
+const library = await db
+  .insert(libraryItems)
+  .values([
+    { title: "A Psicologia Financeira", author: "Morgan Housel", category: "Finanças pessoais", theme: "Comportamento e dinheiro", type: "book", license: "external_only", level: "basico", estimatedMinutes: 360, description: "Indicação de leitura: como emoções e hábitos influenciam decisões financeiras. Consulte a obra em livrarias ou bibliotecas.", coverColor: "#252522", sortOrder: 2 },
+    { title: "Rápido e Devagar", author: "Daniel Kahneman", category: "Comportamento", theme: "Tomada de decisão", type: "book", license: "external_only", level: "intermediario", estimatedMinutes: 720, description: "Indicação de leitura sobre os dois sistemas de pensamento e vieses que afetam escolhas — útil para conversas com clientes.", coverColor: "#3A3935", sortOrder: 3 },
+    { title: "Alcançando Excelência em Vendas: SPIN Selling", author: "Neil Rackham", category: "Vendas", theme: "Venda consultiva", type: "book", license: "external_only", level: "intermediario", estimatedMinutes: 420, description: "Indicação de leitura sobre perguntas de Situação, Problema, Implicação e Necessidade de solução.", coverColor: "#B44F19", sortOrder: 4 },
+    { title: "O Investidor Inteligente", author: "Benjamin Graham", category: "Investimentos", theme: "Investimento em valor", type: "book", license: "external_only", level: "avancado", estimatedMinutes: 900, description: "Indicação clássica sobre disciplina e margem de segurança em investimentos.", coverColor: "#77766F", sortOrder: 5 },
+    { title: "Checklist de discovery", author: "Academia Comercial", category: "Vendas", theme: "Discovery", type: "article", license: "own", level: "basico", estimatedMinutes: 8, description: "Material interno (fictício) com perguntas de discovery para a primeira conversa. Disponível para download.", coverColor: "#171716", sortOrder: 0 },
+    { title: "Guia de boas-vindas", author: "Grupo Life Brasil", category: "Institucional", theme: "Integração", type: "publication", license: "own", level: "basico", estimatedMinutes: 10, description: "Publicação interna (fictícia) para os primeiros dias na empresa. Disponível para download.", coverColor: "#171716", sortOrder: 1 },
+    { title: "Podcast: rotina do planejador", author: "Grupo Life Brasil", category: "Desenvolvimento", theme: "Rotina profissional", type: "podcast", license: "own", level: "basico", estimatedMinutes: 25, description: "Episódio interno (fictício) sobre organização da agenda e acompanhamento de clientes.", coverColor: "#C83C35", sortOrder: 6 },
+  ])
+  .returning();
+for (const [title, subtitle, doc] of [
+  ["Checklist de discovery", "Academia Comercial", CONSORCIO_FUNDAMENTOS],
+  ["Guia de boas-vindas", "Institucional", BOAS_VINDAS],
+] as const) {
+  const item = library.find((l) => l.title === title)!;
+  const cover = await storePrivateFile(app.ctx, { buffer: await renderDemoCover(title, subtitle), originalName: `capa-${item.id}.png`, mimeType: "image/png", purpose: "cover", userId: admin.id, extension: "png" });
+  const file = await storePrivateFile(app.ctx, { buffer: await renderDemoPdf(doc), originalName: `${title}.pdf`, mimeType: "application/pdf", purpose: "library", userId: admin.id, extension: "pdf" });
+  await db.update(libraryItems).set({ coverFileId: cover.id, fileId: file.id, allowDownload: true }).where(eq(libraryItems.id, item.id));
+}
 
 // ---------------------------------------------------------------- Progresso de demonstração
 const allCollabs = [ana, bruno, carla, diego, elisa];

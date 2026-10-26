@@ -108,7 +108,7 @@ export function ValidationsPage() {
         ) : (
           <EmptyState icon={ClipboardCheck} title="Nenhuma avaliação aguardando correção" />
         ))}
-      {tab === "tracks" && (data.tracks.length ? <div className="grid gap-4 lg:grid-cols-2">{data.tracks.map((t) => <TrackValidationCard key={`${t.userId}-${t.trackId}`} t={t} />)}</div> : <EmptyState icon={ShieldCheck} title="Nenhuma trilha aguardando validação" />)}
+      {tab === "tracks" && (data.tracks.length ? <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">{data.tracks.map((t) => <TrackValidationCard key={`${t.userId}-${t.trackId}`} t={t} />)}</div> : <EmptyState icon={ShieldCheck} title="Nenhuma trilha aguardando validação" />)}
     </div>
   );
 }
@@ -153,7 +153,7 @@ export function GradeAttemptPage() {
           <p className="mt-2 font-medium">{q.prompt}</p>
           <div className="mt-3"><QuestionInput q={q} value={q.response} onChange={() => undefined} disabled review /></div>
           {pending && q.pointsAwarded === null && (
-            <div className="mt-4 grid gap-3 sm:grid-cols-[140px_1fr]">
+            <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-[140px_1fr]">
               <Field label={`Pontos (0 a ${q.maxPoints ?? q.points})`} htmlFor={`p-${q.id}`}>
                 <Input id={`p-${q.id}`} inputMode="decimal" value={grades[q.id]?.points ?? ""} onChange={(e) => setGrades({ ...grades, [q.id]: { points: e.target.value, comment: grades[q.id]?.comment ?? "" } })} />
               </Field>

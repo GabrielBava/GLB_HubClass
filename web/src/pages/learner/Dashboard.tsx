@@ -91,7 +91,7 @@ export function DashboardPage() {
         </Alert>
       )}
 
-      <div className="grid gap-4 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <Card className="relative overflow-hidden lg:col-span-2">
           <div className="brand-backdrop dark absolute inset-0" aria-hidden />
           <div className="dark relative flex h-full flex-col justify-between gap-6 p-6 pl-8 text-white sm:p-7 sm:pl-9">
@@ -183,7 +183,7 @@ export function DashboardPage() {
         </Card>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
           <Card>
             <CardHeader title="Trilhas obrigatórias" description="Definidas para o seu cargo e área" icon={Target} action={<Link to="/trilhas?obrigatoria=1" className="text-sm text-primary hover:underline">Ver todas</Link>} />

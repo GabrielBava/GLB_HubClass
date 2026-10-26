@@ -115,9 +115,9 @@ export function LibraryAdminPage() {
                 <td className={td}>
                   {i.file ? (
                     <p className="flex items-center gap-1.5 text-xs">
-                      <Paperclip className="h-3.5 w-3.5 text-brand" aria-hidden />
-                      <span className="max-w-[200px] truncate" title={i.file.name}>{i.file.name}</span>
-                      <span className="text-muted">· {fileSize(i.file.size)}</span>
+                      <Paperclip className="h-3.5 w-3.5 shrink-0 text-brand" aria-hidden />
+                      <span className="min-w-0 max-w-[200px] truncate" title={i.file.name}>{i.file.name}</span>
+                      <span className="shrink-0 whitespace-nowrap text-muted">· {fileSize(i.file.size)}</span>
                       {i.allowDownload ? <Badge tone="success">Download</Badge> : <Badge>Sem download</Badge>}
                     </p>
                   ) : (
@@ -239,7 +239,7 @@ function ItemModal({ initial, item, onClose }: { initial: Form; item: Item | nul
         </>
       }
     >
-      <div className="grid gap-5 md:grid-cols-[180px_minmax(0,1fr)]">
+      <div className="grid grid-cols-1 gap-5 md:grid-cols-[180px_minmax(0,1fr)]">
         {/* Capa */}
         <div>
           <p className="mb-1.5 text-sm font-medium">Foto de capa</p>
@@ -278,7 +278,7 @@ function ItemModal({ initial, item, onClose }: { initial: Form; item: Item | nul
           </Field>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Título" htmlFor="l-title" required className="sm:col-span-2">
             <Input id="l-title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
           </Field>
@@ -287,27 +287,6 @@ function ItemModal({ initial, item, onClose }: { initial: Form; item: Item | nul
           </Field>
           <Field label="Tipo" htmlFor="l-type">
             <Select id="l-type" value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value as LibraryType })} options={LIBRARY_TYPES.map((t) => ({ value: t, label: LIBRARY_TYPE_LABEL[t] }))} />
-          </Field>
-          <Field label="Categoria" htmlFor="l-cat">
-            <Input id="l-cat" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} />
-          </Field>
-          <Field label="Tema" htmlFor="l-theme">
-            <Input id="l-theme" value={form.theme} onChange={(e) => setForm({ ...form, theme: e.target.value })} />
-          </Field>
-          <Field label="Descrição" htmlFor="l-desc" className="sm:col-span-2">
-            <Textarea id="l-desc" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
-          </Field>
-          <Field label="Nível" htmlFor="l-level">
-            <Select id="l-level" value={form.level} onChange={(e) => setForm({ ...form, level: e.target.value as Level })} options={LEVELS.map((l) => ({ value: l, label: LEVEL_LABEL[l] }))} />
-          </Field>
-          <Field label="Tempo estimado (min)" htmlFor="l-min">
-            <Input id="l-min" type="number" min={1} value={form.estimatedMinutes ?? ""} onChange={(e) => setForm({ ...form, estimatedMinutes: e.target.value ? Number(e.target.value) : null })} />
-          </Field>
-          <Field label="Área relacionada" htmlFor="l-area">
-            <Select id="l-area" value={form.areaId ?? ""} placeholder="Nenhuma" onChange={(e) => setForm({ ...form, areaId: e.target.value || null })} options={(areas ?? []).map((a) => ({ value: a.id, label: a.name }))} />
-          </Field>
-          <Field label="Status" htmlFor="l-status">
-            <Select id="l-status" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value as PublicationStatus })} options={PUBLICATION_STATUS.map((s) => ({ value: s, label: PUBLICATION_STATUS_LABEL[s] }))} />
           </Field>
           <Field label="Direitos de uso" htmlFor="l-license" className="sm:col-span-2" hint="Arquivos só podem ser hospedados para conteúdo próprio, licenciado ou de licença aberta.">
             <Select
@@ -328,7 +307,7 @@ function ItemModal({ initial, item, onClose }: { initial: Form; item: Item | nul
                 {hasFile && (
                   <p className="mt-2 flex flex-wrap items-center gap-2 text-sm">
                     <Paperclip className="h-4 w-4 text-muted" aria-hidden />
-                    <span className="truncate">{attachment ? attachment.name : item?.file?.name}</span>
+                    <span className="min-w-0 truncate">{attachment ? attachment.name : item?.file?.name}</span>
                     <span className="text-xs text-muted">{fileSize(attachment ? attachment.size : (item?.file?.size ?? 0))}</span>
                     <Button
                       size="sm"
@@ -373,6 +352,27 @@ function ItemModal({ initial, item, onClose }: { initial: Form; item: Item | nul
             )}
           </div>
 
+          <Field label="Categoria" htmlFor="l-cat">
+            <Input id="l-cat" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} />
+          </Field>
+          <Field label="Tema" htmlFor="l-theme">
+            <Input id="l-theme" value={form.theme} onChange={(e) => setForm({ ...form, theme: e.target.value })} />
+          </Field>
+          <Field label="Descrição" htmlFor="l-desc" className="sm:col-span-2">
+            <Textarea id="l-desc" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+          </Field>
+          <Field label="Nível" htmlFor="l-level">
+            <Select id="l-level" value={form.level} onChange={(e) => setForm({ ...form, level: e.target.value as Level })} options={LEVELS.map((l) => ({ value: l, label: LEVEL_LABEL[l] }))} />
+          </Field>
+          <Field label="Tempo estimado (min)" htmlFor="l-min">
+            <Input id="l-min" type="number" min={1} value={form.estimatedMinutes ?? ""} onChange={(e) => setForm({ ...form, estimatedMinutes: e.target.value ? Number(e.target.value) : null })} />
+          </Field>
+          <Field label="Área relacionada" htmlFor="l-area">
+            <Select id="l-area" value={form.areaId ?? ""} placeholder="Nenhuma" onChange={(e) => setForm({ ...form, areaId: e.target.value || null })} options={(areas ?? []).map((a) => ({ value: a.id, label: a.name }))} />
+          </Field>
+          <Field label="Status" htmlFor="l-status">
+            <Select id="l-status" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value as PublicationStatus })} options={PUBLICATION_STATUS.map((s) => ({ value: s, label: PUBLICATION_STATUS_LABEL[s] }))} />
+          </Field>
           <Field label="Link oficial ou licenciado (https, opcional)" htmlFor="l-url" className="sm:col-span-2">
             <Input id="l-url" type="url" placeholder="https://" value={form.externalUrl ?? ""} onChange={(e) => setForm({ ...form, externalUrl: e.target.value })} />
           </Field>

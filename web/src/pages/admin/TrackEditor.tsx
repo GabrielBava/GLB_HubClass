@@ -161,10 +161,10 @@ export function TrackEditorPage() {
         </div>
       </PageHeader>
 
-      <div className="grid gap-6 xl:grid-cols-[1fr_380px]">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1fr_380px]">
         <Card>
           <CardHeader title="Dados da trilha" action={p.canEdit && <Button size="sm" icon={Save} loading={save.isPending} onClick={() => save.mutate(undefined)}>Salvar</Button>} />
-          <fieldset disabled={!p.canEdit} className="grid gap-4 p-5 sm:grid-cols-2">
+          <fieldset disabled={!p.canEdit} className="grid grid-cols-1 gap-4 p-5 sm:grid-cols-2">
             <Field label="Título" htmlFor="f-title" className="sm:col-span-2"><Input id="f-title" value={form.title} onChange={(e) => set({ title: e.target.value })} /></Field>
             <Field label="Resumo (cartão do catálogo)" htmlFor="f-summary" className="sm:col-span-2"><Input id="f-summary" value={form.summary} maxLength={400} onChange={(e) => set({ summary: e.target.value })} /></Field>
             <Field label="Apresentação" htmlFor="f-desc" className="sm:col-span-2"><Textarea id="f-desc" value={form.description} onChange={(e) => set({ description: e.target.value })} /></Field>
@@ -183,13 +183,13 @@ export function TrackEditorPage() {
             <Field label="Sem autorização, no catálogo a trilha..." htmlFor="f-vis"><Select id="f-vis" value={form.lockedVisibility ?? ""} onChange={(e) => set({ lockedVisibility: (e.target.value || null) as TrackFull["lockedVisibility"] })} placeholder="Segue a configuração geral" options={[{ value: "locked", label: "Aparece bloqueada (pode solicitar acesso)" }, { value: "hidden", label: "Fica oculta" }]} /></Field>
             <fieldset className="space-y-1 sm:col-span-2">
               <legend className="mb-1 text-sm font-medium">Recomendada para os cargos</legend>
-              <div className="grid gap-2 sm:grid-cols-3">
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
                 {data.jobTitles.map((j) => (
                   <Checkbox key={j.id} label={j.name} checked={form.jobTitleIds.includes(j.id)} onChange={(v) => set({ jobTitleIds: v ? [...form.jobTitleIds, j.id] : form.jobTitleIds.filter((x) => x !== j.id) })} />
                 ))}
               </div>
             </fieldset>
-            <div className="grid gap-3 sm:col-span-2 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-3 sm:col-span-2 sm:grid-cols-2">
               <Checkbox label="Exige validação final do líder" checked={form.requiresLeaderValidation} onChange={(v) => set({ requiresLeaderValidation: v })} />
               <Checkbox label="Emite certificado na conclusão" checked={form.certificateEnabled} onChange={(v) => set({ certificateEnabled: v })} />
               <Checkbox label="Permite dúvidas e comentários" checked={form.commentsEnabled} onChange={(v) => set({ commentsEnabled: v })} />
@@ -309,7 +309,7 @@ export function TrackEditorPage() {
 
       <Modal open={!!mod} onClose={() => setMod(null)} title={mod?.id ? "Editar módulo" : "Novo módulo"} footer={<><Button variant="ghost" onClick={() => setMod(null)}>Cancelar</Button><Button loading={saveModule.isPending} disabled={!mod?.title.trim()} onClick={() => saveModule.mutate(undefined)}>Salvar</Button></>}>
         {mod && (
-          <div className="grid gap-4 sm:grid-cols-[120px_1fr]">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-[120px_1fr]">
             <Field label="Código" htmlFor="m-code"><Input id="m-code" value={mod.code} placeholder="M1" onChange={(e) => setMod({ ...mod, code: e.target.value })} /></Field>
             <Field label="Título" htmlFor="m-title"><Input id="m-title" value={mod.title} onChange={(e) => setMod({ ...mod, title: e.target.value })} /></Field>
             <Field label="Descrição" htmlFor="m-desc" className="sm:col-span-2"><Textarea id="m-desc" value={mod.description} onChange={(e) => setMod({ ...mod, description: e.target.value })} /></Field>
@@ -336,7 +336,7 @@ export function TrackEditorPage() {
       </Modal>
       <Modal open={!!activity} onClose={() => setActivity(null)} title={activity?.id ? "Editar atividade prática" : "Nova atividade prática"} size="lg" footer={<>{activity?.id && p.canPublish && <ConfirmButton title="Excluir atividade?" message="Somente atividades em rascunho podem ser excluídas." onConfirm={async () => { await del.mutateAsync({ kind: "activities", id: activity.id! }); setActivity(null); }} icon={Trash2}>Excluir</ConfirmButton>}<Button variant="ghost" onClick={() => setActivity(null)}>Cancelar</Button><Button loading={saveActivity.isPending} disabled={!activity?.title.trim()} onClick={() => saveActivity.mutate(undefined)}>Salvar</Button></>}>
         {activity && (
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="Título" htmlFor="ac-title" className="sm:col-span-2"><Input id="ac-title" value={activity.title} onChange={(e) => setActivity({ ...activity, title: e.target.value })} /></Field>
             <Field label="Etapa" htmlFor="ac-stage"><Select id="ac-stage" value={activity.stage} onChange={(e) => setActivity({ ...activity, stage: e.target.value as PracticeStage })} options={PRACTICE_STAGES.map((s) => ({ value: s, label: PRACTICE_STAGE_LABEL[s] }))} /></Field>
             <Field label="Competência avaliada" htmlFor="ac-comp"><Input id="ac-comp" value={activity.competency} onChange={(e) => setActivity({ ...activity, competency: e.target.value })} /></Field>

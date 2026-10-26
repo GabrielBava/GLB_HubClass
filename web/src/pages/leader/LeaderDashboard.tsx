@@ -68,7 +68,7 @@ export function AssignModal({ open, onClose, members, tracks, preselected }: { o
         <Field label="Trilha" htmlFor="assign-track">
           <Select id="assign-track" value={trackId} onChange={(e) => setTrackId(e.target.value)} placeholder="Selecione a trilha" options={byArea} />
         </Field>
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Prazo (opcional)" htmlFor="assign-due">
             <Input id="assign-due" type="date" value={due} onChange={(e) => setDue(e.target.value)} />
           </Field>
@@ -83,7 +83,7 @@ export function AssignModal({ open, onClose, members, tracks, preselected }: { o
               <Button size="sm" variant="ghost" onClick={() => setSelected(members.map((m) => m.id))}>Selecionar todos</Button>
               <Button size="sm" variant="ghost" onClick={() => setSelected([])}>Limpar</Button>
             </div>
-            <div className="grid max-h-60 gap-2 overflow-y-auto rounded-xl border border-border p-3 sm:grid-cols-2">
+            <div className="grid grid-cols-1 max-h-60 gap-2 overflow-y-auto rounded-xl border border-border p-3 sm:grid-cols-2">
               {members.map((m) => (
                 <Checkbox key={m.id} label={m.name} checked={selected.includes(m.id)} onChange={(v) => setSelected((s) => (v ? [...s, m.id] : s.filter((x) => x !== m.id)))} />
               ))}
@@ -141,7 +141,7 @@ export function LeaderDashboardPage() {
           {members.length === 0 ? (
             <div className="p-5"><EmptyState icon={Users} title="Nenhum colaborador encontrado" description={data.members.length ? "Ajuste a busca." : "Você ainda não lidera nenhuma equipe. Peça ao administrador para configurar seu escopo."} /></div>
           ) : (
-            <div className="overflow-x-auto">
+            <div className="relative overflow-x-auto">
               <table className="w-full min-w-[720px] text-left text-sm">
                 <thead>
                   <tr>
@@ -186,7 +186,7 @@ export function LeaderDashboardPage() {
             </div>
           )}
         </Card>
-        <div className="grid gap-6 xl:grid-cols-3">
+        <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
           <Card className="xl:col-span-2">
             <CardHeader title="Evolução da equipe" description="Trilhas iniciadas e concluídas por mês" />
             <div className="p-5 pt-3">
@@ -346,7 +346,7 @@ export function MemberPage() {
         )
       )}
       {tab === "feedback" && (
-        <div className="grid gap-6 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <Card className="space-y-3 p-5">
             <h2 className="font-heading font-semibold">Registrar feedback</h2>
             <Field label="Tipo" htmlFor="fb-kind">

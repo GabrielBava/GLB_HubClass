@@ -37,7 +37,7 @@ export function Brand({
       {product && (
         <span
           className={cx(
-            "font-body font-bold uppercase leading-none",
+            "whitespace-nowrap font-body font-bold uppercase leading-none",
             dark ? "text-brand" : "text-primary",
             stacked ? (size === "xl" ? "text-lg tracking-[0.32em]" : "text-sm tracking-[0.28em]") : "border-l pl-3 text-[11px] tracking-[0.18em]",
             !stacked && (dark ? "border-white/20" : "border-border"),

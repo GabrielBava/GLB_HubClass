@@ -104,7 +104,7 @@ export function ReportsPage() {
           </div>
         }
       />
-      <Card className="mb-5 grid gap-3 p-4 sm:grid-cols-3">
+      <Card className="mb-5 grid grid-cols-1 gap-3 p-4 sm:grid-cols-3">
         <Field label="De" htmlFor="r-from">
           <Input id="r-from" type="date" value={filters.from} max={filters.to} onChange={(e) => setFilters({ ...filters, from: e.target.value })} />
         </Field>
@@ -126,7 +126,7 @@ export function ReportsPage() {
             <h2 id="eng" className="mb-3 font-heading text-lg font-semibold">
               Engajamento
             </h2>
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
               <StatCard label="Usuários ativos" value={data.engagement.activeUsers} icon={UsersIcon} />
               <StatCard label="Acessaram nos últimos 30 dias" value={data.engagement.engagedLast30Days} icon={Activity} hint={data.engagement.activeUsers ? `${Math.round((data.engagement.engagedLast30Days / data.engagement.activeUsers) * 100)}% dos ativos` : undefined} />
               <StatCard label="Trilhas iniciadas" value={data.engagement.tracksStarted} icon={BookOpenCheck} hint="no período" />
@@ -145,13 +145,13 @@ export function ReportsPage() {
             <h2 id="learn" className="mb-3 font-heading text-lg font-semibold">
               Aprendizagem
             </h2>
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
               <StatCard label="Nota média" value={num(data.learning.averageScore, "%")} icon={Target} />
               <StatCard label="Aprovação" value={num(data.learning.passRate, "%")} icon={Award} tone="success" />
               <StatCard label="Tentativas por avaliação" value={num(data.learning.attemptsPerAssessment)} icon={Activity} />
               <StatCard label="Validações pendentes" value={data.learning.pendingValidations} icon={Hourglass} tone="warning" hint="atividades e correções manuais" />
             </div>
-            <div className="mt-4 grid gap-4 xl:grid-cols-2">
+            <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-2">
               <Card className="p-5">
                 <CardHeader flush title="Avaliações com menor aprovação" description="Mínimo de 3 tentativas corrigidas." />
                 {data.learning.hardestAssessments.length === 0 ? (
@@ -194,13 +194,13 @@ export function ReportsPage() {
             <h2 id="dev" className="mb-3 font-heading text-lg font-semibold">
               Desenvolvimento
             </h2>
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
               <StatCard label="Competências demonstradas" value={data.development.competenciesDemonstrated} icon={Hammer} />
               <StatCard label="Aplicações validadas" value={data.development.practiceValidated} icon={UserCheck} tone="success" />
               <StatCard label="Dias até concluir uma trilha" value={num(data.development.avgDaysToComplete)} icon={Hourglass} hint="média" />
               <StatCard label="Dias até a 1ª execução supervisionada" value={num(data.development.avgDaysToFirstSupervisedExecution)} icon={Target} hint="média, desde o primeiro estudo" />
             </div>
-            <div className="mt-4 grid gap-4 xl:grid-cols-2">
+            <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-2">
               <Card className="p-5">
                 <CardHeader flush title="Progresso médio por cargo" />
                 <div className="mt-4">
@@ -291,7 +291,7 @@ export function AuditPage() {
           </a>
         }
       />
-      <Card className="mb-4 grid gap-3 p-4 sm:grid-cols-2 xl:grid-cols-5">
+      <Card className="mb-4 grid grid-cols-1 gap-3 p-4 sm:grid-cols-2 xl:grid-cols-5">
         <Field label="Tipo de evento" htmlFor="au-action">
           <Select id="au-action" value={f.action} placeholder="Todos" onChange={(e) => update({ action: e.target.value })} options={ACTION_GROUPS} />
         </Field>

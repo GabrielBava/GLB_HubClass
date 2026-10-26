@@ -103,7 +103,7 @@ export function OnboardingPage() {
               <Brand size="lg" className="justify-center" />
               <h1 className="mt-8 font-heading text-3xl font-bold">Bem-vindo ao {data.platformName}!</h1>
               <p className="mt-4 text-lg leading-relaxed text-muted">{data.welcomeMessage}</p>
-              <div className="mt-8 grid gap-3 text-left sm:grid-cols-3">
+              <div className="mt-8 grid grid-cols-1 gap-3 text-left sm:grid-cols-3">
                 {[
                   ["Aprenda", "Apostilas e conteúdos organizados em trilhas."],
                   ["Pratique", "Exercícios, estudos de caso e simulações."],

@@ -59,7 +59,7 @@ export function AssessmentPage() {
         <Badge tone="primary" icon={ClipboardCheck}>{ASSESSMENT_KIND_LABEL[a.kind]}</Badge>
         <h1 className="mt-3 font-heading text-2xl font-bold">{a.title}</h1>
         {a.description && <p className="mt-2 whitespace-pre-line text-muted">{a.description}</p>}
-        <div className="mt-6 grid gap-6 sm:grid-cols-[1fr_auto]">
+        <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-[1fr_auto]">
           <KeyValue
             items={[
               ["Questões", a.questionCount],

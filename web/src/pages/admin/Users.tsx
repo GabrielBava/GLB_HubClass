@@ -95,7 +95,7 @@ export function UsersPage() {
   return (
     <div>
       <PageHeader title="Usuários e convites" description="Cadastro por convite: não há cadastro público. Administradores e líderes usam verificação em duas etapas." actions={<Button icon={Plus} onClick={() => { setInvite(null); setOpen(true); }}>Convidar usuário</Button>} />
-      <Card className="mb-4 grid gap-2 p-4 sm:grid-cols-[1fr_200px_200px]">
+      <Card className="mb-4 grid grid-cols-1 gap-2 p-4 sm:grid-cols-[1fr_200px_200px]">
         <div className="relative">
           <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden />
           <Input aria-label="Buscar usuário" placeholder="Nome ou e-mail" value={q} onChange={(e) => setQ(e.target.value)} className="pl-10" />
@@ -139,7 +139,7 @@ export function UsersPage() {
         {invite ? (
           <InviteResult link={invite.link} onClose={() => setOpen(false)} />
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="Nome completo" htmlFor="u-name" required className="sm:col-span-2"><Input id="u-name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></Field>
             <Field label="E-mail corporativo" htmlFor="u-email" required><Input id="u-email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></Field>
             <Field label="Perfil" htmlFor="u-role" hint={form.role !== "collaborator" ? "Exigirá verificação em duas etapas." : undefined}>
@@ -289,7 +289,7 @@ export function UserDetailPage() {
           <InviteResult link={invite.link} kind={invite.kind} onClose={() => setInvite(null)} />
         </Modal>
       )}
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader title="Dados e organização" action={!edit && <Button size="sm" variant="outline" onClick={() => setEdit({ name: u.name, role: u.role, jobTitleId: u.jobTitleId ?? "", departmentId: u.departmentId ?? "", teamId: u.teamId ?? "" })}>Editar</Button>} />
           <div className="p-5">
@@ -345,7 +345,7 @@ export function UserDetailPage() {
             />
             <div className="p-5">
               {scope ? (
-                <div className="grid gap-6 md:grid-cols-2">
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                   <fieldset className="space-y-2">
                     <legend className="mb-1 text-sm font-medium">Áreas</legend>
                     {(areas.data ?? []).map((a) => (
@@ -361,7 +361,7 @@ export function UserDetailPage() {
                   <div className="flex gap-2 md:col-span-2"><Button loading={saveScope.isPending} onClick={() => saveScope.mutate(undefined)}>Salvar escopo</Button><Button variant="ghost" onClick={() => setScope(null)}>Cancelar</Button></div>
                 </div>
               ) : (
-                <div className="grid gap-4 text-sm md:grid-cols-2">
+                <div className="grid grid-cols-1 gap-4 text-sm md:grid-cols-2">
                   <div>
                     <p className="font-medium">Áreas</p>
                     {data.leaderAreas.length ? data.leaderAreas.map((a) => <p key={a.areaId} className="text-muted">{a.name}</p>) : <p className="text-muted">Nenhuma área.</p>}

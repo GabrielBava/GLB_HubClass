@@ -192,7 +192,8 @@ export async function buildApp(config: AppConfig, opts: { database?: Database } 
   }
 
   app.setNotFoundHandler((req, reply) => {
-    if (req.url.startsWith("/api/") || !hasWeb || req.method !== "GET") {
+    // Arquivos estáticos ausentes (ex.: versão antiga em cache) respondem 404, não a página da aplicação.
+    if (req.url.startsWith("/api/") || req.url.startsWith("/assets/") || !hasWeb || req.method !== "GET") {
       return reply.status(404).send({ error: { code: "not_found", message: "Não encontrado." } });
     }
     // Rotas da aplicação de página única.

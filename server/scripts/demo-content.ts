@@ -249,3 +249,52 @@ export const RAMPAGEM: DemoDocument = {
     },
   ],
 };
+
+/** Capa fictícia (PNG) para itens da biblioteca de demonstração: carvão, faixa laranja e título. */
+export async function renderDemoCover(title: string, subtitle: string): Promise<Buffer> {
+  const { createCanvas, GlobalFonts } = await import("@napi-rs/canvas");
+  const { STANDARD_FONTS_DIR } = await import("../services/documents/pdf.js");
+  const path = await import("node:path");
+  GlobalFonts.registerFromPath(path.join(STANDARD_FONTS_DIR, "LiberationSans-Bold.ttf"), "LCCoverBold");
+  GlobalFonts.registerFromPath(path.join(STANDARD_FONTS_DIR, "LiberationSans-Regular.ttf"), "LCCover");
+  const W = 600;
+  const H = 800;
+  const canvas = createCanvas(W, H);
+  const ctx = canvas.getContext("2d");
+  ctx.fillStyle = "#171716";
+  ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = "#F36B22";
+  ctx.fillRect(0, 0, 18, H);
+  // Linhas finas, como nos materiais do guia de identidade.
+  ctx.strokeStyle = "rgba(255,255,255,0.08)";
+  ctx.lineWidth = 2;
+  for (let i = 0; i < 7; i++) {
+    ctx.beginPath();
+    ctx.moveTo(260 + i * 60, 0);
+    ctx.lineTo(420 + i * 60, H);
+    ctx.stroke();
+  }
+  ctx.fillStyle = "#F36B22";
+  ctx.font = "bold 22px LCCoverBold";
+  ctx.fillText(subtitle.toUpperCase(), 60, 120);
+  ctx.fillStyle = "#FFFFFF";
+  ctx.font = "bold 50px LCCoverBold";
+  const words = title.split(" ");
+  let line = "";
+  let y = 220;
+  for (const w of words) {
+    const test = line ? `${line} ${w}` : w;
+    if (ctx.measureText(test).width > W - 120 && line) {
+      ctx.fillText(line, 60, y);
+      line = w;
+      y += 62;
+    } else line = test;
+  }
+  if (line) ctx.fillText(line, 60, y);
+  ctx.fillStyle = "#F36B22";
+  ctx.fillRect(60, y + 40, 90, 6);
+  ctx.fillStyle = "rgba(255,255,255,0.6)";
+  ctx.font = "22px LCCover";
+  ctx.fillText("Grupo Life Brasil · material de demonstração", 60, H - 60);
+  return canvas.toBuffer("image/png");
+}

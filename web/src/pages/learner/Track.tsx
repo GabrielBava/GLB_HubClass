@@ -331,7 +331,7 @@ export function TrackPage() {
             {track.requiresLeaderValidation && <span className="rounded-full bg-black/30 px-2.5 py-1 text-xs">Validação do líder</span>}
           </div>
         </TrackCover>
-        <div className="grid gap-5 p-6 sm:p-8 lg:grid-cols-[1fr_auto] lg:items-center">
+        <div className="grid grid-cols-1 gap-5 p-6 sm:p-8 lg:grid-cols-[1fr_auto] lg:items-center">
           <div className="space-y-3">
             <div className="flex flex-wrap items-center gap-2">
               <StatusBadge status={view.status} />
@@ -371,7 +371,7 @@ export function TrackPage() {
         {view.validation.status === "rejected" && view.validation.comment && <p className="mt-3 text-sm text-danger">Comentário do líder: {view.validation.comment}</p>}
       </Card>
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_340px]">
         <div className="space-y-4">
           <h2 className="font-heading text-lg font-semibold">Módulos</h2>
           {view.modules.map((m, i) => {

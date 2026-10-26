@@ -40,7 +40,7 @@ export function LibraryPage() {
   return (
     <div>
       <PageHeader title="Biblioteca e desenvolvimento" description="Livros, artigos, podcasts e materiais complementares. Obras comerciais aparecem como indicação, com sinopse e link oficial — sem cópias não autorizadas." />
-      <Card className="mb-6 grid gap-2 p-4 sm:grid-cols-[1fr_200px_200px]">
+      <Card className="mb-6 grid grid-cols-1 gap-2 p-4 sm:grid-cols-[1fr_200px_200px]">
         <div className="relative">
           <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden />
           <Input aria-label="Buscar na biblioteca" placeholder="Buscar por título, autor ou tema" value={q} onChange={(e) => setQ(e.target.value)} className="pl-10" />
@@ -55,7 +55,7 @@ export function LibraryPage() {
       ) : !data.items.length ? (
         <EmptyState icon={BookOpen} title="Nenhum item encontrado" />
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {data.items.map((item) => {
             const Icon = typeIcon[item.type];
             return (

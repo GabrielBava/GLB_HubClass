@@ -63,7 +63,7 @@ export function AdminHomePage() {
           ))}
         </div>
       )}
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader title="Acesso rápido" />
           <div className="grid grid-cols-2 gap-2 p-5 sm:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4">

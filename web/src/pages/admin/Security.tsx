@@ -24,7 +24,7 @@ export function NumberFields<T extends Record<string, unknown>>({
   fields: { key: keyof T & string; label: string; hint?: string; min: number; max: number; step?: number }[];
 }) {
   return (
-    <div className="grid gap-4 sm:grid-cols-2">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
       {fields.map((f) => (
         <Field key={f.key} label={f.label} htmlFor={`n-${f.key}`} hint={f.hint}>
           <Input
@@ -129,7 +129,7 @@ function EnvironmentCard({ env }: { env: SettingsResponse["environment"] }) {
   return (
     <Card className="p-5">
       <CardHeader flush icon={Server} title="Ambiente" description={`Execução: ${env.environment}. Itens dependem de infraestrutura e são configurados por variáveis de ambiente.`} />
-      <ul className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+      <ul className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {items.map((i) => (
           <li key={i.label} className="flex items-start gap-2.5 rounded-xl border border-border p-3 text-sm">
             {i.ok ? <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" aria-label="OK" /> : <CircleAlert className="mt-0.5 h-4 w-4 shrink-0 text-warning" aria-label="Atenção" />}
@@ -289,7 +289,7 @@ function TermsTab() {
         {form && (
           <div className="space-y-4">
             <Alert tone="warning">Ao publicar, a versão anterior deixa de valer e todos os usuários precisarão registrar ciência novamente antes de acessar conteúdos.</Alert>
-            <div className="grid gap-4 sm:grid-cols-[160px_1fr]">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-[160px_1fr]">
               <Field label="Número da versão" htmlFor="t-ver" required>
                 <Input id="t-ver" placeholder={current ? `Ex.: ${bump(current.version)}` : "1.0"} value={form.version} onChange={(e) => setForm({ ...form, version: e.target.value })} />
               </Field>

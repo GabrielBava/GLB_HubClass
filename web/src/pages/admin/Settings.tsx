@@ -91,10 +91,10 @@ function BrandingTab({ data }: { data: SettingsResponse }) {
   void _logoDark;
 
   return (
-    <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_380px]">
+    <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_380px]">
       <Card className="p-5">
         <CardHeader flush title="Identidade visual" description="Nome, cores e tipografia são aplicados em toda a plataforma, inclusive nas telas de acesso." />
-        <div className="mt-4 grid gap-4 sm:grid-cols-2">
+        <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Nome da plataforma" htmlFor="b-name">
             <Input id="b-name" value={value.platformName} onChange={(e) => setValue({ ...value, platformName: e.target.value })} />
           </Field>
@@ -212,7 +212,7 @@ function CatalogTab({ data }: { data: SettingsResponse }) {
   const community = useSettingsGroup(data, "community");
   if (!catalog.value || !community.value) return null;
   return (
-    <div className="grid max-w-5xl gap-5 lg:grid-cols-2">
+    <div className="grid grid-cols-1 max-w-5xl gap-5 lg:grid-cols-2">
       <Card className="p-5">
         <CardHeader flush title="Catálogo" description="Como conteúdos não autorizados aparecem para o colaborador." />
         <div className="mt-4 space-y-4">
@@ -303,7 +303,7 @@ function NotificationsTab({ data }: { data: SettingsResponse }) {
         <Switch label="Enviar também por e-mail" checked={value.emailEnabled} onChange={(v) => setValue({ ...value, emailEnabled: v })} />
         <fieldset disabled={!value.emailEnabled}>
           <legend className="mb-2 text-sm font-medium">Tipos enviados por e-mail</legend>
-          <div className="grid gap-2 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             {NOTIFICATION_TYPES.map((t) => (
               <Checkbox key={t} label={NOTIFICATION_TYPE_LABEL[t]} checked={value.emailTypes.includes(t)} onChange={(on) => setValue({ ...value, emailTypes: on ? [...value.emailTypes, t] : value.emailTypes.filter((x) => x !== t) })} />
             ))}

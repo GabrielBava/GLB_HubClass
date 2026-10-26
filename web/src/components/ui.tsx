@@ -230,7 +230,7 @@ export function CardHeader({ title, description, action, icon: Icon, flush }: { 
           {description && <p className="mt-0.5 text-sm text-muted">{description}</p>}
         </div>
       </div>
-      {action}
+      {action && <div className="shrink-0">{action}</div>}
     </div>
   );
 }
@@ -555,7 +555,7 @@ export function ConfirmButton({
 // ---------------------------------------------------------------- Abas e tabelas
 export function Tabs<T extends string>({ tabs, value, onChange, className }: { tabs: { id: T; label: ReactNode; count?: number }[]; value: T; onChange: (v: T) => void; className?: string }) {
   return (
-    <div role="tablist" className={cx("flex gap-1 overflow-x-auto border-b border-border scrollbar-thin", className)}>
+    <div role="tablist" className={cx("relative flex gap-1 overflow-x-auto border-b border-border scrollbar-thin", className)}>
       {tabs.map((t) => (
         <button
           key={t.id}
@@ -577,7 +577,7 @@ export function Tabs<T extends string>({ tabs, value, onChange, className }: { t
 
 export function TableWrap({ children }: { children: ReactNode }) {
   return (
-    <div className="overflow-x-auto rounded-2xl border border-border bg-card">
+    <div className="relative overflow-x-auto rounded-2xl border border-border bg-card">
       <table className="w-full min-w-[640px] text-left text-sm">{children}</table>
     </div>
   );

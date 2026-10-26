@@ -178,7 +178,7 @@ export function ContentTreePage() {
         footer={<><Button variant="ghost" onClick={() => setArea(null)}>Cancelar</Button><Button loading={saveArea.isPending} disabled={!area?.name.trim()} onClick={() => saveArea.mutate(undefined)}>Salvar</Button></>}
       >
         {area && (
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="Nome" htmlFor="a-name" required className="sm:col-span-2"><Input id="a-name" value={area.name} onChange={(e) => setArea({ ...area, name: e.target.value })} /></Field>
             <Field label="Código (ex.: A, B)" htmlFor="a-code"><Input id="a-code" value={area.code} maxLength={10} onChange={(e) => setArea({ ...area, code: e.target.value })} /></Field>
             <Field label="Ícone" htmlFor="a-icon"><Select id="a-icon" value={area.icon} onChange={(e) => setArea({ ...area, icon: e.target.value })} options={Object.keys(AREA_ICONS).map((k) => ({ value: k, label: k }))} /></Field>
