@@ -2,6 +2,8 @@
 
 Universidade corporativa do Grupo Life Brasil: trilhas de formação, apostilas protegidas, exercícios, avaliações, aplicação prática acompanhada pelo líder e indicadores de capacitação.
 
+O visual segue o guia de identidade do Grupo Life Brasil (carvão, papel e laranja, Newsreader e DM Sans, logotipo oficial), com ajustes para manter o contraste acessível.
+
 Esta é a **Fase 1 (MVP operacional)**: autenticação real, banco de dados relacional, regras de permissão verificadas no servidor e persistência de todo o histórico. Os dados de demonstração são fictícios.
 
 - Arquitetura, modelo de dados e segurança: [`docs/ARQUITETURA.md`](docs/ARQUITETURA.md)
@@ -15,6 +17,13 @@ Esta é a **Fase 1 (MVP operacional)**: autenticação real, banco de dados rela
 As respostas foram gravadas do sistema em funcionamento, com os dados fictícios do seed. A navegação, as telas, o leitor com marca d'água e os painéis são os mesmos do sistema. As alterações (salvar, publicar, enviar avaliação) são apenas simuladas, e downloads e exportações só funcionam na aplicação instalada.
 
 Para gerar de novo: `npm run seed`, servidor em execução, `npm run demo:record` e `npm run demo:build` (a gravação usa o Playwright).
+
+## Acesso de colaboradores
+
+- **Convite e primeiro acesso:** o administrador convida. Em Configurações › Primeiro acesso, define se o primeiro acesso é obrigatório e se novos convites aguardam liberação depois da ativação (ajustável em cada convite).
+- **Liberação:** quem aguarda liberação faz o primeiro acesso, mas só estuda depois que um administrador libera em Usuários. Os administradores são avisados.
+- **Desligamento:** na ficha do usuário, imediato ou agendado, com motivo. Tranca o acesso, encerra sessões, invalida links e remove lideranças, preservando o histórico.
+- **Líderes** acompanham, atribuem e validam, mas não alteram áreas, trilhas, conteúdos nem o banco de questões. Isso é exclusivo do administrador.
 
 ## Rodar localmente
 
@@ -90,9 +99,10 @@ docs/              arquitetura, requisitos, capturas e demonstração
 npm test
 ```
 
-São 56 testes, que rodam com um banco em memória novo a cada arquivo:
+São 64 testes, que rodam com um banco em memória novo a cada arquivo:
 - autenticação, sessões, CSRF, MFA, convite, recuperação de senha e bloqueio de conta;
-- autorização e isolamento de dados (URL direta, API, troca de identificadores, líder fora do escopo);
+- autorização e isolamento de dados (URL direta, API, troca de identificadores, líder fora do escopo e sem edição de conteúdo);
+- liberação após o primeiro acesso, primeiro acesso opcional, desligamento imediato e agendado, capa e arquivo da biblioteca;
 - os critérios de aceitação 1 a 14 da especificação;
 - regras puras: correção de questões, tempo de leitura, CSV e política de senha.
 

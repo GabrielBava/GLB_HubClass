@@ -21,6 +21,9 @@ em <canvas>, sem arquivo              Validação de entrada (zod)
 - **Arquivos:** `local` (pasta privada em `data/storage`, nunca servida diretamente) ou `s3` (bucket privado com criptografia SSE, sem URL assinada nem pública).
 - **Documentos:** pdf.js no servidor extrai texto, sumário e contagem de palavras, e as páginas são renderizadas em WebP com @napi-rs/canvas. A conversão de DOCX usa o LibreOffice, quando instalado. O antivírus é o ClamAV, opcional.
 
+- **Identidade visual:** segue o guia do Grupo Life Brasil: carvão `#171716`, papel `#F6F3ED`, laranja `#F36B22`, âmbar `#FF9C42`, títulos em Newsreader e interface em DM Sans. O laranja da marca aparece em ícones, gráficos e no menu escuro. Em texto e botões sobre fundo claro usa-se um tom calculado (`#B44F19`, contraste de 5,2:1 com branco) para atender ao WCAG AA. Cores, fontes e os logotipos (versão para fundo claro e para fundo escuro) são ajustáveis em Configurações, e os tons acessíveis são recalculados a partir da cor escolhida.
+- **Dicas de função:** botões só com ícone mostram, ao passar o mouse ou ao receber foco pelo teclado, o nome da ação (o mesmo `aria-label` lido por leitores de tela).
+
 O código compartilhado (`shared/`) concentra os rótulos, enums, o cálculo do tempo de leitura e as configurações padrão, para que interface e servidor não divirjam.
 
 ## Ciclo de uma requisição
@@ -28,7 +31,7 @@ O código compartilhado (`shared/`) concentra os rótulos, enums, o cálculo do 
 1. **Cabeçalhos:** CSP restritiva (`script-src 'self'`, sem `unsafe-eval`), `frame-ancestors 'none'`, HSTS, `Referrer-Policy: same-origin`, `Permissions-Policy` e `X-Robots-Tag: noindex` em todas as respostas.
 2. **Sessão:** o cookie `__Host-lc_session` (HttpOnly, Secure, SameSite=Strict) carrega um token opaco. No banco fica apenas o SHA-256 do token. A sessão expira por inatividade (padrão de 60 min) e por tempo máximo (padrão de 12 h).
 3. **CSRF:** métodos que alteram dados exigem o cabeçalho `X-CSRF-Token`, que vem do token sincronizado da sessão e é obtido em `/api/auth/me` e mantido só em memória no navegador. Exigem também `Origin`/`Referer` dentro das origens permitidas.
-4. **Negação por padrão:** toda rota `/api` exige sessão completa. Uma rota só é pública se declarar `config.public`. Uma sessão parcial (senha correta, MFA pendente) só alcança as rotas de MFA.
+4. **Negação por padrão:** toda rota `/api` exige sessão completa. Uma rota só é pública se declarar `config.public`. Uma sessão parcial (senha correta, MFA pendente) só alcança as rotas de MFA. Uma pessoa aguardando liberação só alcança autenticação, primeiro acesso, perfil e notificações.
 5. **Termos:** sem o aceite da versão vigente dos termos, nenhum conteúdo é entregue.
 6. **Autorização:** cada rota consulta a política central (`server/authz/policy.ts`) com os identificadores do recurso. A rota nunca confia no que a interface escondeu.
 7. **Auditoria:** login, falhas, MFA, alterações de permissão, publicações, uploads, downloads, exportações, leituras de documentos e acessos negados são registrados.
@@ -42,12 +45,29 @@ O código compartilhado (`shared/`) concentra os rótulos, enums, o cálculo do 
 - **Recuperação de senha:** resposta genérica e no máximo 3 pedidos por hora. O link é de uso único e, ao ser usado, revoga todas as sessões. O administrador também pode gerar o link quando não há SMTP.
 - **Sessões:** cada usuário vê e encerra as próprias sessões. O administrador encerra sessões de qualquer usuário, e desativar um usuário encerra todas elas na hora.
 
+## Ciclo de acesso do colaborador
+
+```
+convite ──► ativação (senha) ──► [aguardando liberação] ──► ativo ──► desligado
+                                  │ opcional, por convite     │         (imediato ou agendado)
+                                  └─ recusar ─► desativado    └─ desativar ─► desativado
+```
+
+- **Liberação após o primeiro acesso:** em Configurações › Primeiro acesso, o administrador define se novos convites aguardam liberação (padrão: não). A escolha pode ser feita em cada convite. Com liberação exigida, a pessoa ativa a conta, faz o primeiro acesso e edita o perfil, mas o servidor recusa trilhas, conteúdos e painéis (`403 awaiting_approval`). Os administradores são notificados e liberam ou recusam na ficha do usuário. Recusar desativa a conta e encerra as sessões.
+- **Primeiro acesso obrigatório ou opcional:** também em Configurações › Primeiro acesso. Obrigatório (padrão), boas-vindas e ciência dos termos vêm antes de qualquer conteúdo. Opcional, a pessoa entra direto no painel e vê um aviso para concluir depois. O aceite dos termos deixa de bloquear conteúdos.
+- **Desligamento:** ação própria na ficha do usuário, com motivo obrigatório (registrado na auditoria), imediata ou agendada para data e hora. Ao executar, o servidor:
+  - tranca o login e encerra todas as sessões;
+  - invalida links de convite e de redefinição de senha;
+  - remove lideranças de equipes e de áreas;
+  - preserva o histórico de aprendizagem, as notas e os certificados.
+- **Desligamento agendado:** a data é verificada em três pontos: na resolução de cada sessão (recusada a partir do horário), no login (que executa o desligamento vencido) e numa rotina a cada 10 minutos, que conclui os desligamentos e registra na auditoria. O agendamento pode ser cancelado. O administrador não desliga a si mesmo nem o último administrador ativo. A anonimização (LGPD) continua sendo uma ação separada.
+
 ## Autorização
 
 Os perfis são **administrador geral**, **líder de área** e **colaborador**. A regra é avaliada sobre a cadeia **área → trilha → módulo → conteúdo**, nesta ordem:
 
 1. O administrador acessa tudo, inclusive rascunhos, para pré-visualizar.
-2. O conteúdo precisa estar publicado em toda a cadeia. O líder com permissão de edição na área pode pré-visualizar rascunhos dela.
+2. O conteúdo precisa estar publicado em toda a cadeia. Só o administrador pré-visualiza rascunhos.
 3. Uma regra **negar** em qualquer nível que alcance o usuário bloqueia, e prevalece sobre qualquer liberação.
 4. O líder acessa as trilhas das áreas pelas quais responde.
 5. Uma trilha do tipo **livre** é aberta a todos os usuários ativos.
@@ -59,14 +79,14 @@ Mais detalhes:
 - **Acesso parcial:** a trilha mostra só os módulos ou conteúdos liberados.
 - **Sequência:** há pré-requisito entre trilhas ("dependente"), módulo que exige o anterior e conteúdo que depende de outro.
 - **Vitrine bloqueada:** conforme a configuração, uma trilha sem acesso aparece com cadeado (só a apresentação, com pedido de acesso) ou fica oculta. Ver a vitrine não é tentativa de acesso. Abrir o conteúdo é negado e registrado.
-- **Escopo do líder:** áreas, com permissão de editar ou publicar por área, e equipes lideradas. Ele só vê, atribui, valida e corrige dentro desse escopo.
+- **Escopo do líder:** áreas que acompanha e equipes lideradas. Ele só vê, atribui, valida e corrige dentro desse escopo. O líder **não cria nem altera** áreas, trilhas, módulos, conteúdos, avaliações ou o banco de questões: toda escrita de conteúdo é exclusiva do administrador e recusada no servidor (`canManageArea` só concede leitura ao líder).
 - **Identificadores:** são UUIDs, e toda leitura confere o vínculo, de modo que trocar o identificador na URL não expõe dados de outro usuário.
 - **Explicação da decisão:** a tela de Permissões mostra se um usuário pode acessar um recurso e por quê, e quem tem acesso a um recurso.
 
 ## Leitor protegido
 
 ```
-Upload (admin/líder com permissão)
+Upload (administrador)
   └─ valida formato pelo conteúdo (assinatura do arquivo) e tamanho
   └─ marca riscos do PDF (JavaScript, ações de abertura, anexos)
   └─ antivírus ClamAV (se configurado); arquivo infectado é recusado
@@ -102,9 +122,13 @@ Leitura (colaborador autorizado)
 - **Nota:** nota mínima (padrão de 80%, por área ou por avaliação), devolutiva completa ou só a nota, crédito parcial em associação e ordenação, e salvamento automático das respostas.
 - **Atividades práticas:** "demonstrar" (simulação ou estudo de caso) e "executar" (aplicação real acompanhada). Exigem entrega e podem exigir validação do líder, que aprova ou devolve com comentários. A trilha também pode exigir a validação final do líder.
 
+## Biblioteca
+
+Cada item tem foto de capa (PNG, JPEG ou WebP, até 3 MB, proporção de livro) e pode ter um arquivo para download (PDF, Word, Excel, PowerPoint ou EPUB, até 50 MB). O formato é verificado pelo conteúdo do arquivo, não pela extensão, e passa pelo antivírus quando configurado. Arquivos só podem ser anexados a itens de conteúdo próprio, licenciado ou de licença aberta. Obras de terceiros sem autorização entram apenas como indicação, com link oficial. O download é feito pelo servidor, depois da autorização, e cada download é registrado na auditoria. Capa e arquivo ficam no armazenamento privado.
+
 ## Notificações
 
-As notificações ficam na plataforma, com envio opcional por e-mail (tipos configuráveis e preferência de cada pessoa). Uma chave de deduplicação evita repetição. Os eventos são: trilha atribuída, novo conteúdo, prazo próximo, atraso, avaliação liberada ou corrigida, feedback do líder, certificado, atualização relevante de apostila obrigatória, atividade avaliada, resposta a dúvida, validação pendente e solicitação recebida ou respondida.
+As notificações ficam na plataforma, com envio opcional por e-mail (tipos configuráveis e preferência de cada pessoa). Uma chave de deduplicação evita repetição. Os eventos são: trilha atribuída, novo conteúdo, prazo próximo, atraso, avaliação liberada ou corrigida, feedback do líder, certificado, atualização relevante de apostila obrigatória, atividade avaliada, resposta a dúvida, validação pendente, solicitação recebida ou respondida, pessoa aguardando liberação (para administradores) e acesso liberado.
 
 ## Modelo de dados
 
@@ -123,6 +147,7 @@ São 43 tabelas em `server/db/schema.ts`, agrupadas assim:
 - Chaves UUID, chaves estrangeiras com `ON DELETE` coerente e e-mail único sem distinção de maiúsculas.
 - O progresso, as anotações e as tentativas ficam no banco e sobrevivem ao logout.
 - `audit_logs` aceita apenas inclusão: gatilhos no banco recusam `UPDATE` e `DELETE`, exceto a rotina de retenção, que habilita uma variável da própria transação.
+- `users` guarda o ciclo de acesso: status (convidado, aguardando liberação, ativo, desligado/desativado), se o convite exige liberação, quem liberou e quando, e o desligamento (data, motivo e responsável).
 - `entity_revisions` guarda o histórico de alterações de trilhas, módulos, conteúdos e avaliações (quem, quando, o quê).
 
 ## Privacidade e LGPD

@@ -9,7 +9,7 @@ Atualizado com o código deste repositório. Três listas, conforme pedido na es
 ## A. Implementados
 
 ### Acesso e segurança
-- Login corporativo com mostrar/ocultar senha, estados de carregamento e erro e layout responsivo. Visual escuro com painel institucional, como nas referências.
+- Login corporativo com mostrar/ocultar senha, estados de carregamento e erro e layout responsivo. Visual escuro com painel institucional e o logotipo do Grupo Life Brasil.
 - Cadastro **apenas por convite**: link pessoal, de uso único e com validade, sem cadastro público. Há também o comando `admin:create` para o primeiro administrador, sem senha fixa no código.
 - Senhas com Argon2id e política de senha (mínimo configurável, letras e números, sem nome, e-mail ou datas, sem senhas comuns, sem repetir as 5 últimas).
 - Recuperação de senha com resposta genérica e link de uso único que revoga as sessões. O administrador também pode gerar o link quando não há SMTP.
@@ -19,6 +19,9 @@ Atualizado com o código deste repositório. Três listas, conforme pedido na es
 - Nenhum token no `localStorage`. O token CSRF fica só em memória, e há checagem de origem.
 - Negação por padrão em toda a API e autorização no servidor a cada operação. Trocar o identificador na URL não expõe dados de outro usuário.
 - Desativar o usuário encerra as sessões e o acesso na hora.
+- **Liberação após o primeiro acesso** (opcional, definida como padrão em Configurações e ajustável em cada convite): a pessoa ativa a conta e faz o primeiro acesso, mas só abre trilhas e conteúdos depois que o administrador libera. Os administradores recebem notificação e podem liberar ou recusar. Coberto pelo teste `access`.
+- **Primeiro acesso obrigatório ou opcional**, por configuração do administrador. Coberto pelo teste `access`.
+- **Desligamento de colaborador**, imediato ou agendado para data e hora, com motivo registrado na auditoria. Tranca o login, encerra as sessões, invalida convites e links de senha e remove lideranças, preservando o histórico de aprendizagem. O agendamento pode ser cancelado, e o painel administrativo lista os desligamentos agendados. Coberto pelo teste `access`.
 - CSP, HSTS, `noindex` e `robots.txt`, proteção contra injeção de fórmulas em CSV e validação de toda entrada.
 - Auditoria **somente inclusão**, garantida no banco, com filtros e exportação.
 
@@ -26,7 +29,8 @@ Atualizado com o código deste repositório. Três listas, conforme pedido na es
 - Três perfis: **administrador geral**, **líder de área** e **colaborador**.
 - Regras de liberar ou bloquear por **usuário, cargo, equipe, departamento, perfil ou todos**, nos níveis **área, trilha, módulo e documento**, com validade opcional. O bloqueio sempre prevalece.
 - Acesso parcial à trilha, trilhas livres, obrigatórias, opcionais e dependentes, e sequência entre módulos e conteúdos.
-- Escopo do líder: áreas (com permissão de editar ou publicar definida pelo administrador) e equipes. Ele atribui trilhas, define prazos, libera ou bloqueia trilhas da sua área para a sua equipe, corrige, valida e registra feedback, sem ver outras equipes nem conceder mais do que recebeu.
+- Escopo do líder: áreas que acompanha e equipes. Ele atribui trilhas, define prazos, libera ou bloqueia trilhas da sua área para a sua equipe, corrige, valida e registra feedback, sem ver outras equipes nem conceder mais do que recebeu.
+- O líder **não altera áreas, trilhas, conteúdos, avaliações nem o banco de questões** (decisão do Grupo Life Brasil, que substitui a permissão de edição por área prevista na especificação original). O servidor recusa essas operações e o menu "Conteúdo" aparece só para o administrador. Coberto pelo teste `authorization`.
 - Ferramentas de verificação: "este usuário pode acessar?" (com o motivo) e "quem tem acesso a este recurso?".
 - Atribuição em massa de trilhas por cargo, equipe, departamento, perfil ou todos.
 
@@ -37,7 +41,7 @@ Atualizado com o código deste repositório. Três listas, conforme pedido na es
   - próxima atividade recomendada com "Continuar de onde parei" (retoma na página);
   - trilhas obrigatórias e em andamento, evolução e tempo restante estimado;
   - prazos, avaliações pendentes, conteúdos recentes, certificados e recomendações de leitura.
-- **Catálogo de áreas e de trilhas** com capa, nível, módulos, duração, progresso, status e pré-requisitos. Filtros por área, especialidade, cargo, nível, status e obrigatoriedade. Conteúdo sem permissão aparece **bloqueado com pedido de acesso** ou fica **oculto**, conforme a configuração.
+- **Catálogo de áreas** só com ícone e título de cada área, e **catálogo de trilhas** com capa, nível, módulos, duração, progresso, status e pré-requisitos. Filtros por área, especialidade, cargo, nível, status e obrigatoriedade. Conteúdo sem permissão aparece **bloqueado com pedido de acesso** ou fica **oculto**, conforme a configuração.
 - Os seis status de trilha da especificação e os quatro pilares: estudado, avaliado, demonstrado e aplicado/validado.
 - **Leitor protegido:**
   - páginas renderizadas no servidor com **marca d'água individual** (nome, identificador, data e hora, sessão);
@@ -56,7 +60,7 @@ Atualizado com o código deste repositório. Três listas, conforme pedido na es
   - devolutiva completa ou só a nota, e correção manual pelo líder.
 - **Da teoria à prática:** atividades de demonstrar e executar com entrega, validação ou devolução pelo líder e validação final da trilha. Ficam separados os estados estudado, avaliado, demonstrado e validado.
 - Trilha de rampagem de 7 dias, minha evolução e certificados com código.
-- Biblioteca com regras de direito autoral: obras sem licença entram só como indicação, com link oficial.
+- **Biblioteca** com foto de capa e arquivo para download (PDF, Word, Excel, PowerPoint ou EPUB), com download registrado na auditoria. Regras de direito autoral: obras sem licença entram só como indicação, com link oficial, e não aceitam arquivo. Coberto pelo teste `access`.
 - Notificações internas com deduplicação, e-mail opcional e preferência de cada pessoa.
 - Perfil com exportação dos próprios dados (LGPD).
 
@@ -67,8 +71,9 @@ Atualizado com o código deste repositório. Três listas, conforme pedido na es
 - O painel informa o que **não** é monitorado: horários de uso, tempo de tela e anotações pessoais.
 
 ### Administração
-- Painel com pendências e alertas de configuração.
-- Usuários e convites, organização (departamentos, equipes, cargos) e escopo dos líderes.
+- Painel com pendências (incluindo pessoas aguardando liberação e desligamentos agendados) e alertas de configuração.
+- Usuários e convites, liberação de acesso, desligamento, organização (departamentos, equipes, cargos) e escopo dos líderes.
+- Gestão da biblioteca com envio e troca da capa e do arquivo para download.
 - **Áreas e trilhas:**
   - criar, editar, ocultar e reordenar áreas, trilhas, módulos, conteúdos, avaliações e atividades;
   - fluxo editorial rascunho → revisão → publicado → arquivado, com histórico de alterações;
@@ -82,13 +87,14 @@ Atualizado com o código deste repositório. Três listas, conforme pedido na es
   - desenvolvimento: competências demonstradas, aplicações validadas, dias até concluir e até a primeira execução supervisionada, por cargo e por área;
   - exportações em CSV.
 - Auditoria com filtros e CSV, sessões ativas, política de sessão e senha, versões dos termos, retenção (LGPD) e status do ambiente.
-- Identidade visual configurável sem alterar código: nome, frase, cores com verificação de contraste, fontes, logotipo e modo claro ou escuro (claro como padrão, cada pessoa pode trocar).
+- **Identidade visual do Grupo Life Brasil** aplicada como padrão (carvão, papel e laranja, títulos em Newsreader e interface em DM Sans, logotipo oficial) e configurável sem alterar código: nome, frase, cores com verificação de contraste, fontes, logotipo para fundo claro e para fundo escuro, e modo claro ou escuro (claro como padrão, cada pessoa pode trocar).
+- Botões só com ícone mostram o nome da função ao passar o mouse ou com foco pelo teclado.
 
 ### Dados e qualidade
 - Modelo relacional com 43 tabelas, cobrindo todas as entidades da seção 22, com migrações versionadas.
 - Progresso, anotações e tentativas persistem após logout.
 - Dados fictícios de demonstração: áreas A–H com as trilhas da especificação, espaço para a trilha de Planejamento Financeiro M0–M9 sem alterar o original e usuários com senhas aleatórias.
-- 56 testes automatizados e verificação de tipos, além da demonstração em HTML único (`docs/demo`).
+- 64 testes automatizados e verificação de tipos, além da demonstração em HTML único (`docs/demo`).
 
 ### Critérios de aceitação (seção 26)
 
@@ -167,7 +173,6 @@ Atualizado com o código deste repositório. Três listas, conforme pedido na es
 | Monitoramento e alertas | Ferramenta de erros e métricas (Sentry, Datadog ou similar) e alertas de disponibilidade. |
 | Backups e plano de continuidade | Rotina e responsáveis definidos pela TI. |
 | Atualização de dependências | Rotina de `npm audit` e atualização (o CI já roda testes e build a cada envio). |
-| Identidade visual oficial | Logotipo, cores e fontes do Grupo Life Brasil, que entram pela tela de Configurações sem alterar código. |
 | Conteúdo oficial | Apostilas, avaliações e a trilha de Planejamento Financeiro M0–M9. A estrutura já está criada, e os módulos M0–M9 aguardam os arquivos originais. |
 | Termos, privacidade e LGPD | Texto jurídico dos termos e do aviso de privacidade, o encarregado (DPO), os papéis de controlador e operador e o procedimento de incidentes. A plataforma versiona os termos e registra a ciência, e `ARQUITETURA.md` traz uma proposta de procedimento. |
 | Prazos de retenção | Validar com o jurídico os padrões configurados: auditoria 730 dias, sessões de leitura 365 e notificações 180. |
