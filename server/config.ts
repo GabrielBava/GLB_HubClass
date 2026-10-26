@@ -18,7 +18,7 @@ const EnvSchema = z.object({
   DATABASE_URL: z.string().optional(),
   DATA_DIR: z.string().default("./data"),
   APP_SECRET: z.string().optional(),
-  STORAGE_DRIVER: z.enum(["local", "s3"]).default("local"),
+  STORAGE_DRIVER: z.enum(["local", "s3", "vercel-blob"]).optional(),
   S3_BUCKET: z.string().optional(),
   S3_REGION: z.string().default("us-east-1"),
   S3_ENDPOINT: z.string().optional(),
@@ -39,6 +39,16 @@ const EnvSchema = z.object({
   COOKIE_SECURE: z.string().optional(),
   LOG_LEVEL: z.string().default("info"),
   ALLOW_EMBEDDED_DB_IN_PRODUCTION: bool(false),
+  /** Variáveis definidas pela própria Vercel. */
+  VERCEL: z.string().optional(),
+  VERCEL_ENV: z.string().optional(),
+  VERCEL_URL: z.string().optional(),
+  VERCEL_BRANCH_URL: z.string().optional(),
+  VERCEL_PROJECT_PRODUCTION_URL: z.string().optional(),
+  /** Segredo que a Vercel envia no cabeçalho Authorization das rotinas agendadas. */
+  CRON_SECRET: z.string().optional(),
+  /** Libera a configuração inicial (primeiro administrador) enquanto não houver administrador. */
+  SETUP_TOKEN: z.string().optional(),
 });
 
 export interface AppConfig {
@@ -62,7 +72,8 @@ export interface AppConfig {
         accessKeyId?: string;
         secretAccessKey?: string;
         forcePathStyle: boolean;
-      };
+      }
+    | { driver: "vercel-blob" };
   smtp: { host: string; port: number; user?: string; pass?: string; secure: boolean } | null;
   mailFrom: string;
   clamav: { host: string; port: number } | null;
@@ -70,8 +81,12 @@ export interface AppConfig {
   trustProxy: boolean;
   cookieSecure: boolean;
   logLevel: string;
-  /** Em testes, processa documentos de forma síncrona. */
+  /** Em testes e na Vercel, processa documentos dentro da própria requisição de envio. */
   processDocumentsInline: boolean;
+  /** Execução em funções sem servidor (Vercel): sem tarefas em segundo plano nem arquivos estáticos. */
+  serverless: boolean;
+  cronSecret: string | null;
+  setupToken: string | null;
 }
 
 function devSecret(dataDir: string): string {
@@ -93,7 +108,9 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     throw new Error(`Configuração inválida: ${issues}`);
   }
   const e = parsed.data;
-  const production = e.NODE_ENV === "production";
+  const serverless = !!e.VERCEL;
+  // Na Vercel o ambiente de produção e as prévias rodam como produção (HTTPS, banco gerenciado).
+  const production = e.NODE_ENV === "production" || serverless;
   const dataDir = path.resolve(e.DATA_DIR);
 
   let appSecret = e.APP_SECRET;
@@ -103,12 +120,15 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
   }
   if (appSecret.length < 32) throw new Error("APP_SECRET deve ter pelo menos 32 caracteres.");
 
-  if (production && !e.DATABASE_URL && !e.ALLOW_EMBEDDED_DB_IN_PRODUCTION) {
-    throw new Error("DATABASE_URL (PostgreSQL) é obrigatório em produção.");
+  if (production && !e.DATABASE_URL && (serverless || !e.ALLOW_EMBEDDED_DB_IN_PRODUCTION)) {
+    throw new Error("DATABASE_URL (PostgreSQL) é obrigatório em produção. Na Vercel, conecte o banco Neon ao projeto.");
   }
 
   let storage: AppConfig["storage"];
-  if (e.STORAGE_DRIVER === "s3") {
+  const driver = e.STORAGE_DRIVER ?? (serverless ? "vercel-blob" : "local");
+  if (driver === "vercel-blob") {
+    storage = { driver: "vercel-blob" };
+  } else if (driver === "s3") {
     if (!e.S3_BUCKET) throw new Error("S3_BUCKET é obrigatório quando STORAGE_DRIVER=s3.");
     storage = {
       driver: "s3",
@@ -123,14 +143,19 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     storage = { driver: "local", dir: path.join(dataDir, "storage") };
   }
 
-  const origin = new URL(e.APP_ORIGIN).origin;
-  const extra = e.EXTRA_ORIGINS.split(",")
-    .map((s) => s.trim())
+  // Na Vercel, sem APP_ORIGIN, vale o domínio de produção do projeto; as URLs da implantação
+  // (prévias e domínio da branch) também são aceitas como origem.
+  const vercelHost = (h?: string) => (h ? `https://${h.replace(/^https?:\/\//, "")}` : null);
+  const appOriginRaw = env.APP_ORIGIN ? e.APP_ORIGIN : (vercelHost(e.VERCEL_PROJECT_PRODUCTION_URL) ?? vercelHost(e.VERCEL_URL) ?? e.APP_ORIGIN);
+  const origin = new URL(appOriginRaw).origin;
+  const extra = [...e.EXTRA_ORIGINS.split(","), ...(serverless ? [vercelHost(e.VERCEL_URL), vercelHost(e.VERCEL_BRANCH_URL)] : [])]
+    .map((s) => (s ?? "").trim())
     .filter(Boolean)
-    .map((s) => new URL(s).origin);
+    .map((s) => new URL(s).origin)
+    .filter((o, i, all) => o !== origin && all.indexOf(o) === i);
 
   return {
-    env: e.NODE_ENV,
+    env: serverless ? "production" : e.NODE_ENV,
     host: e.HOST,
     port: e.PORT,
     appOrigin: origin,
@@ -143,10 +168,14 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     smtp: e.SMTP_HOST ? { host: e.SMTP_HOST, port: e.SMTP_PORT, user: e.SMTP_USER, pass: e.SMTP_PASS, secure: e.SMTP_SECURE } : null,
     mailFrom: e.MAIL_FROM,
     clamav: e.CLAMAV_HOST ? { host: e.CLAMAV_HOST, port: e.CLAMAV_PORT } : null,
-    docx: { enabled: e.DOCX_CONVERSION, sofficePath: e.SOFFICE_PATH },
-    trustProxy: e.TRUST_PROXY,
+    // Na Vercel não há LibreOffice: as apostilas entram em PDF (a conversão só liga se for configurada).
+    docx: { enabled: serverless && env.DOCX_CONVERSION === undefined ? false : e.DOCX_CONVERSION, sofficePath: e.SOFFICE_PATH },
+    trustProxy: e.TRUST_PROXY || serverless,
     cookieSecure: e.COOKIE_SECURE === undefined ? production : ["1", "true", "yes", "on"].includes(e.COOKIE_SECURE.toLowerCase()),
     logLevel: e.LOG_LEVEL,
-    processDocumentsInline: false,
+    processDocumentsInline: serverless,
+    serverless,
+    cronSecret: e.CRON_SECRET && e.CRON_SECRET.length >= 16 ? e.CRON_SECRET : null,
+    setupToken: e.SETUP_TOKEN && e.SETUP_TOKEN.length >= 16 ? e.SETUP_TOKEN : null,
   };
 }

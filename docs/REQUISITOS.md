@@ -94,7 +94,15 @@ Atualizado com o código deste repositório. Três listas, conforme pedido na es
 - Modelo relacional com 43 tabelas, cobrindo todas as entidades da seção 22, com migrações versionadas.
 - Progresso, anotações e tentativas persistem após logout.
 - Dados fictícios de demonstração: áreas A–H com as trilhas da especificação, espaço para a trilha de Planejamento Financeiro M0–M9 sem alterar o original e usuários com senhas aleatórias.
-- 64 testes automatizados e verificação de tipos, além da demonstração em HTML único (`docs/demo`).
+- 69 testes automatizados e verificação de tipos, além da demonstração em HTML único (`docs/demo`).
+
+### Implantação na Vercel
+- `vercel.json`, a função `api/index.js` e o build `npm run vercel-build` (tipos, interface, servidor e migrações) estão prontos.
+- Banco PostgreSQL da Neon, com pooler, e arquivos no **Vercel Blob privado**, sem URL pública.
+- Envios acima de 4 MB vão direto do navegador ao Blob, com link assinado de uso único e validação na confirmação. Downloads acima de 4 MB saem por link assinado de 5 minutos, depois da verificação de permissão e da auditoria.
+- Rotina diária agendada (Vercel Cron), protegida por `CRON_SECRET`: retenção, desligamentos agendados, documentos interrompidos e envios abandonados.
+- Produção **começa vazia**, sem dados fictícios. O primeiro administrador é criado em `/configuracao-inicial` com o código `SETUP_TOKEN`, e a tela se desativa quando já existe administrador.
+- Testado localmente no modo Vercel com PostgreSQL real: migração, configuração inicial, convite, verificação em duas etapas, publicação de apostila e leitura. A integração com o Blob da Vercel só pode ser testada numa implantação real.
 
 ### Critérios de aceitação (seção 26)
 
@@ -163,16 +171,18 @@ Atualizado com o código deste repositório. Três listas, conforme pedido na es
 
 | Item | O que é preciso |
 | --- | --- |
-| Banco de produção | PostgreSQL gerenciado com backup automático e testes de restauração (`DATABASE_URL`). |
-| Armazenamento privado | Bucket S3 (ou compatível) privado, com bloqueio de acesso público e criptografia (`STORAGE_DRIVER=s3`). |
-| HTTPS | Certificado e proxy reverso ou balanceador (`TRUST_PROXY=true`). |
+| Conta na Vercel | Plano **Pro**: o Hobby é restrito a uso pessoal e não comercial. Projeto importado do GitHub, conforme `docs/DEPLOY-VERCEL.md`. |
+| Banco de produção | Neon pelo menu Storage da Vercel (`DATABASE_URL` automático), com a janela de restauração definida pela TI. Fora da Vercel: PostgreSQL gerenciado com backup. |
+| Armazenamento privado | Loja do Vercel Blob criada como **Private** e conectada só à produção. Fora da Vercel: bucket S3 privado (`STORAGE_DRIVER=s3`). |
+| Segredos | `APP_SECRET`, `CRON_SECRET` e `SETUP_TOKEN` cadastrados nas variáveis de ambiente. |
+| HTTPS | Automático na Vercel (domínio `.vercel.app` ou próprio). Fora dela: certificado e proxy reverso (`TRUST_PROXY=true`). |
 | E-mail | SMTP corporativo (`SMTP_*`). Sem ele, convites e links de redefinição aparecem para o administrador. |
 | Antivírus nos uploads | Serviço ClamAV (`CLAMAV_HOST`). Sem ele, os arquivos passam só pela validação de formato e de riscos do PDF. |
-| Conversão de DOCX | LibreOffice instalado no servidor (`SOFFICE_PATH`). Sem ele, as apostilas devem ser enviadas em PDF. |
+| Conversão de DOCX | Indisponível na Vercel: as apostilas entram em PDF. Em servidor próprio, com LibreOffice (`SOFFICE_PATH`). |
 | Mais de uma instância do servidor | Limite de requisições em Redis e fila externa para processar documentos (ver `ARQUITETURA.md`). |
 | Monitoramento e alertas | Ferramenta de erros e métricas (Sentry, Datadog ou similar) e alertas de disponibilidade. |
 | Backups e plano de continuidade | Rotina e responsáveis definidos pela TI. |
 | Atualização de dependências | Rotina de `npm audit` e atualização (o CI já roda testes e build a cada envio). |
-| Conteúdo oficial | Apostilas, avaliações e a trilha de Planejamento Financeiro M0–M9. A estrutura já está criada, e os módulos M0–M9 aguardam os arquivos originais. |
+| Conteúdo oficial | Apostilas, avaliações e a trilha de Planejamento Financeiro M0–M9, publicadas pelo painel seguindo `docs/PUBLICAR-MATERIAIS.md`. A produção começa vazia. |
 | Termos, privacidade e LGPD | Texto jurídico dos termos e do aviso de privacidade, o encarregado (DPO), os papéis de controlador e operador e o procedimento de incidentes. A plataforma versiona os termos e registra a ciência, e `ARQUITETURA.md` traz uma proposta de procedimento. |
 | Prazos de retenção | Validar com o jurídico os padrões configurados: auditoria 730 dias, sessões de leitura 365 e notificações 180. |

@@ -1,8 +1,9 @@
 import { useState, type FormEvent } from "react";
 import { Link, Navigate, useNavigate, useSearchParams } from "react-router";
+import { useQuery } from "@tanstack/react-query";
 import { AlertTriangle } from "lucide-react";
 import { AuthLayout, AuthTitle } from "../../components/AuthLayout";
-import { Button, Field, Input, PasswordInput } from "../../components/ui";
+import { Alert, Button, Field, Input, PasswordInput } from "../../components/ui";
 import { api, errorMessage, safeNext } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
 import { useBranding } from "../../lib/branding";
@@ -17,6 +18,8 @@ export function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  // Banco recém-criado (sem administrador): oferece a configuração inicial.
+  const setup = useQuery({ queryKey: ["setup-status"], queryFn: () => api.get<{ available: boolean }>("/api/setup/status"), staleTime: 60_000, retry: false });
 
   if (me?.mfa.satisfied) return <Navigate to={next} replace />;
 
@@ -69,6 +72,15 @@ export function LoginPage() {
           Entrar
         </Button>
       </form>
+      {setup.data?.available && (
+        <div className="mt-6">
+          <Alert tone="primary" title="Plataforma ainda sem administrador">
+            <Link to="/configuracao-inicial" className="font-medium text-primary hover:underline">
+              Fazer a configuração inicial
+            </Link>
+          </Alert>
+        </div>
+      )}
       <div className="mt-8 text-center text-sm text-muted">
         <p>Ainda não tem acesso?</p>
         <Link to="/primeiro-acesso/manual" className="font-medium text-primary hover:underline">

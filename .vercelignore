@@ -1,0 +1,7 @@
+# Arquivos que não precisam ir para o build na Vercel.
+.scratch
+data
+docs/demo
+docs/capturas
+tests
+tools/demo

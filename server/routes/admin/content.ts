@@ -30,6 +30,7 @@ import { applyWatermark } from "../../services/documents/watermark.js";
 import { notify } from "../../services/notifications.js";
 import { recordRevision } from "../../services/revisions.js";
 import { managerContext } from "../../services/scope.js";
+import { sendStoredFile } from "../../lib/files.js";
 
 const idParams = z.object({ id: z.string().uuid() });
 const statusBody = z.object({ status: z.enum(PUBLICATION_STATUS) });
@@ -646,10 +647,8 @@ export async function adminContentRoutes(app: FastifyInstance) {
     const [v] = await db.select().from(contentVersions).where(eq(contentVersions.id, versionId));
     const [file] = v?.fileId ? await db.select().from(files).where(eq(files.id, v.fileId)) : [];
     if (!v || !file) throw notFound();
-    const data = await storage.get(file.storageKey);
     await audit(req, "content.original_downloaded", { targetType: "content", targetId: v.contentId, metadata: { version: v.versionNumber } });
-    reply.header("Content-Type", "application/pdf").header("Content-Disposition", `attachment; filename="original-v${v.versionNumber}.pdf"`);
-    return reply.send(data);
+    return sendStoredFile(reply, storage, { ...file, mimeType: "application/pdf" }, `attachment; filename="original-v${v.versionNumber}.pdf"`);
   });
 
   // ------------------------------------------------------------------ Atividades práticas

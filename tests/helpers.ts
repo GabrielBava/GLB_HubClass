@@ -10,21 +10,23 @@ import { hashPassword } from "../server/auth/password.js";
 import { generateMfaSecret, generateTotp } from "../server/auth/mfa.js";
 import { termsVersions, users } from "../server/db/schema.js";
 import type { Role } from "../shared/domain.js";
+import type { StorageDriver } from "../server/services/storage/index.js";
 
 export const ORIGIN = "http://localhost:5173";
 
-export async function createTestApp(): Promise<FastifyInstance> {
+export async function createTestApp(opts: { env?: Record<string, string>; storage?: (dataDir: string) => StorageDriver } = {}): Promise<FastifyInstance> {
   const dir = mkdtempSync(path.join(os.tmpdir(), "lifeclass-test-"));
   const config = loadConfig({
     NODE_ENV: "test",
     APP_SECRET: "segredo-de-teste-com-mais-de-trinta-e-dois-caracteres",
     DATA_DIR: dir,
     APP_ORIGIN: ORIGIN,
+    ...opts.env,
   } as NodeJS.ProcessEnv);
   config.embeddedDbDir = ":memory:";
   config.processDocumentsInline = true;
   config.docx.enabled = false;
-  const app = await buildApp(config);
+  const app = await buildApp(config, { storage: opts.storage?.(dir) });
   await app.ready();
   return app;
 }

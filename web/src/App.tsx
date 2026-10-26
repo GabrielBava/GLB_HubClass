@@ -6,6 +6,7 @@ import { PageLoader } from "./components/ui";
 import { useAuth } from "./lib/auth";
 import { AccessDeniedPage, AwaitingApprovalPage, NotFoundPage } from "./pages/Errors";
 import { LoginPage } from "./pages/auth/Login";
+import { SetupPage } from "./pages/auth/Setup";
 import { MfaSetupPage, MfaVerifyPage } from "./pages/auth/Mfa";
 import { AcceptInvitePage, FirstAccessManualPage, ForgotPasswordPage, ResetPasswordPage } from "./pages/auth/Recovery";
 import { OnboardingPage } from "./pages/learner/Onboarding";
@@ -77,6 +78,7 @@ export function App() {
   return (
     <Routes>
       <Route path="/entrar" element={<LoginPage />} />
+      <Route path="/configuracao-inicial" element={<SetupPage />} />
       <Route path="/entrar/verificacao" element={<MfaVerifyPage />} />
       <Route path="/entrar/configurar-mfa" element={<MfaSetupPage />} />
       <Route path="/recuperar-acesso" element={<ForgotPasswordPage />} />

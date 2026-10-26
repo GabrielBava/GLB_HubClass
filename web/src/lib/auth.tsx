@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { api, setCsrfToken } from "./api";
+import { api, setCsrfToken, setDirectUploadPrefix } from "./api";
 import type { Role, UserStatus } from "../../../shared/domain";
 
 export interface Me {
@@ -15,6 +15,7 @@ export interface Me {
   currentTermsVersion: string | null;
   leader: { areas: { id: string; name: string }[]; teams: { id: string; name: string }[] } | null;
   canManageContent: boolean;
+  uploads: { direct: boolean; prefix: string | null };
 }
 
 type MeResponse = Me | { authenticated: false };
@@ -44,6 +45,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     setCsrfToken(me?.csrfToken ?? null);
   }, [me?.csrfToken]);
+
+  useEffect(() => {
+    setDirectUploadPrefix(me?.uploads?.direct ? me.uploads.prefix : null);
+  }, [me?.uploads?.direct, me?.uploads?.prefix]);
 
   useEffect(() => {
     const onUnauthorized = () => {

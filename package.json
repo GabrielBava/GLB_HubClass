@@ -13,6 +13,7 @@
     "dev:web": "vite",
     "build": "npm run typecheck && vite build && tsc -p tsconfig.server.json",
     "start": "node dist/server/server/index.js",
+    "vercel-build": "npm run build && node dist/server/server/scripts/migrate.js",
     "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.server.json",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -35,6 +36,8 @@
     "@napi-rs/canvas": "1.0.13",
     "@node-rs/argon2": "2.2.2",
     "@tanstack/react-query": "5.90.2",
+    "@vercel/blob": "2.8.1",
+    "@vercel/functions": "3.10.1",
     "drizzle-orm": "0.45.4",
     "fastify": "5.12.7",
     "lucide-react": "0.462.0",
@@ -66,5 +69,10 @@
     "typescript": "5.9.3",
     "vite": "6.4.5",
     "vitest": "5.0.5"
+  },
+  "overrides": {
+    "@vercel/cli-config": {
+      "zod": "4.6.7"
+    }
   }
 }

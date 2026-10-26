@@ -4,6 +4,7 @@ import type { AppContext } from "../app.js";
 import type { AuthState } from "../auth/sessions.js";
 import { departments, jobTitles, knowledgeAreas, leaderAreas, teamLeaders, teams, termsAcceptances, termsVersions } from "../db/schema.js";
 import type { DB } from "../db/client.js";
+import { directUploadPrefix } from "../lib/upload.js";
 
 export async function currentTerms(db: DB) {
   const [terms] = await db.select().from(termsVersions).where(eq(termsVersions.isCurrent, true)).orderBy(desc(termsVersions.publishedAt)).limit(1);
@@ -67,5 +68,7 @@ export async function buildMe(ctx: AppContext, auth: AuthState) {
     leader,
     // Apenas o administrador gerencia áreas, trilhas, conteúdos e o banco de questões.
     canManageContent: u.role === "admin",
+    // Na Vercel, arquivos grandes vão direto do navegador ao armazenamento privado (pasta temporária da pessoa).
+    uploads: ctx.storage.kind === "vercel-blob" && u.role === "admin" ? { direct: true, prefix: directUploadPrefix(u.id) } : { direct: false, prefix: null },
   };
 }

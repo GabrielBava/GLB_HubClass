@@ -9,6 +9,8 @@ Esta é a **Fase 1 (MVP operacional)**: autenticação real, banco de dados rela
 - Arquitetura, modelo de dados e segurança: [`docs/ARQUITETURA.md`](docs/ARQUITETURA.md)
 - Requisitos implementados, pendentes e dependentes de infraestrutura: [`docs/REQUISITOS.md`](docs/REQUISITOS.md)
 - Capturas de tela (computador e celular): [`docs/capturas/`](docs/capturas)
+- **Publicar na Vercel** (banco Neon, arquivos no Vercel Blob privado, produção vazia): [`docs/DEPLOY-VERCEL.md`](docs/DEPLOY-VERCEL.md)
+- **Roteiro para subir os materiais de apoio** pelo painel: [`docs/PUBLICAR-MATERIAIS.md`](docs/PUBLICAR-MATERIAIS.md)
 
 ## Experimentar sem instalar
 
@@ -37,7 +39,18 @@ npm run dev       # API em :3001 e interface em http://localhost:5173
 
 O seed gera senhas aleatórias e grava as credenciais em `data/demo-credentials.txt`. Esse arquivo fica fora do Git e não existe senha fixa no código. Administradores e líderes configuram a verificação em duas etapas no primeiro login, com um aplicativo autenticador como Google Authenticator, Microsoft Authenticator ou 1Password.
 
-## Produção
+## Produção na Vercel
+
+O repositório já vem pronto para a Vercel (`vercel.json`, função `api/index.js`, rotina diária e cabeçalhos de segurança). Em resumo:
+1. importe o projeto;
+2. conecte o banco Neon e uma loja **privada** do Vercel Blob pelo menu Storage;
+3. cadastre `APP_SECRET`, `CRON_SECRET` e `SETUP_TOKEN`;
+4. publique;
+5. crie o primeiro administrador em `/configuracao-inicial`.
+
+A produção começa **vazia**: sem usuários, áreas ou conteúdos fictícios. O passo a passo completo está em [`docs/DEPLOY-VERCEL.md`](docs/DEPLOY-VERCEL.md).
+
+## Produção em servidor próprio
 
 1. Provisionar o PostgreSQL, um bucket S3 privado (ou compatível), SMTP e um proxy reverso com HTTPS. ClamAV e LibreOffice são opcionais.
 2. Copiar `.env.example` para `.env` (ou definir as variáveis no orquestrador). `APP_SECRET` e `DATABASE_URL` são obrigatórios.
@@ -73,10 +86,12 @@ O painel administrativo (Segurança e privacidade › Ambiente) mostra o que est
 | `npm run admin:create` | Cria o primeiro administrador por convite |
 | `npm run audit:purge` | Aplica a política de retenção agora (também roda diariamente) |
 | `npm run demo:record` / `npm run demo:build` | Gera a demonstração em HTML único |
+| `npm run vercel-build` | Build usado pela Vercel: verificação de tipos, interface, servidor e migrações |
 
 ## Estrutura
 
 ```
+api/               função da Vercel (encaminha /api/* para o servidor)
 server/            API (Fastify + Drizzle)
   auth/            senhas (Argon2id), sessões, MFA (TOTP), tokens de convite e redefinição
   authz/           avaliação de permissões (negação por padrão)
@@ -99,10 +114,11 @@ docs/              arquitetura, requisitos, capturas e demonstração
 npm test
 ```
 
-São 64 testes, que rodam com um banco em memória novo a cada arquivo:
+São 69 testes, que rodam com um banco em memória novo a cada arquivo:
 - autenticação, sessões, CSRF, MFA, convite, recuperação de senha e bloqueio de conta;
 - autorização e isolamento de dados (URL direta, API, troca de identificadores, líder fora do escopo e sem edição de conteúdo);
 - liberação após o primeiro acesso, primeiro acesso opcional, desligamento imediato e agendado, capa e arquivo da biblioteca;
+- implantação na Vercel: configuração inicial do primeiro administrador, rotina diária protegida por segredo, envio direto de arquivos grandes e download por link assinado;
 - os critérios de aceitação 1 a 14 da especificação;
 - regras puras: correção de questões, tempo de leitura, CSV e política de senha.
 

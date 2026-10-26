@@ -25,12 +25,18 @@ function migrationsFolder(): string {
  * - Sem DATABASE_URL: PostgreSQL embutido (PGlite) em data/pglite, para desenvolvimento
  *   e testes sem instalar nada. ":memory:" cria um banco temporário em memória.
  */
-export async function openDatabase(opts: { databaseUrl: string | null; embeddedDir: string }): Promise<Database> {
+export async function openDatabase(opts: { databaseUrl: string | null; embeddedDir: string; serverless?: boolean }): Promise<Database> {
   if (opts.databaseUrl) {
     const pg = (await import("pg")).default;
     const { drizzle } = await import("drizzle-orm/node-postgres");
     const { migrate } = await import("drizzle-orm/node-postgres/migrator");
-    const pool = new pg.Pool({ connectionString: opts.databaseUrl, max: 10 });
+    // Em funções sem servidor, poucas conexões por instância (o Neon agrupa as conexões no "pooler").
+    const pool = new pg.Pool({ connectionString: opts.databaseUrl, max: opts.serverless ? 3 : 10, idleTimeoutMillis: opts.serverless ? 5_000 : 10_000 });
+    if (opts.serverless) {
+      // Fecha conexões ociosas antes de a Vercel suspender a instância.
+      const { attachDatabasePool } = await import("@vercel/functions");
+      attachDatabasePool(pool);
+    }
     const db = drizzle(pool, { schema }) as unknown as DB;
     return {
       db,

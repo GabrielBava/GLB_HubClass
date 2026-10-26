@@ -8,6 +8,7 @@ import { communityRoutes } from "./community.js";
 import { dashboardRoutes } from "./dashboard.js";
 import { leaderRoutes } from "./leader.js";
 import { notesRoutes } from "./notes.js";
+import { platformRoutes } from "./platform.js";
 import { publicRoutes } from "./public.js";
 import { readerRoutes } from "./reader.js";
 import { adminAccessRoutes } from "./admin/access.js";
@@ -21,6 +22,7 @@ import { adminUserRoutes } from "./admin/users.js";
 export async function registerRoutes(app: FastifyInstance) {
   for (const plugin of [
     publicRoutes,
+    platformRoutes,
     authRoutes,
     accountRoutes,
     dashboardRoutes,

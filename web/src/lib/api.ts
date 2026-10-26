@@ -2,9 +2,44 @@
 // o token CSRF da sessão é mantido apenas em memória e enviado nas requisições que alteram dados.
 
 let csrfToken: string | null = null;
+/** Pasta temporária para envio direto ao armazenamento (Vercel Blob); nulo quando indisponível. */
+let directUploadPrefix: string | null = null;
 
 export function setCsrfToken(token: string | null) {
   csrfToken = token;
+}
+
+export function setDirectUploadPrefix(prefix: string | null) {
+  directUploadPrefix = prefix;
+}
+
+/** Acima deste tamanho, na Vercel, o arquivo vai direto ao armazenamento privado (limite de 4,5 MB por requisição). */
+const DIRECT_UPLOAD_THRESHOLD = 4 * 1024 * 1024;
+
+/**
+ * Envio de arquivo. Arquivos grandes na Vercel: o navegador envia direto ao armazenamento privado com
+ * um link assinado de uso único e depois confirma na mesma rota, que valida o conteúdo como no envio comum.
+ */
+async function uploadFile<T>(url: string, form: FormData): Promise<T> {
+  const file = form.get("file");
+  if (!directUploadPrefix || !(file instanceof File) || file.size <= DIRECT_UPLOAD_THRESHOLD) return request<T>("POST", url, form);
+  const fields: Record<string, string> = {};
+  form.forEach((v, k) => {
+    if (k !== "file" && typeof v === "string") fields[k] = v;
+  });
+  const pathname = `${directUploadPrefix}${crypto.randomUUID()}`;
+  const { uploadPresigned } = await import("@vercel/blob/client");
+  try {
+    await uploadPresigned(pathname, file, {
+      access: "private",
+      handleUploadUrl: "/api/uploads/blob",
+      headers: csrfToken ? { "X-CSRF-Token": csrfToken } : {},
+      contentType: file.type || "application/octet-stream",
+    });
+  } catch {
+    throw new ApiError(0, "upload_failed", "Não foi possível enviar o arquivo. Verifique sua conexão e tente novamente.");
+  }
+  return request<T>("POST", url, { blobUpload: { pathname, filename: file.name, contentType: file.type, fields } });
 }
 
 export class ApiError extends Error {
@@ -57,7 +92,7 @@ export const api = {
   put: <T>(url: string, body: unknown = {}) => request<T>("PUT", url, body),
   patch: <T>(url: string, body: unknown = {}) => request<T>("PATCH", url, body),
   del: <T>(url: string, body?: unknown) => request<T>("DELETE", url, body),
-  upload: <T>(url: string, form: FormData) => request<T>("POST", url, form),
+  upload: <T>(url: string, form: FormData) => uploadFile<T>(url, form),
 };
 
 /** Envio "fire and forget" que sobrevive ao fechamento da aba (fim da sessão de leitura). */

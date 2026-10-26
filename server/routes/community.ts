@@ -8,6 +8,7 @@ import { audit, currentUser } from "../lib/http.js";
 import { parse } from "../lib/validate.js";
 import { notifyMany } from "../services/notifications.js";
 import { deadlineReminders } from "./dashboard.js";
+import { sendStoredFile } from "../lib/files.js";
 
 const idParams = z.object({ id: z.string().uuid() });
 
@@ -64,12 +65,8 @@ export async function communityRoutes(app: FastifyInstance) {
     if (!item || !item.fileId || !item.allowDownload || item.license === "external_only") throw notFound();
     const [file] = await db.select().from(files).where(eq(files.id, item.fileId));
     if (!file) throw notFound();
-    const data = await storage.get(file.storageKey);
     await audit(req, "library.download", { targetType: "library_item", targetId: id });
-    reply
-      .header("Content-Type", file.mimeType)
-      .header("Content-Disposition", `attachment; filename="material"; filename*=UTF-8''${encodeURIComponent(file.originalName)}`);
-    return reply.send(data);
+    return sendStoredFile(reply, storage, file, `attachment; filename="material"; filename*=UTF-8''${encodeURIComponent(file.originalName)}`);
   });
 
   // ------------------------------------------------------------------ Notificações

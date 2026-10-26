@@ -10,6 +10,7 @@ import { parse } from "../lib/validate.js";
 import { contentForUser } from "../services/access.js";
 import { applyWatermark } from "../services/documents/watermark.js";
 import { refreshEnrollment } from "../services/progress.js";
+import { sendStoredFile } from "../lib/files.js";
 
 const idParams = z.object({ id: z.string().uuid() });
 const pageParams = z.object({ id: z.string().uuid(), n: z.coerce.number().int().min(1).max(5000) });
@@ -319,13 +320,9 @@ export async function readerRoutes(app: FastifyInstance) {
     const [version] = await db.select().from(contentVersions).where(eq(contentVersions.id, c.content.currentVersionId));
     const [file] = version?.fileId ? await db.select().from(files).where(eq(files.id, version.fileId)) : [];
     if (!file) throw notFound();
-    const data = await storage.get(file.storageKey);
     await audit(req, "content.download", { targetType: "content", targetId: id });
     const safeName = c.content.title.replace(/[^\p{L}\p{N} _.-]/gu, "").slice(0, 80) || "documento";
-    reply
-      .header("Content-Type", "application/pdf")
-      .header("Content-Disposition", `attachment; filename="documento.pdf"; filename*=UTF-8''${encodeURIComponent(safeName)}.pdf`);
-    return reply.send(data);
+    return sendStoredFile(reply, storage, { ...file, mimeType: "application/pdf" }, `attachment; filename="documento.pdf"; filename*=UTF-8''${encodeURIComponent(safeName)}.pdf`);
   });
 
   /** Conclusão manual para conteúdos que não são apostilas (link, vídeo, texto). */

@@ -170,6 +170,27 @@ As responsabilidades de controlador e operador e o texto jurídico dos termos de
 
 ## Implantação e escala
 
+**Na Vercel** (guia passo a passo em `docs/DEPLOY-VERCEL.md`):
+
+```
+Navegador ──► CDN da Vercel ── dist/web (interface, cabeçalhos de segurança do vercel.json)
+          └─► /api/* ──► função api/index.js (o mesmo Fastify, até 300 s por requisição)
+                          ├─ PostgreSQL Neon (DATABASE_URL com pooler; migrações no build)
+                          └─ Vercel Blob privado (arquivos, páginas renderizadas, capas)
+Envio > 4 MB:  navegador ──PUT com link assinado de uso único──► Blob (pasta temporária da pessoa)
+               └─ confirmação na rota de sempre: lê do Blob, valida o conteúdo, grava o definitivo
+Download > 4 MB: rota autorizada e auditada ──303──► link assinado do Blob válido por 5 min
+Rotina diária (Vercel Cron, Authorization: Bearer CRON_SECRET): retenção, desligamentos agendados,
+               documentos interrompidos e envios temporários abandonados
+```
+
+- As funções da Vercel limitam cada requisição e resposta a 4,5 MB; por isso os envios e downloads grandes passam pelo Blob com links assinados, sempre emitidos depois da verificação de permissão.
+- O processamento das apostilas (texto e páginas em imagem) acontece na própria requisição de envio. Se for interrompido, a rotina diária retoma.
+- Não há LibreOffice nem ClamAV na Vercel: as apostilas entram em PDF e o antivírus pode ser um serviço externo (`CLAMAV_HOST`).
+- O banco começa vazio. O primeiro administrador é criado em `/configuracao-inicial` com o código `SETUP_TOKEN`, e a tela se desativa quando já existe administrador.
+
+**Em servidor próprio ou contêiner:**
+
 - Em produção, `APP_SECRET` e `DATABASE_URL` são obrigatórios e o servidor recusa iniciar sem eles. Os cookies são `Secure`. Use HTTPS no proxy reverso com `TRUST_PROXY=true`.
 - Para mais de uma instância:
   - mover o limite de requisições para Redis (`@fastify/rate-limit` aceita esse armazenamento);

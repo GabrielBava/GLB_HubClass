@@ -63,15 +63,16 @@ function originAllowed(req: FastifyRequest, allowed: string[]): boolean {
 
 const PENDING_APPROVAL_ROUTES = ["/api/auth/", "/api/onboarding", "/api/profile", "/api/notifications"];
 
-export async function buildApp(config: AppConfig, opts: { database?: Database } = {}): Promise<FastifyInstance> {
+export async function buildApp(config: AppConfig, opts: { database?: Database; storage?: StorageDriver } = {}): Promise<FastifyInstance> {
   const app = Fastify({
     logger: config.env === "test" ? false : { level: config.logLevel, redact: ["req.headers.cookie", "req.headers['x-csrf-token']"] },
     trustProxy: config.trustProxy,
     bodyLimit: 1_048_576,
   });
 
-  const database = opts.database ?? (await openDatabase({ databaseUrl: config.databaseUrl, embeddedDir: config.embeddedDbDir }));
-  if (!opts.database) await database.migrate();
+  const database = opts.database ?? (await openDatabase({ databaseUrl: config.databaseUrl, embeddedDir: config.embeddedDbDir, serverless: config.serverless }));
+  // Na Vercel as migrações rodam no build (npm run vercel-build), não a cada instância nova.
+  if (!opts.database && !config.serverless) await database.migrate();
 
   const ctx: AppContext = {
     config,
@@ -79,7 +80,7 @@ export async function buildApp(config: AppConfig, opts: { database?: Database } 
     db: database.db,
     secrets: new Secrets(config.appSecret),
     settings: new SettingsService(database.db),
-    storage: createStorage(config),
+    storage: opts.storage ?? createStorage(config),
     mailer: createMailer(config, app.log),
     jobs: new JobQueue(app.log),
   };
@@ -177,8 +178,9 @@ export async function buildApp(config: AppConfig, opts: { database?: Database } 
   await registerRoutes(app);
 
   // Front-end compilado (produção). A pasta de armazenamento nunca é servida.
+  // Na Vercel, a interface é servida pela CDN (vercel.json); a função atende só a API.
   const webDir = path.resolve(process.cwd(), "dist/web");
-  const hasWeb = config.env !== "test" && existsSync(path.join(webDir, "index.html"));
+  const hasWeb = config.env !== "test" && !config.serverless && existsSync(path.join(webDir, "index.html"));
   if (hasWeb) {
     await app.register(fastifyStatic, {
       root: webDir,
@@ -206,7 +208,8 @@ export async function buildApp(config: AppConfig, opts: { database?: Database } 
     if (!opts.database) await database.close();
   });
 
-  if (config.env !== "test") {
+  // Sem servidor contínuo, documentos interrompidos são retomados pela rotina diária (/api/cron/maintenance).
+  if (config.env !== "test" && !config.serverless) {
     app.addHook("onReady", async () => {
       await recoverPendingDocuments(app);
     });

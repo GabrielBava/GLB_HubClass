@@ -74,7 +74,7 @@ export async function adminSettingsRoutes(app: FastifyInstance) {
       settings: await settings.all(),
       environment: {
         database: database.kind === "postgres" ? "PostgreSQL" : "PostgreSQL embutido (desenvolvimento)",
-        storage: config.storage.driver === "s3" ? "Armazenamento S3 privado" : "Disco local privado",
+        storage: config.storage.driver === "vercel-blob" ? "Vercel Blob privado" : config.storage.driver === "s3" ? "Armazenamento S3 privado" : "Disco local privado",
         smtp: mailer.configured,
         antivirus: !!config.clamav,
         docxConversion: config.docx.enabled,
