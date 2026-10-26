@@ -13,27 +13,27 @@ export function useApi<T>(url: string | null, opts: { refetchInterval?: number |
   });
 }
 
-interface MutationOpts<R> {
+interface MutationOpts<R, V = unknown> {
   invalidate?: (string | QueryKey)[];
   success?: string | ((r: R) => string | null);
-  onSuccess?: (r: R) => void;
+  onSuccess?: (r: R, variables: V) => void;
   silent?: boolean;
 }
 
 /** Mutação com aviso de sucesso/erro e invalidação de consultas relacionadas. */
-export function useAction<V, R = unknown>(fn: (v: V) => Promise<R>, opts: MutationOpts<R> = {}) {
+export function useAction<V, R = unknown>(fn: (v: V) => Promise<R>, opts: MutationOpts<R, V> = {}) {
   const qc = useQueryClient();
   const toast = useToast();
   return useMutation({
     mutationFn: fn,
-    onSuccess: async (r) => {
+    onSuccess: async (r, variables) => {
       for (const key of opts.invalidate ?? []) {
         if (typeof key === "string") await qc.invalidateQueries({ predicate: (q) => typeof q.queryKey[0] === "string" && (q.queryKey[0] as string).startsWith(key) });
         else await qc.invalidateQueries({ queryKey: key });
       }
       const msg = typeof opts.success === "function" ? opts.success(r) : opts.success;
       if (msg) toast.success(msg);
-      opts.onSuccess?.(r);
+      opts.onSuccess?.(r, variables);
     },
     onError: (err) => {
       if (!opts.silent) toast.error(errorMessage(err));

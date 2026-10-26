@@ -162,6 +162,25 @@ describe("autenticação e sessões", () => {
     expect(reuse.statusCode).toBe(404);
   });
 
+  it("sem SMTP, o administrador gera o link de redefinição de senha; outros perfis não", async () => {
+    const adminUser = await createUser(app, { role: "admin" });
+    const admin = new Client(app);
+    await admin.login(adminUser);
+    const u = await createUser(app);
+    const c = new Client(app);
+    await c.login(u);
+    expect((await c.post(`/api/admin/users/${u.id}/password-reset`)).statusCode).toBe(403);
+    const res = await admin.post(`/api/admin/users/${u.id}/password-reset`);
+    expect(res.statusCode).toBe(200);
+    expect(res.json().emailed).toBe(false);
+    const token = (res.json().inviteLink as string).split("/redefinir-senha/")[1]!;
+    const anon = new Client(app);
+    expect((await anon.post("/api/auth/password/reset", { token, password: "Senha-nova-do-admin-42" })).statusCode).toBe(200);
+    expect((await c.get("/api/dashboard")).statusCode).toBe(401);
+    const logs = await app.ctx.db.select().from(auditLogs).where(eq(auditLogs.action, "user.password_reset_link"));
+    expect(logs.some((l) => l.targetId === u.id)).toBe(true);
+  });
+
   it("usuário desativado perde a sessão imediatamente", async () => {
     const admin = await createUser(app, { role: "admin" });
     const u = await createUser(app);

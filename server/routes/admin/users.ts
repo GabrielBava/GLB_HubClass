@@ -26,7 +26,7 @@ import {
 import { badRequest, conflict, notFound } from "../../lib/errors.js";
 import { audit, requireRole } from "../../lib/http.js";
 import { parse } from "../../lib/validate.js";
-import { inviteEmail } from "../../services/emails.js";
+import { inviteEmail, resetEmail } from "../../services/emails.js";
 
 const idParams = z.object({ id: z.string().uuid() });
 const optionalUuid = z.string().uuid().nullable().optional();
@@ -245,6 +245,22 @@ export async function adminUserRoutes(app: FastifyInstance) {
     const invite = await sendInvite(id, admin.id);
     await audit(req, "user.invite_resent", { targetType: "user", targetId: id });
     return invite;
+  });
+
+  /** Link de redefinição de senha gerado pelo administrador (essencial quando não há SMTP configurado). */
+  app.post("/api/admin/users/:id/password-reset", { config: { rateLimit: { max: 20, timeWindow: "1 minute" } } }, async (req) => {
+    const admin = requireRole(req, "admin");
+    const { id } = parse(idParams, req.params);
+    const [u] = await db.select().from(users).where(eq(users.id, id));
+    if (!u) throw notFound();
+    if (u.status !== "active") throw badRequest("Disponível apenas para usuários ativos. Para convites pendentes, reenvie o convite.");
+    const security = await settings.get("security");
+    const branding = await settings.get("branding");
+    const token = await issueAuthToken(db, { userId: id, type: "password_reset", ttlMinutes: security.resetExpiryMinutes, createdBy: admin.id });
+    const link = `${config.appOrigin}/redefinir-senha/${token}`;
+    await mailer.send({ to: u.email, ...resetEmail({ name: u.name, link, platform: branding.platformName, expiresMinutes: security.resetExpiryMinutes }) });
+    await audit(req, "user.password_reset_link", { targetType: "user", targetId: id, metadata: { emailed: mailer.configured } });
+    return { emailed: mailer.configured, inviteLink: mailer.configured ? null : link, expiresMinutes: security.resetExpiryMinutes };
   });
 
   app.post("/api/admin/users/:id/deactivate", async (req) => {

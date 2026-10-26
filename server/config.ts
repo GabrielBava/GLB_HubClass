@@ -85,6 +85,8 @@ function devSecret(dataDir: string): string {
 }
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
+  // Arquivo .env opcional na raiz (variáveis já definidas no ambiente têm prioridade).
+  if (env === process.env && env.NODE_ENV !== "test" && existsSync(".env")) process.loadEnvFile(".env");
   const parsed = EnvSchema.safeParse(env);
   if (!parsed.success) {
     const issues = parsed.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; ");

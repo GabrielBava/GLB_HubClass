@@ -31,7 +31,7 @@ export interface Org {
 
 const statusTone = (s: UserStatus) => (s === "active" ? "success" : s === "invited" ? "info" : "neutral") as "success" | "info" | "neutral";
 
-function InviteResult({ link, onClose }: { link: string | null; onClose: () => void }) {
+function InviteResult({ link, onClose, kind = "invite" }: { link: string | null; onClose: () => void; kind?: "invite" | "reset" }) {
   const toast = useToast();
   return (
     <div className="space-y-3">
@@ -41,12 +41,12 @@ function InviteResult({ link, onClose }: { link: string | null; onClose: () => v
             Envie o link abaixo ao colaborador por um canal corporativo seguro. Ele é pessoal, de uso único e expira automaticamente.
           </Alert>
           <div className="flex gap-2">
-            <Input readOnly value={link} aria-label="Link de convite" onFocus={(e) => e.target.select()} />
+            <Input readOnly value={link} aria-label={kind === "reset" ? "Link de redefinição de senha" : "Link de convite"} onFocus={(e) => e.target.select()} />
             <Button icon={Copy} variant="outline" onClick={() => { void navigator.clipboard?.writeText(link); toast.success("Link copiado."); }}>Copiar</Button>
           </div>
         </>
       ) : (
-        <Alert tone="success" title="Convite enviado por e-mail" />
+        <Alert tone="success" title={kind === "reset" ? "Link de redefinição enviado por e-mail" : "Convite enviado por e-mail"} />
       )}
       <div className="flex justify-end"><Button onClick={onClose}>Concluir</Button></div>
     </div>
@@ -157,7 +157,7 @@ export function UserDetailPage() {
   const access = useApi<{ trackId: string; title: string; areaName: string; access: string; explanation: string }[]>(`/api/admin/access/user/${id}`, { enabled: false });
   const [edit, setEdit] = useState<{ name: string; role: Role; jobTitleId: string; departmentId: string; teamId: string } | null>(null);
   const [scope, setScope] = useState<{ areas: Record<string, { on: boolean; canEdit: boolean; canPublish: boolean }>; teams: string[] } | null>(null);
-  const [invite, setInvite] = useState<{ link: string | null } | null>(null);
+  const [invite, setInvite] = useState<{ link: string | null; kind: "invite" | "reset" } | null>(null);
   const [anon, setAnon] = useState("");
   useDocumentTitle(data?.user.name);
   const save = useAction(() => api.patch(url, { ...edit, jobTitleId: edit!.jobTitleId || null, departmentId: edit!.departmentId || null, teamId: edit!.teamId || null }), { invalidate: [url, "/api/admin/users"], success: "Usuário atualizado.", onSuccess: () => setEdit(null) });
@@ -172,9 +172,9 @@ export function UserDetailPage() {
   const act = useAction((path: string) => api.post<{ inviteLink?: string | null; invite?: { inviteLink: string | null } | null }>(`${url}/${path}`, path === "anonymize" ? { confirm: anon } : {}), {
     invalidate: [url, "/api/admin/users"],
     success: "Ação concluída.",
-    onSuccess: (r) => {
+    onSuccess: (r, path) => {
       const link = r?.inviteLink ?? r?.invite?.inviteLink;
-      if (link !== undefined) setInvite({ link: link ?? null });
+      if (link !== undefined) setInvite({ link: link ?? null, kind: path === "password-reset" ? "reset" : "invite" });
     },
   });
   const revokeSession = useAction((sid: string) => api.del(`/api/admin/sessions/${sid}`), { invalidate: [url], success: "Sessão encerrada." });
@@ -209,8 +209,8 @@ export function UserDetailPage() {
         </div>
       </PageHeader>
       {invite && (
-        <Modal open onClose={() => setInvite(null)} title="Convite">
-          <InviteResult link={invite.link} onClose={() => setInvite(null)} />
+        <Modal open onClose={() => setInvite(null)} title={invite.kind === "reset" ? "Redefinição de senha" : "Convite"}>
+          <InviteResult link={invite.link} kind={invite.kind} onClose={() => setInvite(null)} />
         </Modal>
       )}
       <div className="grid gap-6 lg:grid-cols-2">
@@ -246,6 +246,9 @@ export function UserDetailPage() {
             <ConfirmButton title="Redefinir MFA?" message="O usuário precisará configurar o aplicativo autenticador novamente no próximo login. As sessões serão encerradas." onConfirm={() => act.mutateAsync("reset-mfa")} icon={ShieldOff} confirmVariant="primary">Redefinir MFA</ConfirmButton>
             <Button size="sm" variant="outline" icon={KeyRound} onClick={() => act.mutate("unlock")} disabled={!u.lockedUntil}>Desbloquear</Button>
             <Button size="sm" variant="outline" icon={LogOut} onClick={() => act.mutate("revoke-sessions")}>Encerrar todas as sessões</Button>
+            {u.status === "active" && (
+              <ConfirmButton title="Gerar link de redefinição de senha?" message="O link é pessoal, de uso único e expira automaticamente. Sem SMTP configurado, ele aparece aqui para ser enviado por um canal corporativo seguro." confirmLabel="Gerar link" confirmVariant="primary" icon={KeyRound} onConfirm={() => act.mutateAsync("password-reset")}>Redefinir senha</ConfirmButton>
+            )}
           </div>
           <ul className="divide-y divide-border px-5 pb-3 text-sm">
             {data.sessions.map((s) => (

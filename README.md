@@ -1,0 +1,99 @@
+# LIFE CLASS
+
+Universidade corporativa do Grupo Life Brasil: trilhas de formação, apostilas protegidas, exercícios, avaliações, aplicação prática acompanhada pelo líder e indicadores de capacitação.
+
+Esta é a **Fase 1 (MVP operacional)**: autenticação real, banco de dados relacional, regras de permissão verificadas no servidor e persistência de todo o histórico. Os dados de demonstração são fictícios.
+
+- Arquitetura, modelo de dados e segurança: [`docs/ARQUITETURA.md`](docs/ARQUITETURA.md)
+- Requisitos implementados, pendentes e dependentes de infraestrutura: [`docs/REQUISITOS.md`](docs/REQUISITOS.md)
+- Capturas de tela (computador e celular): [`docs/capturas/`](docs/capturas)
+
+## Experimentar sem instalar
+
+[`docs/demo/life-class-demo.html`](docs/demo/life-class-demo.html) é a aplicação real em um único arquivo, sem servidor: baixe e abra no navegador. Use os botões no canto inferior direito para entrar como **Colaborador**, **Líder** ou **Administrador**.
+
+As respostas foram gravadas do sistema em funcionamento, com os dados fictícios do seed. A navegação, as telas, o leitor com marca d'água e os painéis são os mesmos do sistema. As alterações (salvar, publicar, enviar avaliação) são apenas simuladas, e downloads e exportações só funcionam na aplicação instalada.
+
+Para gerar de novo: `npm run seed`, servidor em execução, `npm run demo:record` e `npm run demo:build` (a gravação usa o Playwright).
+
+## Rodar localmente
+
+Requisitos: Node.js 22 ou superior. O PostgreSQL é opcional em desenvolvimento, porque sem `DATABASE_URL` é usado um PostgreSQL embutido (PGlite) em `data/`.
+
+```bash
+npm install
+npm run seed      # cria áreas, trilhas, apostilas, avaliações e usuários fictícios
+npm run dev       # API em :3001 e interface em http://localhost:5173
+```
+
+O seed gera senhas aleatórias e grava as credenciais em `data/demo-credentials.txt`. Esse arquivo fica fora do Git e não existe senha fixa no código. Administradores e líderes configuram a verificação em duas etapas no primeiro login, com um aplicativo autenticador como Google Authenticator, Microsoft Authenticator ou 1Password.
+
+## Produção
+
+1. Provisionar o PostgreSQL, um bucket S3 privado (ou compatível), SMTP e um proxy reverso com HTTPS. ClamAV e LibreOffice são opcionais.
+2. Copiar `.env.example` para `.env` (ou definir as variáveis no orquestrador). `APP_SECRET` e `DATABASE_URL` são obrigatórios.
+3. Gerar o build e iniciar o servidor:
+
+   ```bash
+   npm ci
+   npm run build
+   npm start          # aplica as migrações e serve API e interface na mesma porta
+   ```
+
+4. Criar o primeiro administrador. O comando imprime um link de convite de uso único:
+
+   ```bash
+   npm run admin:create -- --email pessoa@empresa.com.br --name "Nome Completo"
+   ```
+
+5. Configurar backup do banco e do bucket e o monitoramento de erros. Esses itens são de infraestrutura e estão listados em `docs/REQUISITOS.md`.
+
+O painel administrativo (Segurança e privacidade › Ambiente) mostra o que está configurado: banco, armazenamento, SMTP, antivírus, conversão de DOCX e cookies seguros.
+
+## Scripts
+
+| Comando | Para quê |
+| --- | --- |
+| `npm run dev` | API e interface com recarga automática |
+| `npm run build` / `npm start` | Verificação de tipos, build e servidor de produção |
+| `npm test` | Testes automatizados (autenticação, autorização, critérios de aceitação e unidades) |
+| `npm run typecheck` | Verificação de tipos do front-end e do servidor |
+| `npm run db:migrate` | Aplica as migrações (o servidor também aplica ao iniciar) |
+| `npm run db:generate` | Gera uma nova migração a partir de `server/db/schema.ts` |
+| `npm run seed` | Dados fictícios de demonstração (só em banco vazio; recusado em produção) |
+| `npm run admin:create` | Cria o primeiro administrador por convite |
+| `npm run audit:purge` | Aplica a política de retenção agora (também roda diariamente) |
+| `npm run demo:record` / `npm run demo:build` | Gera a demonstração em HTML único |
+
+## Estrutura
+
+```
+server/            API (Fastify + Drizzle)
+  auth/            senhas (Argon2id), sessões, MFA (TOTP), tokens de convite e redefinição
+  authz/           avaliação de permissões (negação por padrão)
+  routes/          rotas do colaborador, do líder e do administrador (admin/)
+  services/        trilhas e progresso, avaliações, documentos (PDF), notificações, retenção
+  db/              esquema, cliente e migrações
+  scripts/         seed, migração, criação de administrador, retenção
+shared/            tipos, rótulos e regras usados pelo servidor e pela interface
+web/src/           interface (React + Tailwind)
+  pages/           telas do colaborador (learner), do líder (leader), do administrador (admin) e de acesso (auth)
+  demo/            modo demonstração (somente no build de demonstração)
+tests/             testes automatizados (Vitest)
+tools/demo/        gravação e montagem da demonstração em HTML
+docs/              arquitetura, requisitos, capturas e demonstração
+```
+
+## Testes
+
+```bash
+npm test
+```
+
+São 56 testes, que rodam com um banco em memória novo a cada arquivo:
+- autenticação, sessões, CSRF, MFA, convite, recuperação de senha e bloqueio de conta;
+- autorização e isolamento de dados (URL direta, API, troca de identificadores, líder fora do escopo);
+- os critérios de aceitação 1 a 14 da especificação;
+- regras puras: correção de questões, tempo de leitura, CSV e política de senha.
+
+O critério 15 (celular e computador) foi verificado no navegador. As capturas estão em `docs/capturas/`.
