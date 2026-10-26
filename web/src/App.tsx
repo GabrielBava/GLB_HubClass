@@ -4,7 +4,7 @@ import type { Role } from "../../shared/domain";
 import { AppShell } from "./components/AppShell";
 import { PageLoader } from "./components/ui";
 import { useAuth } from "./lib/auth";
-import { AccessDeniedPage, NotFoundPage } from "./pages/Errors";
+import { AccessDeniedPage, AwaitingApprovalPage, NotFoundPage } from "./pages/Errors";
 import { LoginPage } from "./pages/auth/Login";
 import { MfaSetupPage, MfaVerifyPage } from "./pages/auth/Mfa";
 import { AcceptInvitePage, FirstAccessManualPage, ForgotPasswordPage, ResetPasswordPage } from "./pages/auth/Recovery";
@@ -53,7 +53,11 @@ function RequireAuth() {
   const next = encodeURIComponent(location.pathname + location.search);
   if (!me) return <Navigate to={`/entrar?next=${next}${expired ? "&expirou=1" : ""}`} replace />;
   if (!me.mfa.satisfied) return <Navigate to={me.mfa.enabled ? `/entrar/verificacao?next=${next}` : `/entrar/configurar-mfa?next=${next}`} replace />;
-  if ((!me.onboardingCompleted || !me.termsAccepted) && location.pathname !== "/primeiro-acesso") return <Navigate to="/primeiro-acesso" replace />;
+  const firstAccessPending = !me.onboardingCompleted || !me.termsAccepted;
+  // O administrador pode tornar o primeiro acesso opcional (Configurações › Primeiro acesso).
+  if (me.onboardingRequired && firstAccessPending && location.pathname !== "/primeiro-acesso") return <Navigate to="/primeiro-acesso" replace />;
+  // Aguardando liberação: o primeiro acesso continua disponível; o restante mostra a tela de espera.
+  if (me.user.status === "pending_approval" && location.pathname !== "/primeiro-acesso") return <AwaitingApprovalPage />;
   return <Outlet />;
 }
 

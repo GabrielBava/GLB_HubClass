@@ -1,11 +1,11 @@
 import { Link } from "react-router";
-import { AlertTriangle, BookOpen, Building, ChartColumn, FileWarning, FolderTree, Inbox, KeyRound, Monitor, ScrollText, Settings, Shield, ShieldCheck, UserPlus, Users } from "lucide-react";
+import { AlertTriangle, BookOpen, Building, CalendarClock, ChartColumn, FileWarning, FolderTree, Hourglass, Inbox, KeyRound, Monitor, ScrollText, Settings, Shield, ShieldCheck, UserPlus, Users } from "lucide-react";
 import { Alert, Card, CardHeader, ErrorState, PageHeader, PageLoader, StatCard } from "../../components/ui";
 import { formatDateTime } from "../../lib/format";
 import { useApi, useDocumentTitle } from "../../lib/hooks";
 
 interface Overview {
-  users: { active: number; invited: number; inactive: number };
+  users: { active: number; invited: number; inactive: number; pendingApproval: number; scheduledOffboardings: number };
   tracks: { published: number; draft: number; review: number; archived: number };
   activeSessions: number;
   documents: { failed: number; processing: number };
@@ -35,6 +35,18 @@ export function AdminHomePage() {
   return (
     <div className="space-y-6">
       <PageHeader title="Painel administrativo" description="Visão geral da plataforma, pendências e alertas de segurança." />
+      {data.users.pendingApproval > 0 && (
+        <Alert tone="warning" icon={Hourglass} title={`${data.users.pendingApproval} pessoa(s) aguardando liberação de acesso`}>
+          <Link to="/admin/usuarios?status=pending_approval" className="font-medium text-primary hover:underline">
+            Revisar e liberar
+          </Link>
+        </Alert>
+      )}
+      {data.users.scheduledOffboardings > 0 && (
+        <Alert tone="info" icon={CalendarClock} title={`${data.users.scheduledOffboardings} desligamento(s) agendado(s)`}>
+          O acesso é trancado automaticamente na data definida em cada ficha de usuário.
+        </Alert>
+      )}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
         <StatCard label="Usuários ativos" value={data.users.active} hint={`${data.users.invited} convite(s) pendente(s)`} icon={Users} />
         <StatCard label="Trilhas publicadas" value={data.tracks.published} hint={`${data.tracks.draft} rascunho(s) · ${data.tracks.review} em revisão`} icon={BookOpen} />

@@ -3,7 +3,7 @@ import { eq } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
 import { enrollments, leaderAreas, teamLeaders, teams, users } from "../server/db/schema.js";
 import { applyDueOffboardings } from "../server/services/offboarding.js";
-import { buildPublishedTrack, Client, createTestApp, createUser, ensureTerms } from "./helpers.js";
+import { buildPublishedTrack, Client, createTestApp, createUser, ensureTerms, makePdf } from "./helpers.js";
 
 let app: FastifyInstance;
 let admin: Client;
@@ -133,5 +133,35 @@ describe("desligamento", () => {
     expect(row).toMatchObject({ status: "active", offboardAt: null });
     const self = (await admin.get("/api/auth/me")).json().user.id;
     expect((await admin.post(`/api/admin/users/${self}/offboard`, { reason: "Teste" })).statusCode).toBe(400);
+  });
+});
+
+describe("biblioteca: capa e arquivo para download", () => {
+  it("anexa o arquivo (download liberado e auditado) e recusa formatos inválidos e obras sem licença", async () => {
+    const item = (await admin.post("/api/admin/library", { title: "Guia de Atendimento", license: "own", type: "publication" })).json();
+    const fake = await admin.upload(`/api/admin/library/${item.id}/file`, { name: "planilha.xlsx", type: "application/octet-stream", data: Buffer.from("não é uma planilha") });
+    expect(fake.statusCode).toBe(400);
+    const ok = await admin.upload(`/api/admin/library/${item.id}/file`, { name: "guia.pdf", type: "application/pdf", data: await makePdf(2, "Guia") });
+    expect(ok.statusCode).toBe(200);
+    const png = Buffer.from("89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c4890000000d49444154789c6360000002000154a24f5d0000000049454e44ae426082", "hex");
+    expect((await admin.upload(`/api/admin/library/${item.id}/cover`, { name: "capa.png", type: "image/png", data: png })).statusCode).toBe(200);
+
+    const u = await createUser(app);
+    const c = new Client(app);
+    await c.login(u);
+    const listed = (await c.get("/api/library")).json().items.find((i: { id: string }) => i.id === item.id);
+    expect(listed).toMatchObject({ canDownload: true, download: { ext: "PDF" } });
+    expect(listed.coverFileId).toBeTruthy();
+    expect((await c.get(`/api/files/${listed.coverFileId}/image`)).statusCode).toBe(200);
+    const dl = await c.get(`/api/library/${item.id}/file`);
+    expect(dl.statusCode).toBe(200);
+    expect(dl.headers["content-disposition"]).toContain("attachment");
+
+    const book = (await admin.post("/api/admin/library", { title: "Livro de terceiros", license: "external_only" })).json();
+    const denied = await admin.upload(`/api/admin/library/${book.id}/file`, { name: "livro.pdf", type: "application/pdf", data: await makePdf(1) });
+    expect(denied.statusCode).toBe(400);
+    // Remover o anexo encerra o download.
+    expect((await admin.delete(`/api/admin/library/${item.id}/file`)).statusCode).toBe(200);
+    expect((await c.get(`/api/library/${item.id}/file`)).statusCode).toBe(404);
   });
 });

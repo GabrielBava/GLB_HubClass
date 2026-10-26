@@ -1,9 +1,9 @@
-import { useState } from "react";
-import { Link, useParams } from "react-router";
-import { ArrowLeft, Copy, KeyRound, Lock, LogOut, Mail, Plus, Search, ShieldOff, UserCheck, UserX } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Link, useParams, useSearchParams } from "react-router";
+import { ArrowLeft, CalendarClock, Copy, DoorClosed, KeyRound, Lock, LogOut, Mail, Plus, Search, ShieldOff, UserCheck, UserX } from "lucide-react";
 import { ROLES, ROLE_LABEL, USER_STATUS, USER_STATUS_LABEL, LEARNER_TRACK_STATUS_LABEL, type LearnerTrackStatus, type Role, type UserStatus } from "../../../../shared/domain";
 import { useToast } from "../../components/toast";
-import { Alert, Badge, Button, Card, CardHeader, Checkbox, ConfirmButton, EmptyState, ErrorState, Field, Input, KeyValue, Modal, PageHeader, PageLoader, Select, TableWrap, td, th } from "../../components/ui";
+import { Alert, Badge, Button, Card, CardHeader, Checkbox, ConfirmButton, EmptyState, ErrorState, Field, Input, KeyValue, Modal, PageHeader, PageLoader, Select, TableWrap, Textarea, td, th } from "../../components/ui";
 import { api, ApiError } from "../../lib/api";
 import { formatDate, formatDateTime, relativeTime } from "../../lib/format";
 import { useAction, useApi, useDebounced, useDocumentTitle } from "../../lib/hooks";
@@ -22,6 +22,8 @@ interface UserRow {
   mfaEnabled: boolean;
   lastLoginAt: string | null;
   lockedUntil: string | null;
+  approvalRequired: boolean;
+  offboardAt: string | null;
 }
 export interface Org {
   departments: { id: string; name: string }[];
@@ -29,7 +31,7 @@ export interface Org {
   jobTitles: { id: string; name: string; departmentId: string | null }[];
 }
 
-const statusTone = (s: UserStatus) => (s === "active" ? "success" : s === "invited" ? "info" : "neutral") as "success" | "info" | "neutral";
+const statusTone = (s: UserStatus) => (s === "active" ? "success" : s === "invited" ? "info" : s === "pending_approval" ? "warning" : "neutral") as "success" | "info" | "warning" | "neutral";
 
 function InviteResult({ link, onClose, kind = "invite" }: { link: string | null; onClose: () => void; kind?: "invite" | "reset" }) {
   const toast = useToast();
@@ -57,7 +59,8 @@ export function UsersPage() {
   const [q, setQ] = useState("");
   const dq = useDebounced(q);
   const [role, setRole] = useState("");
-  const [status, setStatus] = useState("");
+  const [searchParams] = useSearchParams();
+  const [status, setStatus] = useState(searchParams.get("status") ?? "");
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", role: "collaborator" as Role, jobTitleId: "", departmentId: "", teamId: "" });
   const [invite, setInvite] = useState<{ link: string | null } | null>(null);
@@ -68,8 +71,19 @@ export function UsersPage() {
   if (status) params.set("status", status);
   const { data, isLoading, error, refetch } = useApi<UserRow[]>(`/api/admin/users?${params.toString()}`);
   const org = useApi<Org>("/api/admin/org");
+  const settings = useApi<{ settings: { onboarding: { approvalRequired: boolean } } }>("/api/admin/settings");
+  const [approval, setApproval] = useState<"auto" | "manual">("auto");
+  const approvalDefault = settings.data?.settings.onboarding.approvalRequired ? "manual" : "auto";
+  useEffect(() => setApproval(approvalDefault), [approvalDefault]);
   const create = useAction(
-    () => api.post<{ inviteLink: string | null }>("/api/admin/users", { ...form, jobTitleId: form.jobTitleId || null, departmentId: form.departmentId || null, teamId: form.teamId || null }),
+    () =>
+      api.post<{ inviteLink: string | null }>("/api/admin/users", {
+        ...form,
+        jobTitleId: form.jobTitleId || null,
+        departmentId: form.departmentId || null,
+        teamId: form.teamId || null,
+        approvalRequired: approval === "manual",
+      }),
     {
       invalidate: ["/api/admin/users"],
       onSuccess: (r) => {
@@ -106,6 +120,7 @@ export function UsersPage() {
                 <td className={td}>
                   <Badge tone={statusTone(u.status)}>{USER_STATUS_LABEL[u.status]}</Badge>
                   {u.lockedUntil && <Badge tone="danger" icon={Lock} className="ml-1">Bloqueado</Badge>}
+                  {u.offboardAt && u.status !== "inactive" && <Badge tone="warning" icon={CalendarClock} className="ml-1">Desligamento em {formatDate(u.offboardAt)}</Badge>}
                 </td>
                 <td className={td}>{u.mfaEnabled ? <Badge tone="success">Ativo</Badge> : u.role !== "collaborator" ? <Badge tone="warning">Pendente</Badge> : "—"}</td>
                 <td className={td}>{u.lastLoginAt ? relativeTime(u.lastLoginAt) : "—"}</td>
@@ -133,6 +148,17 @@ export function UsersPage() {
             <Field label="Cargo" htmlFor="u-job"><Select id="u-job" value={form.jobTitleId} onChange={(e) => setForm({ ...form, jobTitleId: e.target.value })} placeholder="—" options={(org.data?.jobTitles ?? []).map((j) => ({ value: j.id, label: j.name }))} /></Field>
             <Field label="Departamento" htmlFor="u-dep"><Select id="u-dep" value={form.departmentId} onChange={(e) => setForm({ ...form, departmentId: e.target.value })} placeholder="—" options={(org.data?.departments ?? []).map((d) => ({ value: d.id, label: d.name }))} /></Field>
             <Field label="Equipe" htmlFor="u-team"><Select id="u-team" value={form.teamId} onChange={(e) => setForm({ ...form, teamId: e.target.value })} placeholder="—" options={(org.data?.teams ?? []).map((t) => ({ value: t.id, label: t.name }))} /></Field>
+            <Field label="Após ativar o convite" htmlFor="u-approval" className="sm:col-span-2" hint="O padrão é definido em Configurações › Primeiro acesso. Enquanto aguarda, a pessoa faz o primeiro acesso, mas não abre conteúdos.">
+              <Select
+                id="u-approval"
+                value={approval}
+                onChange={(e) => setApproval(e.target.value as "auto" | "manual")}
+                options={[
+                  { value: "auto", label: "Liberar o acesso automaticamente" },
+                  { value: "manual", label: "Aguardar a liberação do administrador" },
+                ]}
+              />
+            </Field>
           </div>
         )}
       </Modal>
@@ -141,7 +167,27 @@ export function UsersPage() {
 }
 
 interface UserDetail {
-  user: { id: string; code: string; name: string; email: string; role: Role; status: UserStatus; jobTitleId: string | null; departmentId: string | null; teamId: string | null; mfaEnabled: boolean; lastLoginAt: string | null; lockedUntil: string | null; onboardingCompletedAt: string | null; createdAt: string; deactivatedAt: string | null };
+  user: {
+    id: string;
+    code: string;
+    name: string;
+    email: string;
+    role: Role;
+    status: UserStatus;
+    jobTitleId: string | null;
+    departmentId: string | null;
+    teamId: string | null;
+    mfaEnabled: boolean;
+    lastLoginAt: string | null;
+    lockedUntil: string | null;
+    onboardingCompletedAt: string | null;
+    createdAt: string;
+    deactivatedAt: string | null;
+    approvalRequired: boolean;
+    approvedAt: string | null;
+    offboardAt: string | null;
+    offboardReason: string | null;
+  };
   leaderAreas: { areaId: string; name: string }[];
   leaderTeams: { teamId: string; name: string }[];
   sessions: { id: string; createdAt: string; lastSeenAt: string; ip: string | null; userAgent: string | null; mfa: boolean }[];
@@ -178,6 +224,8 @@ export function UserDetailPage() {
     },
   });
   const revokeSession = useAction((sid: string) => api.del(`/api/admin/sessions/${sid}`), { invalidate: [url], success: "Sessão encerrada." });
+  const [offboarding, setOffboarding] = useState(false);
+  const cancelOffboard = useAction(() => api.del(`${url}/offboard`), { invalidate: [url, "/api/admin/users"], success: "Agendamento cancelado." });
 
   if (isLoading) return <PageLoader />;
   if (error instanceof ApiError && error.status === 404) return <NotFoundPage />;
@@ -193,8 +241,17 @@ export function UserDetailPage() {
         actions={
           <>
             {u.status === "invited" && <Button variant="outline" icon={Mail} onClick={() => act.mutate("invite")}>Reenviar convite</Button>}
+            {u.status === "pending_approval" && (
+              <>
+                <Button icon={UserCheck} loading={act.isPending && act.variables === "approve"} onClick={() => act.mutate("approve")}>Liberar acesso</Button>
+                <ConfirmButton title="Recusar o acesso?" message="A conta é desativada e as sessões são encerradas. Você pode reativar depois, se necessário." confirmLabel="Recusar" onConfirm={() => act.mutateAsync("reject")} icon={UserX} size="md">Recusar</ConfirmButton>
+              </>
+            )}
             {u.status !== "inactive" ? (
-              <ConfirmButton title="Desativar usuário?" message="Todas as sessões são encerradas imediatamente e o acesso aos conteúdos é revogado. O histórico de aprendizado é preservado." confirmLabel="Desativar" onConfirm={() => act.mutateAsync("deactivate")} icon={UserX} size="md">Desativar</ConfirmButton>
+              <>
+                <ConfirmButton title="Desativar temporariamente?" message="As sessões são encerradas e o acesso fica bloqueado até a reativação. O histórico e a liderança são mantidos. Para desligamento, use a opção Desligamento." confirmLabel="Desativar" onConfirm={() => act.mutateAsync("deactivate")} icon={UserX} size="md">Desativar</ConfirmButton>
+                <Button variant="danger" icon={DoorClosed} onClick={() => setOffboarding(true)}>Desligamento</Button>
+              </>
             ) : (
               <Button variant="outline" icon={UserCheck} onClick={() => act.mutate("reactivate")}>Reativar</Button>
             )}
@@ -208,6 +265,25 @@ export function UserDetailPage() {
           {u.lockedUntil && <Badge tone="danger" icon={Lock}>Bloqueado até {formatDateTime(u.lockedUntil)}</Badge>}
         </div>
       </PageHeader>
+      {u.status === "pending_approval" && (
+        <Alert tone="warning" title="Aguardando liberação">
+          {u.name} ativou o convite e pode fazer o primeiro acesso, mas só abre trilhas e conteúdos depois que você liberar.
+        </Alert>
+      )}
+      {u.offboardAt && u.status !== "inactive" && (
+        <Alert tone="warning" icon={CalendarClock} title={`Desligamento agendado para ${formatDateTime(u.offboardAt)}`}>
+          <p>Motivo: {u.offboardReason ?? "—"}. No horário, o acesso é trancado automaticamente.</p>
+          <Button className="mt-2" size="sm" variant="outline" loading={cancelOffboard.isPending} onClick={() => cancelOffboard.mutate(undefined)}>
+            Cancelar agendamento
+          </Button>
+        </Alert>
+      )}
+      {u.status === "inactive" && u.offboardReason && (
+        <Alert tone="neutral" icon={DoorClosed} title={`Desligado em ${formatDateTime(u.offboardAt ?? u.deactivatedAt)}`}>
+          Motivo: {u.offboardReason}. O histórico de aprendizagem está preservado.
+        </Alert>
+      )}
+      {offboarding && <OffboardModal user={u} onClose={() => setOffboarding(false)} />}
       {invite && (
         <Modal open onClose={() => setInvite(null)} title={invite.kind === "reset" ? "Redefinição de senha" : "Convite"}>
           <InviteResult link={invite.link} kind={invite.kind} onClose={() => setInvite(null)} />
@@ -246,7 +322,7 @@ export function UserDetailPage() {
             <ConfirmButton title="Redefinir MFA?" message="O usuário precisará configurar o aplicativo autenticador novamente no próximo login. As sessões serão encerradas." onConfirm={() => act.mutateAsync("reset-mfa")} icon={ShieldOff} confirmVariant="primary">Redefinir MFA</ConfirmButton>
             <Button size="sm" variant="outline" icon={KeyRound} onClick={() => act.mutate("unlock")} disabled={!u.lockedUntil}>Desbloquear</Button>
             <Button size="sm" variant="outline" icon={LogOut} onClick={() => act.mutate("revoke-sessions")}>Encerrar todas as sessões</Button>
-            {u.status === "active" && (
+            {(u.status === "active" || u.status === "pending_approval") && (
               <ConfirmButton title="Gerar link de redefinição de senha?" message="O link é pessoal, de uso único e expira automaticamente. Sem SMTP configurado, ele aparece aqui para ser enviado por um canal corporativo seguro." confirmLabel="Gerar link" confirmVariant="primary" icon={KeyRound} onConfirm={() => act.mutateAsync("password-reset")}>Redefinir senha</ConfirmButton>
             )}
           </div>
@@ -342,5 +418,64 @@ export function UserDetailPage() {
         )}
       </div>
     </div>
+  );
+}
+
+/** Modelo de desligamento: tranca o acesso agora ou na data informada, com motivo registrado na auditoria. */
+function OffboardModal({ user, onClose }: { user: UserDetail["user"]; onClose: () => void }) {
+  const [reason, setReason] = useState("");
+  const [when, setWhen] = useState<"now" | "schedule">("now");
+  const [at, setAt] = useState("");
+  const url = `/api/admin/users/${user.id}`;
+  const scheduledAt = when === "schedule" && at ? new Date(at) : null;
+  const run = useAction(() => api.post<{ scheduled: boolean }>(`${url}/offboard`, { reason: reason.trim(), at: scheduledAt ? scheduledAt.toISOString() : null }), {
+    invalidate: [url, "/api/admin/users"],
+    success: (r) => (r.scheduled ? "Desligamento agendado." : "Acesso trancado. Desligamento concluído."),
+    onSuccess: onClose,
+  });
+  const invalid = reason.trim().length < 3 || (when === "schedule" && (!scheduledAt || scheduledAt.getTime() <= Date.now()));
+  return (
+    <Modal
+      open
+      onClose={onClose}
+      title={`Desligamento de ${user.name}`}
+      size="lg"
+      footer={
+        <>
+          <Button variant="ghost" onClick={onClose}>Cancelar</Button>
+          <Button variant="danger" icon={DoorClosed} loading={run.isPending} disabled={invalid} onClick={() => run.mutate(undefined)}>
+            {when === "now" ? "Trancar acesso agora" : "Agendar desligamento"}
+          </Button>
+        </>
+      }
+    >
+      <div className="space-y-5">
+        <div className="rounded-xl border border-border bg-subtle/60 p-4 text-sm">
+          <p className="font-medium">O que acontece no desligamento</p>
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-muted">
+            <li>O login é bloqueado e todas as sessões abertas são encerradas.</li>
+            <li>Links de convite e de redefinição de senha deixam de valer.</li>
+            <li>Lideranças de equipes e áreas são removidas.</li>
+            <li>O histórico de aprendizagem, notas e certificados é preservado.</li>
+            <li>A anonimização (LGPD) pode ser feita depois, nesta mesma ficha.</li>
+          </ul>
+        </div>
+        <Field label="Motivo (uso interno)" htmlFor="off-reason" required hint="Registrado na auditoria. Ex.: encerramento do contrato, transferência.">
+          <Textarea id="off-reason" value={reason} maxLength={500} onChange={(e) => setReason(e.target.value)} />
+        </Field>
+        <fieldset className="space-y-2">
+          <legend className="mb-1 text-sm font-medium">Quando trancar o acesso</legend>
+          <label className="flex items-center gap-2 text-sm">
+            <input type="radio" name="off-when" checked={when === "now"} onChange={() => setWhen("now")} className="h-4 w-4 accent-[var(--primary)]" /> Agora
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <input type="radio" name="off-when" checked={when === "schedule"} onChange={() => setWhen("schedule")} className="h-4 w-4 accent-[var(--primary)]" /> Agendar para uma data e hora
+          </label>
+          {when === "schedule" && (
+            <Input aria-label="Data e hora do desligamento" type="datetime-local" className="max-w-xs" value={at} onChange={(e) => setAt(e.target.value)} />
+          )}
+        </fieldset>
+      </div>
+    </Modal>
   );
 }

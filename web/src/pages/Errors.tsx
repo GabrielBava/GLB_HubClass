@@ -1,6 +1,9 @@
+import { useEffect } from "react";
 import { Link } from "react-router";
-import { Compass, ShieldAlert } from "lucide-react";
+import { Compass, Hourglass, LogOut, ShieldAlert } from "lucide-react";
+import { AuthLayout, AuthTitle } from "../components/AuthLayout";
 import { Button } from "../components/ui";
+import { useAuth } from "../lib/auth";
 
 export function AccessDeniedPage({ message }: { message?: string }) {
   return (
@@ -29,5 +32,37 @@ export function NotFoundPage() {
         <Button variant="outline">Voltar ao início</Button>
       </Link>
     </div>
+  );
+}
+
+/** Conta ativada, aguardando a liberação do administrador. Verifica sozinha de tempos em tempos. */
+export function AwaitingApprovalPage() {
+  const { me, refresh, logout } = useAuth();
+  useEffect(() => {
+    const t = window.setInterval(() => void refresh(), 30_000);
+    return () => window.clearInterval(t);
+  }, [refresh]);
+  const firstName = me?.user.name.split(" ")[0] ?? "";
+  return (
+    <AuthLayout>
+      <span className="mb-6 grid h-12 w-12 place-items-center rounded-xl bg-brand/15 text-brand">
+        <Hourglass className="h-6 w-6" aria-hidden />
+      </span>
+      <AuthTitle title={`Quase lá, ${firstName}!`} subtitle="Seu acesso foi ativado e aguarda a liberação do administrador." />
+      <div className="space-y-4 text-sm leading-relaxed text-white/70">
+        <p>Assim que o acesso for liberado, você recebe um aviso e as trilhas aparecem automaticamente nesta tela.</p>
+        {!me?.onboardingCompleted && <p>Enquanto isso, você já pode conhecer a plataforma e registrar a ciência dos termos no primeiro acesso.</p>}
+      </div>
+      <div className="mt-8 flex flex-wrap gap-3">
+        {!me?.onboardingCompleted && (
+          <Link to="/primeiro-acesso">
+            <Button size="lg" glow>Fazer o primeiro acesso</Button>
+          </Link>
+        )}
+        <Button size="lg" variant="ghost" className="text-white hover:bg-white/10" icon={LogOut} onClick={() => void logout()}>
+          Sair
+        </Button>
+      </div>
+    </AuthLayout>
   );
 }

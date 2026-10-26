@@ -1,15 +1,16 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, setCsrfToken } from "./api";
-import type { Role } from "../../../shared/domain";
+import type { Role, UserStatus } from "../../../shared/domain";
 
 export interface Me {
   authenticated: true;
   csrfToken: string;
   sessionExpiresAt: string;
   mfa: { required: boolean; enabled: boolean; satisfied: boolean };
-  user: { id: string; code: string; name: string; email: string; role: Role; jobTitle: string | null; team: string | null; department: string | null };
+  user: { id: string; code: string; name: string; email: string; role: Role; status: UserStatus; jobTitle: string | null; team: string | null; department: string | null };
   onboardingCompleted: boolean;
+  onboardingRequired: boolean;
   termsAccepted: boolean;
   currentTermsVersion: string | null;
   leader: { areas: { id: string; name: string }[]; teams: { id: string; name: string }[] } | null;

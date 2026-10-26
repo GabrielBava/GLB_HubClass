@@ -26,14 +26,15 @@ export async function communityRoutes(app: FastifyInstance) {
       conds.push(or(ilike(libraryItems.title, term), ilike(libraryItems.author, term), ilike(libraryItems.theme, term))!);
     }
     const rows = await db
-      .select({ item: libraryItems, areaName: knowledgeAreas.name })
+      .select({ item: libraryItems, areaName: knowledgeAreas.name, fileName: files.originalName, fileSize: files.sizeBytes })
       .from(libraryItems)
       .leftJoin(knowledgeAreas, eq(knowledgeAreas.id, libraryItems.areaId))
+      .leftJoin(files, eq(files.id, libraryItems.fileId))
       .where(and(...conds))
       .orderBy(asc(libraryItems.sortOrder), asc(libraryItems.title));
     const categories = await db.selectDistinct({ category: libraryItems.category }).from(libraryItems).where(eq(libraryItems.status, "published"));
     return {
-      items: rows.map(({ item, areaName }) => ({
+      items: rows.map(({ item, areaName, fileName, fileSize }) => ({
         id: item.id,
         title: item.title,
         author: item.author,
@@ -48,6 +49,7 @@ export async function communityRoutes(app: FastifyInstance) {
         coverFileId: item.coverFileId,
         externalUrl: item.externalUrl,
         canDownload: item.allowDownload && !!item.fileId && item.license !== "external_only",
+        download: item.allowDownload && item.fileId && item.license !== "external_only" ? { ext: (fileName ?? "").split(".").pop()?.toUpperCase() ?? "", size: fileSize ?? 0 } : null,
         areaName,
       })),
       categories: categories.map((c) => c.category).filter(Boolean).sort(),

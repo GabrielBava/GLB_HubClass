@@ -326,8 +326,23 @@ function OnboardingTab({ data }: { data: SettingsResponse }) {
   if (!value) return null;
   return (
     <Card className="max-w-3xl p-5">
-      <CardHeader flush title="Primeiro acesso" description="Mensagem de boas-vindas da etapa 1 e contato de suporte exibido na ajuda." />
+      <CardHeader flush title="Primeiro acesso" description="Regras de liberação, mensagem de boas-vindas da etapa 1 e contato de suporte exibido na ajuda." />
       <div className="mt-4 space-y-4">
+        <Switch
+          label="Exigir o primeiro acesso antes dos conteúdos"
+          description="Boas-vindas, instruções e ciência dos termos de uso e confidencialidade. Desativado, o colaborador entra direto no painel e pode fazer o primeiro acesso depois."
+          checked={value.required}
+          onChange={(v) => setValue({ ...value, required: v })}
+        />
+        {!value.required && (
+          <Alert tone="warning">Sem esta exigência, os conteúdos abrem mesmo sem a ciência registrada dos termos de confidencialidade.</Alert>
+        )}
+        <Switch
+          label="Aguardar a liberação do administrador após a ativação do convite"
+          description="Padrão para novos convites (pode ser ajustado em cada convite). A pessoa ativa a conta e faz o primeiro acesso, mas só abre trilhas e conteúdos depois de liberada em Usuários."
+          checked={value.approvalRequired}
+          onChange={(v) => setValue({ ...value, approvalRequired: v })}
+        />
         <Field label="Mensagem de boas-vindas" htmlFor="o-msg">
           <Textarea id="o-msg" className="min-h-[160px]" value={value.welcomeMessage} onChange={(e) => setValue({ ...value, welcomeMessage: e.target.value })} />
         </Field>

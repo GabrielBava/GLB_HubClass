@@ -27,6 +27,26 @@ export async function readSingleFile(req: FastifyRequest, maxBytes: number): Pro
   return { buffer, filename: part.filename.slice(0, 200), mimetype: part.mimetype, fields };
 }
 
+const OOXML: Record<string, string> = {
+  docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+};
+
+/**
+ * Materiais da biblioteca: PDF, Word, Excel, PowerPoint (sem macros) e EPUB.
+ * O tipo é confirmado pelo conteúdo do arquivo, não só pela extensão.
+ */
+export function detectLibraryFile(buf: Buffer, filename: string): { mime: string; ext: string } | null {
+  const ext = filename.toLowerCase().split(".").pop() ?? "";
+  if (buf.subarray(0, 1024).toString("latin1").includes("%PDF-")) return { mime: "application/pdf", ext: "pdf" };
+  const isZip = buf.length > 4 && buf.readUInt32BE(0) === 0x504b0304;
+  if (!isZip) return null;
+  if (ext === "epub" && buf.subarray(0, 100).toString("latin1").includes("application/epub+zip")) return { mime: "application/epub+zip", ext };
+  if (OOXML[ext] && buf.includes("[Content_Types].xml")) return { mime: OOXML[ext], ext };
+  return null;
+}
+
 export function detectImage(buf: Buffer): { mime: string; ext: string } | null {
   if (buf.length > 8 && buf.readUInt32BE(0) === 0x89504e47) return { mime: "image/png", ext: "png" };
   if (buf.length > 3 && buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff) return { mime: "image/jpeg", ext: "jpg" };

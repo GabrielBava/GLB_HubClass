@@ -1,7 +1,8 @@
 import { Link } from "react-router";
 import { Award, BookOpen, CalendarClock, ClipboardList, Clock, MessageSquareQuote, PlayCircle, Sparkles, Target, Timer } from "lucide-react";
 import { DueBadge, StatusBadge } from "../../components/learning";
-import { Badge, Button, Card, CardHeader, EmptyState, ErrorState, PageLoader, Progress, ProgressRing, cx } from "../../components/ui";
+import { Alert, Badge, Button, Card, CardHeader, EmptyState, ErrorState, PageLoader, Progress, ProgressRing, cx } from "../../components/ui";
+import { useAuth } from "../../lib/auth";
 import { LIBRARY_TYPE_LABEL, type LearnerTrackStatus, type LibraryType } from "../../../../shared/domain";
 import { formatDate, formatMinutes, greeting, relativeTime } from "../../lib/format";
 import { useApi, useDocumentTitle } from "../../lib/hooks";
@@ -65,10 +66,12 @@ function TrackRow({ t }: { t: TrackItem }) {
 
 export function DashboardPage() {
   const { data, isLoading, error, refetch } = useApi<DashboardData>("/api/dashboard");
+  const { me } = useAuth();
   useDocumentTitle("Início");
   if (isLoading) return <PageLoader />;
   if (error || !data) return <ErrorState error={error} retry={refetch} />;
   const firstName = data.user.name.split(" ")[0];
+  const firstAccessPending = !!me && !me.onboardingRequired && (!me.onboardingCompleted || !me.termsAccepted);
 
   return (
     <div className="space-y-6">
@@ -78,6 +81,15 @@ export function DashboardPage() {
           {greeting()}, {firstName}!
         </h1>
       </header>
+
+      {firstAccessPending && (
+        <Alert tone="info" title="Conheça a plataforma">
+          Faça o primeiro acesso para ver as instruções e registrar a ciência dos termos de uso e confidencialidade.{" "}
+          <Link to="/primeiro-acesso" className="font-medium text-primary hover:underline">
+            Começar agora
+          </Link>
+        </Alert>
+      )}
 
       <div className="grid gap-4 lg:grid-cols-3">
         <Card className="relative overflow-hidden lg:col-span-2">

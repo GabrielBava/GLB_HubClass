@@ -2,7 +2,7 @@ import { useState } from "react";
 import { BookOpen, Download, ExternalLink, Headphones, Link2, Newspaper, PlayCircle, Search } from "lucide-react";
 import { LEVEL_LABEL, LIBRARY_LICENSE_LABEL, LIBRARY_TYPES, LIBRARY_TYPE_LABEL, type Level, type LibraryLicense, type LibraryType } from "../../../../shared/domain";
 import { Badge, Button, Card, EmptyState, ErrorState, Input, PageHeader, PageLoader, Select } from "../../components/ui";
-import { formatMinutes } from "../../lib/format";
+import { fileSize, formatMinutes } from "../../lib/format";
 import { useApi, useDebounced, useDocumentTitle } from "../../lib/hooks";
 
 interface LibraryItem {
@@ -20,6 +20,7 @@ interface LibraryItem {
   coverFileId: string | null;
   externalUrl: string | null;
   canDownload: boolean;
+  download: { ext: string; size: number } | null;
   areaName: string | null;
 }
 
@@ -60,9 +61,9 @@ export function LibraryPage() {
             return (
               <Card as="article" key={item.id} className="flex gap-4 p-4">
                 {item.coverFileId ? (
-                  <img src={`/api/files/${item.coverFileId}/image`} alt="" className="h-32 w-24 shrink-0 rounded-lg object-cover" />
+                  <img src={`/api/files/${item.coverFileId}/image`} alt={`Capa de ${item.title}`} className="h-40 w-28 shrink-0 rounded-lg object-cover shadow-sm" />
                 ) : (
-                  <div className="grid h-32 w-24 shrink-0 place-items-center rounded-lg text-white/90" style={{ background: item.coverColor ?? "var(--accent)" }} aria-hidden>
+                  <div className="grid h-40 w-28 shrink-0 place-items-center rounded-lg text-white/90" style={{ background: item.coverColor ?? "var(--surface-2)" }} aria-hidden>
                     <Icon className="h-8 w-8" />
                   </div>
                 )}
@@ -81,8 +82,11 @@ export function LibraryPage() {
                   </p>
                   <div className="mt-auto flex flex-wrap gap-2 pt-3">
                     {item.canDownload && (
-                      <a href={`/api/library/${item.id}/file`}>
-                        <Button size="sm" icon={Download}>Baixar</Button>
+                      <a href={`/api/library/${item.id}/file`} download>
+                        <Button size="sm" icon={Download}>
+                          Baixar{item.download?.ext ? ` ${item.download.ext}` : ""}
+                          {item.download?.size ? <span className="font-normal opacity-80">· {fileSize(item.download.size)}</span> : null}
+                        </Button>
                       </a>
                     )}
                     {item.externalUrl && (

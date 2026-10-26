@@ -3,13 +3,12 @@ import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { LEVELS, LIBRARY_LICENSES, LIBRARY_TYPES, NOTIFICATION_TYPES, PUBLICATION_STATUS } from "../../../shared/domain.js";
 import { FONT_CHOICES, type AllSettings, type SettingsKey } from "../../../shared/settings.js";
-import { libraryItems, termsAcceptances, termsVersions } from "../../db/schema.js";
+import { files, libraryItems, termsAcceptances, termsVersions } from "../../db/schema.js";
 import { badRequest, conflict, notFound } from "../../lib/errors.js";
 import { audit, requireRole } from "../../lib/http.js";
-import { detectImage, readSingleFile } from "../../lib/upload.js";
+import { detectImage, detectLibraryFile, readSingleFile } from "../../lib/upload.js";
 import { parse } from "../../lib/validate.js";
 import { storePrivateFile } from "../../services/documents/pipeline.js";
-import { isPdf } from "../../services/documents/pdf.js";
 
 const hex = z.string().regex(/^#[0-9a-fA-F]{6}$/, "Use uma cor no formato #RRGGBB.");
 const font = z.enum(FONT_CHOICES);
@@ -189,7 +188,12 @@ export async function adminSettingsRoutes(app: FastifyInstance) {
 
   app.get("/api/admin/library", async (req) => {
     requireRole(req, "admin");
-    return db.select().from(libraryItems).orderBy(asc(libraryItems.sortOrder), asc(libraryItems.title));
+    const rows = await db
+      .select({ item: libraryItems, fileName: files.originalName, fileSize: files.sizeBytes })
+      .from(libraryItems)
+      .leftJoin(files, eq(files.id, libraryItems.fileId))
+      .orderBy(asc(libraryItems.sortOrder), asc(libraryItems.title));
+    return rows.map(({ item, fileName, fileSize }) => ({ ...item, file: item.fileId ? { name: fileName, size: fileSize } : null }));
   });
 
   app.post("/api/admin/library", async (req) => {
@@ -228,10 +232,27 @@ export async function adminSettingsRoutes(app: FastifyInstance) {
     if (!item) throw notFound();
     if (item.license === "external_only") throw badRequest("Obras sem autorização de distribuição não podem ter arquivo hospedado. Use o link oficial.");
     const file = await readSingleFile(req, 50 * 1024 * 1024);
-    if (!isPdf(file.buffer)) throw badRequest("Envie o material em PDF.");
-    const stored = await storePrivateFile(app.ctx, { buffer: file.buffer, originalName: file.filename, mimeType: "application/pdf", purpose: "library", userId: admin.id, extension: "pdf" });
-    await db.update(libraryItems).set({ fileId: stored.id, updatedAt: new Date() }).where(eq(libraryItems.id, id));
-    await audit(req, "library.file_uploaded", { targetType: "library_item", targetId: id });
+    const kind = detectLibraryFile(file.buffer, file.filename);
+    if (!kind) throw badRequest("Formatos aceitos: PDF, Word (.docx), Excel (.xlsx), PowerPoint (.pptx) ou EPUB, até 50 MB.");
+    const stored = await storePrivateFile(app.ctx, { buffer: file.buffer, originalName: file.filename, mimeType: kind.mime, purpose: "library", userId: admin.id, extension: kind.ext });
+    // O arquivo anexado existe para ser baixado: o download fica liberado (o administrador pode desligar).
+    await db.update(libraryItems).set({ fileId: stored.id, allowDownload: true, updatedAt: new Date() }).where(eq(libraryItems.id, id));
+    await audit(req, "library.file_uploaded", { targetType: "library_item", targetId: id, metadata: { name: file.filename, type: kind.ext } });
+    return { ok: true };
+  });
+
+  app.delete("/api/admin/library/:id/file", async (req) => {
+    requireRole(req, "admin");
+    const { id } = parse(z.object({ id: z.string().uuid() }), req.params);
+    await db.update(libraryItems).set({ fileId: null, allowDownload: false, updatedAt: new Date() }).where(eq(libraryItems.id, id));
+    await audit(req, "library.file_removed", { targetType: "library_item", targetId: id });
+    return { ok: true };
+  });
+
+  app.delete("/api/admin/library/:id/cover", async (req) => {
+    requireRole(req, "admin");
+    const { id } = parse(z.object({ id: z.string().uuid() }), req.params);
+    await db.update(libraryItems).set({ coverFileId: null, updatedAt: new Date() }).where(eq(libraryItems.id, id));
     return { ok: true };
   });
 
