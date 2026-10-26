@@ -60,9 +60,12 @@ export async function renderDemoPdf(doc: DemoDocument): Promise<Buffer> {
   // Capa
   newPage();
   page!.drawRectangle({ x: 0, y: H - 260, width: W, height: 260, color: rgb(0.05, 0.08, 0.07) });
-  page!.drawText(doc.title, { x: M, y: H - 150, size: 26, font: bold, color: rgb(1, 1, 1), maxWidth: W - 2 * M });
-  page!.drawText(doc.subtitle, { x: M, y: H - 185, size: 12, font: regular, color: rgb(0.75, 0.85, 0.8), maxWidth: W - 2 * M });
-  page!.drawRectangle({ x: M, y: H - 215, width: 60, height: 4, color: ACCENT });
+  // Título em quantas linhas forem necessárias; subtítulo e traço descem junto.
+  const titleLines = wrap(doc.title, bold, 26, W - 2 * M);
+  titleLines.forEach((line, i) => page!.drawText(line, { x: M, y: H - 120 - i * 32, size: 26, font: bold, color: rgb(1, 1, 1) }));
+  const below = H - 120 - (titleLines.length - 1) * 32;
+  page!.drawText(doc.subtitle, { x: M, y: below - 34, size: 12, font: regular, color: rgb(0.75, 0.85, 0.8), maxWidth: W - 2 * M });
+  page!.drawRectangle({ x: M, y: below - 62, width: 60, height: 4, color: ACCENT });
   page!.drawText("Sumário", { x: M, y: H - 320, size: 14, font: bold, color: INK });
   doc.sections.forEach((s, i) => {
     page!.drawText(`${i + 1}. ${s.title}`, { x: M, y: H - 350 - i * 20, size: 11, font: regular, color: INK });
