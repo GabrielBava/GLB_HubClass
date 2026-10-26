@@ -128,7 +128,7 @@ function EnvironmentCard({ env }: { env: SettingsResponse["environment"] }) {
   ];
   return (
     <Card className="p-5">
-      <CardHeader icon={Server} title="Ambiente" description={`Execução: ${env.environment}. Itens dependem de infraestrutura e são configurados por variáveis de ambiente.`} />
+      <CardHeader flush icon={Server} title="Ambiente" description={`Execução: ${env.environment}. Itens dependem de infraestrutura e são configurados por variáveis de ambiente.`} />
       <ul className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {items.map((i) => (
           <li key={i.label} className="flex items-start gap-2.5 rounded-xl border border-border p-3 text-sm">
@@ -149,7 +149,7 @@ function PolicyTab({ data }: { data: SettingsResponse }) {
   if (!value) return null;
   return (
     <Card className="max-w-4xl p-5">
-      <CardHeader title="Sessão, senha e bloqueio" description="MFA é obrigatório para administradores e líderes. Senhas são armazenadas com Argon2id." />
+      <CardHeader flush title="Sessão, senha e bloqueio" description="MFA é obrigatório para administradores e líderes. Senhas são armazenadas com Argon2id." />
       <div className="mt-4">
         <NumberFields
           value={value as unknown as Record<string, unknown>}
@@ -317,7 +317,7 @@ function PrivacyTab({ data }: { data: SettingsResponse }) {
   if (!value) return null;
   return (
     <Card className="max-w-4xl p-5">
-      <CardHeader title="Retenção de dados (LGPD)" description="Registros mais antigos que o prazo são removidos automaticamente uma vez por dia. A auditoria só é apagada pela rotina de retenção." />
+      <CardHeader flush title="Retenção de dados (LGPD)" description="Registros mais antigos que o prazo são removidos automaticamente uma vez por dia. A auditoria só é apagada pela rotina de retenção." />
       <div className="mt-4 space-y-4">
         <NumberFields
           value={value as unknown as Record<string, unknown>}

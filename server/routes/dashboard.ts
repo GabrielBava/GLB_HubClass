@@ -92,7 +92,7 @@ async function relevantTracks(req: FastifyRequest, lc: LearnerContext): Promise<
     const track = index.tracks.find((t) => t.id === id);
     if (!track) continue;
     try {
-      const tv = await trackForUser(req, id, lc);
+      const tv = await trackForUser(req, id, lc, { auditDenied: false });
       const e = enr.find((x) => x.trackId === id);
       out.push({
         trackId: id,

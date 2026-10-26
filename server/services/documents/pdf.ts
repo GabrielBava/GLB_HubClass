@@ -90,17 +90,52 @@ export async function extractOutline(doc: PdfDoc): Promise<OutlineItem[]> {
   return out;
 }
 
-export async function pageText(doc: PdfDoc, pageNumber: number): Promise<string> {
+/**
+ * Texto da página e o provável título (linha com a maior fonte, bem acima da mediana).
+ * O título alimenta o sumário quando o PDF não tem marcadores próprios.
+ */
+export async function pageContent(doc: PdfDoc, pageNumber: number): Promise<{ text: string; heading: string | null }> {
   const page = await doc.getPage(pageNumber);
   const tc = await page.getTextContent();
   let text = "";
+  const lines = new Map<string, { size: number; y: number; str: string }>();
+  const sizes: number[] = [];
   for (const item of tc.items) {
     if (!("str" in item)) continue;
     text += item.str;
     text += item.hasEOL ? "\n" : " ";
+    if (!item.str.trim()) continue;
+    const size = Math.round(Math.hypot(item.transform[2] ?? 0, item.transform[3] ?? 0) * 10) / 10 || item.height;
+    const y = Math.round(item.transform[5] ?? 0);
+    sizes.push(size);
+    const key = `${y}:${size}`;
+    const line = lines.get(key) ?? { size, y, str: "" };
+    line.str += item.str;
+    lines.set(key, line);
   }
   page.cleanup();
-  return text.replace(/[ \t]+\n/g, "\n").replace(/[ \t]{2,}/g, " ").trim();
+  const sorted = [...sizes].sort((a, b) => a - b);
+  const median = sorted[Math.floor(sorted.length / 2)] ?? 0;
+  const candidates = [...lines.values()].filter((l) => l.size >= median * 1.3 && l.str.trim().length >= 3);
+  candidates.sort((a, b) => b.size - a.size || b.y - a.y);
+  let heading: string | null = null;
+  const top = candidates[0];
+  if (top) {
+    // Títulos longos quebram em várias linhas do mesmo tamanho: junta as linhas logo abaixo.
+    const parts = [top.str];
+    let y = top.y;
+    for (const l of candidates.filter((c) => c.size === top.size && c.y < top.y).sort((a, b) => b.y - a.y)) {
+      if (y - l.y > top.size * 1.8) break;
+      parts.push(l.str);
+      y = l.y;
+    }
+    heading = parts.join(" ").replace(/\s+/g, " ").trim().slice(0, 120);
+  }
+  return { text: text.replace(/[ \t]+\n/g, "\n").replace(/[ \t]{2,}/g, " ").trim(), heading };
+}
+
+export async function pageText(doc: PdfDoc, pageNumber: number): Promise<string> {
+  return (await pageContent(doc, pageNumber)).text;
 }
 
 /** Renderiza a página como imagem WebP (largura alvo ~1600 px, boa para zoom em telas comuns). */

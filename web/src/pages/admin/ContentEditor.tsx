@@ -152,9 +152,9 @@ export function ContentEditorPage() {
           <>
             <RevisionsButton entityType="content" entityId={id} />
             {c.status === "published" && (
-              <Button variant="outline" size="sm" icon={Eye} onClick={() => window.open(`/conteudos/${id}`, "_blank", "noopener")}>
-                Ver como colaborador
-              </Button>
+              <Link to={`/conteudos/${id}`} target="_blank" rel="noopener noreferrer" className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-border bg-card px-3 text-sm font-medium hover:bg-subtle">
+                <Eye className="h-4 w-4" aria-hidden /> Ver como colaborador
+              </Link>
             )}
           </>
         }
@@ -174,7 +174,7 @@ export function ContentEditorPage() {
 
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_380px]">
         <Card className="p-5">
-          <CardHeader title="Dados do conteúdo" description="Título, objetivo, nível, responsável e regras de acesso." />
+          <CardHeader flush title="Dados do conteúdo" description="Título, objetivo, nível, responsável e regras de acesso." />
           <fieldset disabled={!p.canEdit} className="mt-4 grid gap-4 sm:grid-cols-2">
             <Field label="Título" htmlFor="c-title" required className="sm:col-span-2">
               <Input id="c-title" value={form.title} onChange={(e) => set({ title: e.target.value })} />
@@ -262,7 +262,7 @@ export function ContentEditorPage() {
         {c.type === "document" && (
           <div className="space-y-5">
             <Card className="p-5">
-              <CardHeader
+              <CardHeader flush
                 icon={ShieldCheck}
                 title="Arquivo protegido"
                 description="O original fica em armazenamento privado. Os colaboradores recebem somente páginas renderizadas, com marca d'água individual."
@@ -307,7 +307,7 @@ export function ContentEditorPage() {
       {c.type === "document" && data.versions.length > 0 && (
         <Card className="mt-5 overflow-hidden">
           <div className="p-5 pb-3">
-            <CardHeader title="Versões" description="Toda troca de arquivo gera uma nova versão. O progresso dos colaboradores é preservado." />
+            <CardHeader flush title="Versões" description="Toda troca de arquivo gera uma nova versão. O progresso dos colaboradores é preservado." />
           </div>
           <TableWrap>
               <thead>

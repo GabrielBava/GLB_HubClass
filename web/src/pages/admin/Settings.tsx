@@ -94,7 +94,7 @@ function BrandingTab({ data }: { data: SettingsResponse }) {
   return (
     <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_380px]">
       <Card className="p-5">
-        <CardHeader title="Identidade visual" description="Nome, cores e tipografia são aplicados em toda a plataforma, inclusive nas telas de acesso." />
+        <CardHeader flush title="Identidade visual" description="Nome, cores e tipografia são aplicados em toda a plataforma, inclusive nas telas de acesso." />
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <Field label="Nome da plataforma" htmlFor="b-name">
             <Input id="b-name" value={value.platformName} onChange={(e) => setValue({ ...value, platformName: e.target.value })} />
@@ -131,7 +131,7 @@ function BrandingTab({ data }: { data: SettingsResponse }) {
 
       <div className="space-y-5">
         <Card className="p-5">
-          <CardHeader title="Prévia" description="Como o painel institucional e os botões ficarão." />
+          <CardHeader flush title="Prévia" description="Como o painel institucional e os botões ficarão." />
           <div className="mt-4 overflow-hidden rounded-2xl p-5" style={{ background: colorsOk ? `radial-gradient(400px 220px at 0% 0%, ${value.colors.primary}44, transparent 70%), ${value.colors.brandSurface}` : undefined }}>
             <p className="text-lg font-semibold text-white" style={{ fontFamily: `"${value.fonts.heading}", system-ui` }}>
               {value.platformName}
@@ -146,9 +146,9 @@ function BrandingTab({ data }: { data: SettingsResponse }) {
           {colorsOk && <p className="mt-2 text-xs text-muted">Contraste da cor principal sobre a cor institucional: {onSurface.toFixed(1)}:1</p>}
         </Card>
         <Card className="p-5">
-          <CardHeader title="Logotipo" description="PNG, JPEG ou WebP de até 1 MB. Sem logotipo, o nome da plataforma é exibido." />
+          <CardHeader flush title="Logotipo" description="PNG, JPEG ou WebP de até 1 MB. Sem logotipo, o nome da plataforma é exibido." />
           <div className="mt-4 flex min-h-[72px] items-center justify-center rounded-xl p-4" style={{ background: branding.colors.brandSurface }}>
-            <Brand />
+            <Brand onDark />
           </div>
           <div className="mt-3 flex gap-2">
             <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp" className="sr-only" onChange={(e) => {
@@ -178,7 +178,7 @@ function CatalogTab({ data }: { data: SettingsResponse }) {
   return (
     <div className="grid max-w-5xl gap-5 lg:grid-cols-2">
       <Card className="p-5">
-        <CardHeader title="Catálogo" description="Como conteúdos não autorizados aparecem para o colaborador." />
+        <CardHeader flush title="Catálogo" description="Como conteúdos não autorizados aparecem para o colaborador." />
         <div className="mt-4 space-y-4">
           <Field label="Conteúdo sem permissão" htmlFor="cat-vis">
             <Select
@@ -197,7 +197,7 @@ function CatalogTab({ data }: { data: SettingsResponse }) {
         <SaveBar dirty={catalog.dirty} loading={catalog.save.isPending} onSave={() => catalog.save.mutate(catalog.value!)} />
       </Card>
       <Card className="p-5">
-        <CardHeader title="Dúvidas e comentários" description="Comentários compartilhados ficam visíveis para quem acessa o mesmo conteúdo; anotações são sempre privadas." />
+        <CardHeader flush title="Dúvidas e comentários" description="Comentários compartilhados ficam visíveis para quem acessa o mesmo conteúdo; anotações são sempre privadas." />
         <div className="mt-4">
           <Switch label="Comentários habilitados por padrão" description="Áreas e conteúdos podem desativar individualmente." checked={community.value.commentsEnabledDefault} onChange={(v) => community.setValue({ ...community.value!, commentsEnabledDefault: v })} />
         </div>
@@ -213,7 +213,7 @@ function ReadingTab({ data }: { data: SettingsResponse }) {
   const sample = Math.ceil(12_000 / Math.max(50, value.wordsPerMinute || 200));
   return (
     <Card className="max-w-4xl p-5">
-      <CardHeader title="Tempo de leitura" description="Base do tempo estimado das apostilas. Áreas e conteúdos podem ter valores próprios ou tempo manual." />
+      <CardHeader flush title="Tempo de leitura" description="Base do tempo estimado das apostilas. Áreas e conteúdos podem ter valores próprios ou tempo manual." />
       <div className="mt-4 space-y-4">
         <NumberFields
           value={value as unknown as Record<string, unknown>}
@@ -239,7 +239,7 @@ function AssessmentTab({ data }: { data: SettingsResponse }) {
   if (!value) return null;
   return (
     <Card className="max-w-3xl p-5">
-      <CardHeader title="Padrões das avaliações" description="Aplicados às novas avaliações. Cada área e cada avaliação podem ter valores próprios." />
+      <CardHeader flush title="Padrões das avaliações" description="Aplicados às novas avaliações. Cada área e cada avaliação podem ter valores próprios." />
       <div className="mt-4">
         <NumberFields
           value={value as unknown as Record<string, unknown>}
@@ -261,7 +261,7 @@ function NotificationsTab({ data }: { data: SettingsResponse }) {
   if (!value) return null;
   return (
     <Card className="max-w-4xl p-5">
-      <CardHeader title="Notificações" description="Todas as notificações aparecem na plataforma. O envio por e-mail depende do servidor SMTP." />
+      <CardHeader flush title="Notificações" description="Todas as notificações aparecem na plataforma. O envio por e-mail depende do servidor SMTP." />
       <div className="mt-4 space-y-5">
         {!data.environment.smtp && <Alert tone="warning">SMTP não configurado. Os e-mails ficam registrados na caixa de saída do servidor até a configuração.</Alert>}
         <Switch label="Enviar também por e-mail" checked={value.emailEnabled} onChange={(v) => setValue({ ...value, emailEnabled: v })} />
@@ -290,7 +290,7 @@ function OnboardingTab({ data }: { data: SettingsResponse }) {
   if (!value) return null;
   return (
     <Card className="max-w-3xl p-5">
-      <CardHeader title="Primeiro acesso" description="Mensagem de boas-vindas da etapa 1 e contato de suporte exibido na ajuda." />
+      <CardHeader flush title="Primeiro acesso" description="Mensagem de boas-vindas da etapa 1 e contato de suporte exibido na ajuda." />
       <div className="mt-4 space-y-4">
         <Field label="Mensagem de boas-vindas" htmlFor="o-msg">
           <Textarea id="o-msg" className="min-h-[160px]" value={value.welcomeMessage} onChange={(e) => setValue({ ...value, welcomeMessage: e.target.value })} />

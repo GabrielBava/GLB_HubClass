@@ -207,7 +207,7 @@ function RulesTab() {
                     </td>
                     <td className={td}>
                       <p className="font-medium">{r.subjectType === "role" ? ROLE_LABEL[r.subjectName as Role] ?? r.subjectName : r.subjectName}</p>
-                      <p className="text-xs text-muted">{ACCESS_SUBJECT_LABEL[r.subjectType]}</p>
+                      {r.subjectType !== "everyone" && <p className="text-xs text-muted">{ACCESS_SUBJECT_LABEL[r.subjectType]}</p>}
                     </td>
                     <td className={td}>
                       <p className="font-medium">{r.resourceName}</p>
@@ -282,7 +282,7 @@ function BulkTab() {
   const ready = state.resource.trackId && (state.subjectType === "everyone" || state.subjectId);
   return (
     <Card className="max-w-3xl p-5">
-      <CardHeader icon={UsersIcon} title="Atribuir trilha em massa" description="Matricula todos os usuários ativos do grupo escolhido. A atribuição concede acesso à trilha publicada e aparece no painel de cada colaborador." />
+      <CardHeader flush icon={UsersIcon} title="Atribuir trilha em massa" description="Matricula todos os usuários ativos do grupo escolhido. A atribuição concede acesso à trilha publicada e aparece no painel de cada colaborador." />
       <div className="mt-5 space-y-5">
         <SubjectPicker idPrefix="b" type={state.subjectType} id={state.subjectId} types={["job_title", "team", "department", "role", "everyone"]} onChange={(subjectType, subjectId) => setState({ ...state, subjectType, subjectId })} />
         <ResourcePicker idPrefix="b" maxLevel="track" value={state.resource} onChange={(resource) => setState({ ...state, resource })} />
@@ -318,7 +318,7 @@ function CheckTab() {
   return (
     <div className="grid gap-5 xl:grid-cols-2">
       <Card className="p-5">
-        <CardHeader title="Este usuário pode acessar?" description="Mostra a decisão e o motivo, exatamente como o servidor avalia." />
+        <CardHeader flush title="Este usuário pode acessar?" description="Mostra a decisão e o motivo, exatamente como o servidor avalia." />
         <div className="mt-4 space-y-4">
           <Field label="Usuário" htmlFor="c-user">
             <Select id="c-user" value={userId} placeholder="Selecione..." onChange={(e) => setUserId(e.target.value)} options={(people ?? []).map((u) => ({ value: u.id, label: `${u.name} (${ROLE_LABEL[u.role]})` }))} />
@@ -332,7 +332,7 @@ function CheckTab() {
         </div>
       </Card>
       <Card className="p-5">
-        <CardHeader title="Quem tem acesso?" description="Lista os usuários ativos que conseguem abrir o recurso e o motivo." />
+        <CardHeader flush title="Quem tem acesso?" description="Lista os usuários ativos que conseguem abrir o recurso e o motivo." />
         <div className="mt-4 space-y-4">
           <ResourcePicker idPrefix="w" value={who} onChange={(v) => { setWho(v); setWhoOpen(false); }} />
           <Button variant="outline" disabled={!whoRes} loading={list.isFetching} onClick={() => setWhoOpen(true)}>

@@ -1,6 +1,6 @@
-import { StrictMode } from "react";
+import { StrictMode, type ReactNode } from "react";
 import { createRoot } from "react-dom/client";
-import { BrowserRouter } from "react-router";
+import { BrowserRouter, HashRouter } from "react-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ApiError } from "./lib/api";
 import { AuthProvider } from "./lib/auth";
@@ -19,18 +19,33 @@ const queryClient = new QueryClient({
   },
 });
 
-createRoot(document.getElementById("root")!).render(
-  <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <BrandingProvider>
-        <ToastProvider>
-          <AuthProvider>
-            <BrowserRouter>
-              <App />
-            </BrowserRouter>
-          </AuthProvider>
-        </ToastProvider>
-      </BrandingProvider>
-    </QueryClientProvider>
-  </StrictMode>,
-);
+async function start() {
+  // Build de demonstração (arquivo HTML único, sem servidor): API simulada e rotas por hash.
+  const demo = import.meta.env.MODE === "demo";
+  let extra: ReactNode = null;
+  if (demo) {
+    const [{ installDemo }, { DemoBar }] = await Promise.all([import("./demo/mock"), import("./demo/DemoBar")]);
+    if (window.__LC_DEMO__) installDemo(window.__LC_DEMO__);
+    extra = <DemoBar />;
+  }
+  const Router = demo ? HashRouter : BrowserRouter;
+
+  createRoot(document.getElementById("root")!).render(
+    <StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <BrandingProvider>
+          <ToastProvider>
+            <AuthProvider>
+              <Router>
+                <App />
+                {extra}
+              </Router>
+            </AuthProvider>
+          </ToastProvider>
+        </BrandingProvider>
+      </QueryClientProvider>
+    </StrictMode>,
+  );
+}
+
+void start();

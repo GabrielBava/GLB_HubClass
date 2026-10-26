@@ -128,7 +128,7 @@ export async function catalogRoutes(app: FastifyInstance) {
     const lc = await learnerContext(req);
     let t;
     try {
-      t = await trackForUser(req, id, lc);
+      t = await trackForUser(req, id, lc, { auditDenied: false });
     } catch (err) {
       // Trilha sem autorização: mostra apenas a apresentação, se o catálogo estiver em modo "bloqueado".
       const e = err as { code?: string };

@@ -7,7 +7,7 @@ import { HttpError } from "../../lib/errors.js";
 import { sha256 } from "../../lib/crypto.js";
 import { convertDocxToPdf, isDocx, isMacroEnabled } from "./docx.js";
 import { scanBuffer } from "./malware.js";
-import { closePdf, countWords, extractOutline, isPdf, openPdf, pageText, pdfRiskFlags, renderPage } from "./pdf.js";
+import { closePdf, countWords, extractOutline, isPdf, openPdf, pageContent, pdfRiskFlags, renderPage } from "./pdf.js";
 
 export interface StoredFile {
   id: string;
@@ -140,18 +140,18 @@ export async function processVersion(ctx: AppContext, versionId: string) {
     const doc = await openPdf(buf);
     const outline = await extractOutline(doc);
     let totalWords = 0;
-    const firstLines: { title: string; page: number; level: number }[] = [];
+    const headings: { title: string; page: number; level: number }[] = [];
     await db.delete(documentPages).where(eq(documentPages.versionId, versionId));
     for (let n = 1; n <= doc.numPages; n++) {
-      const text = await pageText(doc, n);
+      const { text, heading } = await pageContent(doc, n);
       const words = countWords(text);
       totalWords += words;
       const { image, width, height } = await renderPage(doc, n);
       const imageKey = `pages/${versionId}/${String(n).padStart(4, "0")}.webp`;
       await storage.put(imageKey, image, "image/webp");
       await db.insert(documentPages).values({ versionId, pageNumber: n, imageKey, width, height, text, wordCount: words });
-      const line = text.split("\n").map((l) => l.trim()).find((l) => l.length > 3);
-      firstLines.push({ title: line ? line.slice(0, 80) : `Página ${n}`, page: n, level: 0 });
+      // Sem marcadores no PDF, o sumário usa os títulos detectados (páginas de continuação ficam de fora).
+      if (heading && headings.at(-1)?.title !== heading) headings.push({ title: heading, page: n, level: 0 });
     }
     const pageCount = doc.numPages;
     await closePdf(doc);
@@ -161,7 +161,7 @@ export async function processVersion(ctx: AppContext, versionId: string) {
         processingStatus: "ready",
         pageCount,
         wordCount: totalWords,
-        outline: outline.length ? outline : firstLines,
+        outline: outline.length ? outline : headings,
       })
       .where(eq(contentVersions.id, versionId));
 

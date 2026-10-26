@@ -41,7 +41,11 @@ export interface TrackForUser {
  * Carrega a trilha já recortada ao que o usuário pode ver e calcula o progresso.
  * Lança 404 (inexistente/não publicada) ou 403 (sem autorização), registrando a negativa.
  */
-export async function trackForUser(req: FastifyRequest, trackId: string, lcIn?: LearnerContext): Promise<TrackForUser> {
+/**
+ * Trilha com a visão do usuário. `auditDenied: false` serve para a vitrine do catálogo, em que ver a
+ * apresentação de uma trilha bloqueada é permitido e não deve aparecer como tentativa de acesso.
+ */
+export async function trackForUser(req: FastifyRequest, trackId: string, lcIn?: LearnerContext, opts: { auditDenied?: boolean } = {}): Promise<TrackForUser> {
   const { db, settings } = req.server.ctx;
   const lc = lcIn ?? (await learnerContext(req));
   const base = await loadTrackChain(db, trackId);
@@ -59,7 +63,7 @@ export async function trackForUser(req: FastifyRequest, trackId: string, lcIn?: 
   );
   if (access.access === "none") {
     if (access.reason === "unpublished") throw notFound("Trilha não encontrada.");
-    await audit(req, "authz.denied", { outcome: "denied", targetType: "track", targetId: trackId });
+    if (opts.auditDenied !== false) await audit(req, "authz.denied", { outcome: "denied", targetType: "track", targetId: trackId });
     throw forbidden("Você ainda não tem acesso a esta trilha.", "no_access");
   }
   const structure = restrictStructure(structureAll, access);

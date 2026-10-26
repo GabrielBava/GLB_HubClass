@@ -215,9 +215,10 @@ export function Card({ className, children, as: As = "div", ...rest }: { classNa
   );
 }
 
-export function CardHeader({ title, description, action, icon: Icon }: { title: ReactNode; description?: ReactNode; action?: ReactNode; icon?: LucideIcon }) {
+/** Cabeçalho de cartão. `flush` remove o espaçamento próprio (cartões que já têm padding). */
+export function CardHeader({ title, description, action, icon: Icon, flush }: { title: ReactNode; description?: ReactNode; action?: ReactNode; icon?: LucideIcon; flush?: boolean }) {
   return (
-    <div className="flex items-start justify-between gap-3 px-5 pt-5">
+    <div className={cx("flex items-start justify-between gap-3", !flush && "px-5 pt-5")}>
       <div className="flex items-start gap-3 min-w-0">
         {Icon && (
           <span className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-primary/12 text-primary">

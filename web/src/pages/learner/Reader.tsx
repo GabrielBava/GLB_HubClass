@@ -73,7 +73,7 @@ function watermarkStyle(text: string) {
 }
 
 /** Página renderizada em <canvas> a partir da imagem com marca d'água gerada no servidor. */
-function PageCanvas({ contentId, page, sessionId, width, ratio, onAccessLost }: { contentId: string; page: number; sessionId: string | null; width: number; ratio: number; onAccessLost: (msg: string) => void }) {
+function PageCanvas({ contentId, page, total, sessionId, width, ratio, onAccessLost }: { contentId: string; page: number; total: number; sessionId: string | null; width: number; ratio: number; onAccessLost: (msg: string) => void }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const cache = useRef(new Map<number, ImageBitmap>());
   const [loading, setLoading] = useState(true);
@@ -113,7 +113,7 @@ function PageCanvas({ contentId, page, sessionId, width, ratio, onAccessLost }: 
         c.getContext("2d")?.drawImage(bmp, 0, 0);
         setLoading(false);
         // Pré-carrega a próxima página para a navegação ficar fluida.
-        void load(page + 1).catch(() => undefined);
+        if (page < total) void load(page + 1).catch(() => undefined);
       })
       .catch((err: unknown) => {
         if (cancelled) return;
@@ -124,7 +124,7 @@ function PageCanvas({ contentId, page, sessionId, width, ratio, onAccessLost }: 
     return () => {
       cancelled = true;
     };
-  }, [page, load, onAccessLost]);
+  }, [page, total, load, onAccessLost]);
 
   return (
     <div className="relative mx-auto" style={{ width, height: width * ratio }}>
@@ -464,7 +464,8 @@ export function ReaderPage() {
   return (
     <>
       <div ref={rootRef} className="reader-root fixed inset-0 flex flex-col bg-bg">
-        <header className="no-print flex h-14 shrink-0 items-center gap-1 border-b border-border bg-card px-2 sm:gap-2 sm:px-3">
+        {/* No celular, as ferramentas ficam numa segunda linha para o título continuar legível. */}
+        <header className="no-print flex shrink-0 flex-wrap items-center gap-x-1 border-b border-border bg-card px-2 py-1 sm:h-14 sm:flex-nowrap sm:gap-2 sm:px-3 sm:py-0">
           <Link to={`/modulos/${data.module.id}`} className="rounded-lg p-2 text-muted hover:bg-subtle hover:text-fg" aria-label={`Voltar para ${data.module.title}`}>
             <ArrowLeft className="h-5 w-5" />
           </Link>
@@ -477,44 +478,46 @@ export function ReaderPage() {
               Página {page} de {total} · {progress?.percent ?? 0}% lido{data.preview ? " · pré-visualização" : ""}
             </p>
           </div>
-          <button className={toolbarBtn(panel === "toc")} onClick={() => setPanel((p) => (p === "toc" ? null : "toc"))} aria-label="Sumário" aria-pressed={panel === "toc"}>
-            <ListTree className="h-5 w-5" />
-          </button>
-          <button className={toolbarBtn(false)} onClick={() => setZoom((z) => Math.max(0.6, +(z - 0.15).toFixed(2)))} aria-label="Diminuir zoom">
-            <ZoomOut className="h-5 w-5" />
-          </button>
-          <span className="hidden w-11 text-center text-xs text-muted sm:block" aria-live="polite">
-            {Math.round(zoom * 100)}%
-          </span>
-          <button className={toolbarBtn(false)} onClick={() => setZoom((z) => Math.min(2.5, +(z + 0.15).toFixed(2)))} aria-label="Aumentar zoom">
-            <ZoomIn className="h-5 w-5" />
-          </button>
-          {data.content.allowTextMode && (
-            <button className={toolbarBtn(textMode)} onClick={() => setTextMode((t) => !t)} aria-pressed={textMode} aria-label="Modo texto: leitura confortável e acessível" title="Modo texto (leitura confortável e acessível)">
-              <Type className="h-5 w-5" />
+          <div className="flex w-full items-center justify-between gap-1 border-t border-border pt-1 sm:w-auto sm:justify-end sm:border-0 sm:pt-0" role="toolbar" aria-label="Ferramentas de leitura">
+            <button className={toolbarBtn(panel === "toc")} onClick={() => setPanel((p) => (p === "toc" ? null : "toc"))} aria-label="Sumário" aria-pressed={panel === "toc"}>
+              <ListTree className="h-5 w-5" />
             </button>
-          )}
-          <button className={toolbarBtn(!!bookmarked)} onClick={toggleBookmark} aria-pressed={!!bookmarked} aria-label={bookmarked ? "Remover marcador desta página" : "Marcar esta página"}>
-            {bookmarked ? <BookmarkCheck className="h-5 w-5" /> : <Bookmark className="h-5 w-5" />}
-          </button>
-          <button className={toolbarBtn(rightPanel === "notes")} onClick={() => setRightPanel((p) => (p === "notes" ? null : "notes"))} aria-label="Anotações" aria-pressed={rightPanel === "notes"}>
-            <NotebookPen className="h-5 w-5" />
-          </button>
-          {data.content.commentsEnabled && (
-            <button className={toolbarBtn(rightPanel === "comments")} onClick={() => setRightPanel((p) => (p === "comments" ? null : "comments"))} aria-label="Dúvidas e comentários" aria-pressed={rightPanel === "comments"}>
-              <MessageSquareText className="h-5 w-5" />
+            <button className={toolbarBtn(false)} onClick={() => setZoom((z) => Math.max(0.6, +(z - 0.15).toFixed(2)))} aria-label="Diminuir zoom">
+              <ZoomOut className="h-5 w-5" />
             </button>
-          )}
-          <button className={toolbarBtn(rightPanel === "info")} onClick={() => setRightPanel((p) => (p === "info" ? null : "info"))} aria-label="Informações e tempo de leitura" aria-pressed={rightPanel === "info"}>
-            <Info className="h-5 w-5" />
-          </button>
-          <button
-            className={cx(toolbarBtn(fullscreen), "hidden sm:block")}
-            onClick={() => (document.fullscreenElement ? document.exitFullscreen() : rootRef.current?.requestFullscreen())}
-            aria-label={fullscreen ? "Sair da tela cheia" : "Tela cheia"}
-          >
-            {fullscreen ? <Minimize2 className="h-5 w-5" /> : <Maximize2 className="h-5 w-5" />}
-          </button>
+            <span className="hidden w-11 text-center text-xs text-muted sm:block" aria-live="polite">
+              {Math.round(zoom * 100)}%
+            </span>
+            <button className={toolbarBtn(false)} onClick={() => setZoom((z) => Math.min(2.5, +(z + 0.15).toFixed(2)))} aria-label="Aumentar zoom">
+              <ZoomIn className="h-5 w-5" />
+            </button>
+            {data.content.allowTextMode && (
+              <button className={toolbarBtn(textMode)} onClick={() => setTextMode((t) => !t)} aria-pressed={textMode} aria-label="Modo texto: leitura confortável e acessível" title="Modo texto (leitura confortável e acessível)">
+                <Type className="h-5 w-5" />
+              </button>
+            )}
+            <button className={toolbarBtn(!!bookmarked)} onClick={toggleBookmark} aria-pressed={!!bookmarked} aria-label={bookmarked ? "Remover marcador desta página" : "Marcar esta página"}>
+              {bookmarked ? <BookmarkCheck className="h-5 w-5" /> : <Bookmark className="h-5 w-5" />}
+            </button>
+            <button className={toolbarBtn(rightPanel === "notes")} onClick={() => setRightPanel((p) => (p === "notes" ? null : "notes"))} aria-label="Anotações" aria-pressed={rightPanel === "notes"}>
+              <NotebookPen className="h-5 w-5" />
+            </button>
+            {data.content.commentsEnabled && (
+              <button className={toolbarBtn(rightPanel === "comments")} onClick={() => setRightPanel((p) => (p === "comments" ? null : "comments"))} aria-label="Dúvidas e comentários" aria-pressed={rightPanel === "comments"}>
+                <MessageSquareText className="h-5 w-5" />
+              </button>
+            )}
+            <button className={toolbarBtn(rightPanel === "info")} onClick={() => setRightPanel((p) => (p === "info" ? null : "info"))} aria-label="Informações e tempo de leitura" aria-pressed={rightPanel === "info"}>
+              <Info className="h-5 w-5" />
+            </button>
+            <button
+              className={cx(toolbarBtn(fullscreen), "hidden sm:block")}
+              onClick={() => (document.fullscreenElement ? document.exitFullscreen() : rootRef.current?.requestFullscreen())}
+              aria-label={fullscreen ? "Sair da tela cheia" : "Tela cheia"}
+            >
+              {fullscreen ? <Minimize2 className="h-5 w-5" /> : <Maximize2 className="h-5 w-5" />}
+            </button>
+          </div>
         </header>
         <div className="no-print h-1 bg-subtle">
           <div className="h-full bg-primary transition-[width]" style={{ width: `${progress?.percent ?? 0}%` }} />
@@ -560,9 +563,10 @@ export function ReaderPage() {
                   <TextPage contentId={id} page={page} fontScale={zoom} highlights={highlights} onSelection={(t) => setQuote(t)} />
                 </Card>
               ) : (
-                <PageCanvas contentId={id} page={page} sessionId={session?.sessionId ?? null} width={pageWidth} ratio={ratio} onAccessLost={setAccessLost} />
+                <PageCanvas contentId={id} page={page} total={total} sessionId={session?.sessionId ?? null} width={pageWidth} ratio={ratio} onAccessLost={setAccessLost} />
               )}
-              <div className="watermark-overlay absolute inset-0" style={watermarkStyle(watermark)} aria-hidden />
+              {/* A imagem da página já vem com a marca d'água gravada no servidor; o modo texto recebe a sobreposição. */}
+              {textMode && <div className="watermark-overlay absolute inset-0" style={watermarkStyle(watermark)} aria-hidden />}
             </div>
             {quote && (
               <div className="no-print fixed bottom-20 left-1/2 z-30 flex -translate-x-1/2 items-center gap-2 rounded-2xl border border-border bg-card px-3 py-2 shadow-xl">
@@ -620,7 +624,7 @@ export function ReaderPage() {
                     <li>{total} páginas{v.wordCount ? ` · ${v.wordCount.toLocaleString("pt-BR")} palavras` : ""}</li>
                     <li>Leitura estimada: {formatMinutes(data.estimate.minutes)} ({data.estimate.wordsPerMinute} palavras/min{data.estimate.factor !== 1 ? `, fator ${data.estimate.factor.toLocaleString("pt-BR")}` : ""})</li>
                     <li>Progresso: {progress?.percent ?? 0}%</li>
-                    <li>Tempo restante estimado: {formatMinutes(remaining)}</li>
+                    <li>Tempo restante estimado: {remaining > 0 ? formatMinutes(remaining) : "nenhum, leitura completa"}</li>
                   </ul>
                   <Progress value={progress?.percent ?? 0} label="Progresso da leitura" />
                   <div className="rounded-xl bg-subtle p-3 text-xs text-muted">
@@ -674,7 +678,7 @@ export function ReaderPage() {
               className="h-9 w-16 rounded-lg border border-border bg-input text-center text-sm"
             />
             <span className="text-muted">de {total}</span>
-            <span className="hidden text-xs text-muted md:inline">· restante ~{formatMinutes(remaining) || "0 min"}</span>
+            <span className="hidden text-xs text-muted md:inline">· {remaining > 0 ? `restante ~${formatMinutes(remaining)}` : "leitura completa"}</span>
           </div>
           <Button variant="outline" size="sm" disabled={page >= total} onClick={() => go(page + 1)} className="flex-row-reverse" icon={ChevronRight}>
             <span className="hidden sm:inline">Próxima</span>

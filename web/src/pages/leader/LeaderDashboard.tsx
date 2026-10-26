@@ -128,8 +128,8 @@ export function LeaderDashboardPage() {
         <StatCard label="Com dificuldade" value={k.struggling} icon={AlertTriangle} tone="warning" />
         <StatCard label="Competências validadas" value={k.competenciesValidated} icon={Award} tone="success" />
       </div>
-      <div className="grid gap-6 xl:grid-cols-3">
-        <Card className="xl:col-span-2">
+      <div className="space-y-6">
+        <Card>
           <CardHeader title="Colaboradores" description="Clique para ver detalhes, registrar feedback e validar atividades." />
           <div className="flex flex-col gap-3 p-5 pb-3 sm:flex-row sm:items-center">
             <div className="relative flex-1">
@@ -145,7 +145,7 @@ export function LeaderDashboardPage() {
               <table className="w-full min-w-[720px] text-left text-sm">
                 <thead>
                   <tr>
-                    <th className={th}>Colaborador</th>
+                    <th className={`${th} min-w-[260px]`}>Colaborador</th>
                     <th className={th}>Progresso</th>
                     <th className={th}>Obrig.</th>
                     <th className={th}>Atrasos</th>
@@ -186,8 +186,8 @@ export function LeaderDashboardPage() {
             </div>
           )}
         </Card>
-        <div className="space-y-6">
-          <Card>
+        <div className="grid gap-6 xl:grid-cols-3">
+          <Card className="xl:col-span-2">
             <CardHeader title="Evolução da equipe" description="Trilhas iniciadas e concluídas por mês" />
             <div className="p-5 pt-3">
               <MonthlyEvolution data={data.evolution} />

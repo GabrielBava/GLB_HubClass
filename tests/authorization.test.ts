@@ -90,6 +90,19 @@ describe("acesso a apostilas protegidas", () => {
     expect(track.json().view).toBeUndefined();
   });
 
+  it("ver a vitrine de uma trilha bloqueada não é registrado como tentativa de acesso; abrir o módulo é", async () => {
+    const deniedFor = async (targetId: string) => {
+      const res = await admin.get(`/api/admin/audit?action=authz.denied&actor=${encodeURIComponent(stranger.email)}`);
+      return (res.json().items as { targetId: string | null }[]).filter((i) => i.targetId === targetId).length;
+    };
+    const before = await deniedFor(t1.track.id);
+    expect((await strangerC.get(`/api/tracks/${t1.track.id}`)).json().locked).toBe(true);
+    expect(await deniedFor(t1.track.id)).toBe(before);
+    // O módulo é negado na verificação da trilha, e o registro aponta para ela.
+    expect((await strangerC.get(`/api/modules/${t1.module.id}`)).statusCode).toBe(403);
+    expect(await deniedFor(t1.track.id)).toBe(before + 1);
+  });
+
   it("arquivo original não tem URL pública e o download do original é só do administrador", async () => {
     const anon = new Client(app);
     expect((await anon.get(`/api/storage/originals/qualquer.pdf`)).statusCode).toBe(404);

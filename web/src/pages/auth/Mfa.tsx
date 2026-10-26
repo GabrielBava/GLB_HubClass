@@ -130,8 +130,9 @@ export function MfaSetupPage() {
     setError(null);
     try {
       const r = await api.post<{ recoveryCodes: string[] }>("/api/auth/mfa/enable", { code });
-      await refresh();
+      // Mostra os códigos antes de atualizar a sessão: com o MFA ativo, esta tela redirecionaria sem exibi-los.
       setCodes(r.recoveryCodes);
+      await refresh();
     } catch (err) {
       setError(errorMessage(err));
     } finally {

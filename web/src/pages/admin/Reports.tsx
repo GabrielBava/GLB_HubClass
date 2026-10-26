@@ -134,7 +134,7 @@ export function ReportsPage() {
               <StatCard label="Abandono" value={num(data.engagement.abandonmentRate, "%")} icon={TrendingDown} tone="warning" hint="iniciadas sem atividade há 30 dias" />
             </div>
             <Card className="mt-4 p-5">
-              <CardHeader title="Evolução mensal" description="Trilhas iniciadas e concluídas nos últimos 12 meses." />
+              <CardHeader flush title="Evolução mensal" description="Trilhas iniciadas e concluídas nos últimos 12 meses." />
               <div className="mt-4">
                 <MonthlyEvolution data={data.engagement.evolution} />
               </div>
@@ -153,7 +153,7 @@ export function ReportsPage() {
             </div>
             <div className="mt-4 grid gap-4 xl:grid-cols-2">
               <Card className="p-5">
-                <CardHeader title="Avaliações com menor aprovação" description="Mínimo de 3 tentativas corrigidas." />
+                <CardHeader flush title="Avaliações com menor aprovação" description="Mínimo de 3 tentativas corrigidas." />
                 {data.learning.hardestAssessments.length === 0 ? (
                   <p className="mt-4 text-sm text-muted">Dados insuficientes no período.</p>
                 ) : (
@@ -173,7 +173,7 @@ export function ReportsPage() {
                 )}
               </Card>
               <Card className="p-5">
-                <CardHeader title="Questões com mais erros" description="Indicam pontos do conteúdo que precisam de reforço." />
+                <CardHeader flush title="Questões com mais erros" description="Indicam pontos do conteúdo que precisam de reforço." />
                 {data.learning.hardestQuestions.length === 0 ? (
                   <p className="mt-4 text-sm text-muted">Dados insuficientes no período.</p>
                 ) : (
@@ -202,13 +202,13 @@ export function ReportsPage() {
             </div>
             <div className="mt-4 grid gap-4 xl:grid-cols-2">
               <Card className="p-5">
-                <CardHeader title="Progresso médio por cargo" />
+                <CardHeader flush title="Progresso médio por cargo" />
                 <div className="mt-4">
                   <GroupBars rows={data.development.byJobTitle} label="Cargo" />
                 </div>
               </Card>
               <Card className="p-5">
-                <CardHeader title="Progresso médio por área" />
+                <CardHeader flush title="Progresso médio por área" />
                 <div className="mt-4">
                   <GroupBars rows={data.development.byArea} label="Área" />
                 </div>

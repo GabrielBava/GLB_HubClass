@@ -401,7 +401,7 @@ export function AssessmentEditorPage() {
 
       <div className="grid gap-5 xl:grid-cols-[400px_minmax(0,1fr)]">
         <Card className="h-fit p-5">
-          <CardHeader title="Configurações" description="Nota mínima, tentativas, tempo, embaralhamento e devolutiva." />
+          <CardHeader flush title="Configurações" description="Nota mínima, tentativas, tempo, embaralhamento e devolutiva." />
           <fieldset disabled={!p.canEdit} className="mt-4 space-y-4">
             <Field label="Título" htmlFor="a-title" required>
               <Input id="a-title" value={form.title} onChange={(e) => set({ title: e.target.value })} />
@@ -410,10 +410,10 @@ export function AssessmentEditorPage() {
               <Textarea id="a-desc" value={form.description} onChange={(e) => set({ description: e.target.value })} />
             </Field>
             <div className="grid grid-cols-2 gap-3">
-              <Field label="Tipo" htmlFor="a-kind">
+              <Field label="Tipo" htmlFor="a-kind" className="col-span-2">
                 <Select id="a-kind" value={form.kind} onChange={(e) => set({ kind: e.target.value as AssessmentKind })} options={ASSESSMENT_KINDS.map((k) => ({ value: k, label: ASSESSMENT_KIND_LABEL[k] }))} />
               </Field>
-              <Field label="Módulo" htmlFor="a-mod">
+              <Field label="Módulo" htmlFor="a-mod" className="col-span-2">
                 <Select id="a-mod" value={form.moduleId ?? ""} placeholder="Final da trilha" onChange={(e) => set({ moduleId: e.target.value || null })} options={data.modules.map((m) => ({ value: m.id, label: m.title }))} />
               </Field>
               <Field label="Nota mínima (%)" htmlFor="a-pass">
@@ -729,7 +729,7 @@ export function AssessmentResultsPage() {
 
       <div className="mt-5 grid gap-5 xl:grid-cols-2">
         <Card className="p-5">
-          <CardHeader title="Índice de acerto por questão" description="Questões com menor acerto aparecem primeiro e indicam pontos do conteúdo a reforçar." />
+          <CardHeader flush title="Índice de acerto por questão" description="Questões com menor acerto aparecem primeiro e indicam pontos do conteúdo a reforçar." />
           {hardest.length === 0 ? (
             <p className="mt-4 text-sm text-muted">Ainda não há respostas corrigidas.</p>
           ) : (
@@ -751,7 +751,7 @@ export function AssessmentResultsPage() {
         </Card>
         <Card className="overflow-hidden">
           <div className="p-5 pb-3">
-            <CardHeader title="Tentativas" description="Líderes veem somente a própria equipe." />
+            <CardHeader flush title="Tentativas" description="Líderes veem somente a própria equipe." />
           </div>
           {data.attempts.length === 0 ? (
             <p className="px-5 pb-5 text-sm text-muted">Nenhuma tentativa.</p>
