@@ -19,6 +19,8 @@ export default defineConfig(({ mode }) => {
     },
     build: {
       outDir: demo ? "../dist/demo" : "../dist/web",
+      // Na demonstração (arquivo único), imagens como o logotipo vão embutidas no pacote.
+      assetsInlineLimit: demo ? 10_000_000 : 4096,
       emptyOutDir: true,
       sourcemap: false,
       rollupOptions: {

@@ -4,53 +4,72 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 /*
- * Variáveis globais de design. As cores da marca (primária, superfície institucional e destaque)
- * e as fontes são definidas em tempo de execução pela identidade visual configurada pelo
- * administrador (lib/branding.tsx). Trocar a identidade não exige alterar componentes.
+ * Variáveis globais de design (padrão: identidade do Grupo Life Brasil).
+ * As cores da marca e as fontes são aplicadas em tempo de execução a partir da identidade visual
+ * configurada pelo administrador (lib/branding.tsx). Trocar a identidade não exige alterar componentes.
+ *
+ * --brand          laranja da marca, para elementos gráficos (barras, ícones, traços, destaques)
+ * --primary        laranja acessível para texto e botões (escurecido no modo claro, contraste mínimo 4,5:1)
+ * --surface        carvão: menu lateral e telas de acesso
  */
 :root {
-  --primary: #1fb873;
-  --primary-fg: #04140c;
-  --accent: #0e6b4a;
-  --surface: #0b1210;
-  --font-heading: "Bricolage Grotesque", "Inter", system-ui, sans-serif;
-  --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --brand: #f36b22;
+  --primary-light: #b44f19;
+  --primary-fg-light: #ffffff;
+  --primary-dark: #f36b22;
+  --primary-fg-dark: #171716;
+  --primary: var(--primary-light);
+  --primary-fg: var(--primary-fg-light);
+  --accent: #ff9c42;
+  --surface: #171716;
+  --surface-2: #252522;
+  --font-heading: "Newsreader", Georgia, "Times New Roman", serif;
+  --font-body: "DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
 
-  --bg: #f5f7f6;
+  --bg: #f6f3ed;
   --card: #ffffff;
-  --fg: #0e1512;
-  --muted: #5b6763;
-  --border: #e2e8e5;
-  --subtle: #eef2f0;
+  --fg: #171716;
+  --muted: #6b6a63;
+  --border: #e3ddd2;
+  --subtle: #efebe3;
   --input: #ffffff;
-  --success: #15803d;
-  --warning: #b45309;
-  --danger: #c0262d;
-  --info: #1d4ed8;
-  --ring: color-mix(in oklab, var(--primary) 55%, transparent);
-  /* Séries dos gráficos (paleta validada para daltonismo e contraste, por modo). */
-  --chart-1: #2f6fd6;
-  --chart-2: #159a5e;
-  --chart-grid: #e6ebe8;
+  --success: #2f7d4f;
+  --warning: #a8560c;
+  --danger: #c83c35;
+  --info: #3d5a80;
+  --ring: color-mix(in oklab, var(--brand) 60%, transparent);
+  /* Séries dos gráficos (validadas para daltonismo e contraste em cada modo):
+     laranja para o foco e azul-ardósia para a comparação (guia: "uma cor para o foco"). */
+  --chart-1: #e0601c;
+  --chart-2: #2f6fd6;
+  --chart-grid: #e6e1d8;
   color-scheme: light;
 }
 
 .dark {
-  --bg: #070b0a;
-  --card: #0d1311;
-  --fg: #ecf2ef;
-  --muted: #94a39d;
-  --border: #1f2a26;
-  --subtle: #141c19;
-  --input: #111816;
-  --success: #34d399;
-  --warning: #fbbf24;
-  --danger: #f87171;
-  --info: #60a5fa;
-  --chart-1: #3f7fe3;
-  --chart-2: #1ea868;
-  --chart-grid: #1f2a26;
+  --primary: var(--primary-dark);
+  --primary-fg: var(--primary-fg-dark);
+  --bg: #171716;
+  --card: #201f1e;
+  --fg: #f6f3ed;
+  --muted: #a39e99;
+  --border: #353430;
+  --subtle: #2a2927;
+  --input: #1c1b1a;
+  --success: #5cc48a;
+  --warning: #ffb066;
+  --danger: #ff6b6b;
+  --info: #9db7dc;
+  --chart-1: #e8611c;
+  --chart-2: #3f7fe3;
+  --chart-grid: #353430;
   color-scheme: dark;
+}
+
+/* Área sempre clara dentro do tema escuro (ex.: prévia do logotipo para fundo claro). */
+.light-scope {
+  --primary: var(--primary-light);
+  --primary-fg: var(--primary-fg-light);
 }
 
 @theme inline {
@@ -63,6 +82,8 @@
   --color-input: var(--input);
   --color-primary: var(--primary);
   --color-primary-fg: var(--primary-fg);
+  --color-brand: var(--brand);
+  --color-surface-2: var(--surface-2);
   --color-accent: var(--accent);
   --color-surface: var(--surface);
   --color-success: var(--success);
@@ -92,7 +113,7 @@ h2,
 h3,
 .font-heading {
   font-family: var(--font-heading);
-  letter-spacing: -0.02em;
+  letter-spacing: -0.01em;
 }
 
 :focus-visible {
@@ -101,18 +122,29 @@ h3,
 }
 
 ::selection {
-  background: color-mix(in oklab, var(--primary) 30%, transparent);
+  background: color-mix(in oklab, var(--brand) 28%, transparent);
 }
 
 .brand-glow {
-  box-shadow: 0 10px 30px -10px color-mix(in oklab, var(--primary) 70%, transparent);
+  box-shadow: 0 10px 28px -12px color-mix(in oklab, var(--brand) 75%, transparent);
 }
 
+/* Telas de acesso: base carvão com faixa laranja à esquerda e linhas finas (guia: "impacto escuro"). */
 .brand-backdrop {
   background:
-    radial-gradient(900px 520px at 0% 0%, color-mix(in oklab, var(--primary) 26%, transparent), transparent 70%),
-    radial-gradient(700px 420px at 100% 100%, color-mix(in oklab, var(--accent) 18%, transparent), transparent 70%),
+    linear-gradient(90deg, var(--brand) 0 6px, transparent 6px),
+    radial-gradient(760px 460px at 100% 0%, color-mix(in oklab, var(--brand) 16%, transparent), transparent 70%),
     var(--surface);
+}
+
+/* Rótulo editorial: caixa alta pequena em laranja (ex.: "01 / PRINCÍPIOS"). */
+.eyebrow {
+  font-family: var(--font-body);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--primary);
 }
 
 .skip-link {

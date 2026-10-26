@@ -8,7 +8,7 @@ const monthLabel = (ym: string) => {
   return `${MONTHS[Number(m) - 1]}/${y?.slice(2)}`;
 };
 
-/** Trilhas iniciadas × concluídas por mês (duas séries, com legenda, dica e tabela). */
+/** Trilhas iniciadas × concluídas por mês (duas séries, com legenda, dica e tabela). Concluídas em laranja: é o foco. */
 export function MonthlyEvolution({ data }: { data: { month: string; started: number; completed: number }[] }) {
   const [table, setTable] = useState(false);
   const rows = data.map((d) => ({ ...d, label: monthLabel(d.month) }));
@@ -46,8 +46,8 @@ export function MonthlyEvolution({ data }: { data: { month: string; started: num
                 labelStyle={{ color: "var(--fg)", fontWeight: 600 }}
               />
               <Legend wrapperStyle={{ fontSize: 12, color: "var(--muted)" }} iconType="circle" />
-              <Bar dataKey="started" name="Iniciadas" fill="var(--chart-1)" radius={[4, 4, 0, 0]} maxBarSize={22} />
-              <Bar dataKey="completed" name="Concluídas" fill="var(--chart-2)" radius={[4, 4, 0, 0]} maxBarSize={22} />
+              <Bar dataKey="started" name="Iniciadas" fill="var(--chart-2)" radius={[4, 4, 0, 0]} maxBarSize={22} />
+              <Bar dataKey="completed" name="Concluídas" fill="var(--chart-1)" radius={[4, 4, 0, 0]} maxBarSize={22} />
             </BarChart>
           </ResponsiveContainer>
         </div>

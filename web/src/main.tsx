@@ -6,6 +6,7 @@ import { ApiError } from "./lib/api";
 import { AuthProvider } from "./lib/auth";
 import { BrandingProvider } from "./lib/branding";
 import { ToastProvider } from "./components/toast";
+import { TooltipLayer } from "./components/Tooltip";
 import { App } from "./App";
 import "./index.css";
 
@@ -38,6 +39,7 @@ async function start() {
             <AuthProvider>
               <Router>
                 <App />
+                <TooltipLayer />
                 {extra}
               </Router>
             </AuthProvider>

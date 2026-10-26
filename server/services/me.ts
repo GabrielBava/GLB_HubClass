@@ -29,10 +29,10 @@ export async function buildMe(ctx: AppContext, auth: AuthState) {
   const [team] = u.teamId ? await db.select().from(teams).where(eq(teams.id, u.teamId)) : [];
   const [department] = u.departmentId ? await db.select().from(departments).where(eq(departments.id, u.departmentId)) : [];
 
-  let leader: { areas: { id: string; name: string; canEdit: boolean; canPublish: boolean }[]; teams: { id: string; name: string }[] } | null = null;
+  let leader: { areas: { id: string; name: string }[]; teams: { id: string; name: string }[] } | null = null;
   if (u.role === "leader") {
     const areas = await db
-      .select({ id: knowledgeAreas.id, name: knowledgeAreas.name, canEdit: leaderAreas.canEdit, canPublish: leaderAreas.canPublish })
+      .select({ id: knowledgeAreas.id, name: knowledgeAreas.name })
       .from(leaderAreas)
       .innerJoin(knowledgeAreas, eq(knowledgeAreas.id, leaderAreas.areaId))
       .where(eq(leaderAreas.userId, u.id));
@@ -42,6 +42,7 @@ export async function buildMe(ctx: AppContext, auth: AuthState) {
   }
 
   const terms = await currentTerms(db);
+  const onboarding = await ctx.settings.get("onboarding");
   return {
     authenticated: true as const,
     csrfToken: auth.session.csrfToken,
@@ -53,14 +54,18 @@ export async function buildMe(ctx: AppContext, auth: AuthState) {
       name: u.name,
       email: u.email,
       role: u.role,
+      status: u.status,
       jobTitle: jobTitle?.name ?? null,
       team: team?.name ?? null,
       department: department?.name ?? null,
     },
     onboardingCompleted: u.onboardingCompletedAt !== null,
+    /** O administrador pode tornar o primeiro acesso opcional (Configurações › Primeiro acesso). */
+    onboardingRequired: onboarding.required,
     termsAccepted: auth.mfaSatisfied ? await hasAcceptedCurrentTerms(db, u.id) : false,
     currentTermsVersion: terms?.version ?? null,
     leader,
-    canManageContent: u.role === "admin" || !!leader?.areas.some((a) => a.canEdit),
+    // Apenas o administrador gerencia áreas, trilhas, conteúdos e o banco de questões.
+    canManageContent: u.role === "admin",
   };
 }

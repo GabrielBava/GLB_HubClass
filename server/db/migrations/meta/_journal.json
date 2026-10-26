@@ -15,6 +15,13 @@
       "when": 1792960505944,
       "tag": "0001_audit_protection",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793036744264,
+      "tag": "0002_acesso_desligamento",
+      "breakpoints": true
     }
   ]
 }

@@ -76,7 +76,7 @@ function useNavSections() {
       ],
     });
   }
-  if (role === "admin" || me.canManageContent) {
+  if (role === "admin") {
     sections.push({
       title: "Conteúdo",
       items: [
@@ -108,8 +108,8 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const sections = useNavSections();
   return (
     <nav aria-label="Navegação principal" className="flex h-full flex-col">
-      <div className="px-5 pb-4 pt-5">
-        <Link to="/" onClick={onNavigate} aria-label="Ir para o início">
+      <div className="px-5 pb-5 pt-6">
+        <Link to="/" onClick={onNavigate} aria-label="Ir para o início" className="block">
           <Brand size="sm" onDark />
         </Link>
       </div>
@@ -126,14 +126,17 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
                     onClick={onNavigate}
                     className={({ isActive }) =>
                       cx(
-                        "flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition",
-                        isActive ? "bg-white/10 font-medium text-white" : "text-white/65 hover:bg-white/5 hover:text-white",
+                        "relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition",
+                        // Item ativo: traço laranja à esquerda, como os marcadores do guia de identidade.
+                        isActive
+                          ? "bg-white/[0.07] font-medium text-white before:absolute before:inset-y-1.5 before:left-0 before:w-[3px] before:rounded-full before:bg-brand"
+                          : "text-white/65 hover:bg-white/5 hover:text-white",
                       )
                     }
                   >
                     {({ isActive }) => (
                       <>
-                        <item.icon className={cx("h-4 w-4 shrink-0", isActive && "text-primary")} aria-hidden />
+                        <item.icon className={cx("h-4 w-4 shrink-0", isActive && "text-brand")} aria-hidden />
                         {item.label}
                       </>
                     )}
@@ -172,7 +175,7 @@ function Popover({ button, children, label }: { button: (open: boolean) => React
   }, [open]);
   return (
     <div className="relative" ref={ref}>
-      <button aria-haspopup="true" aria-expanded={open} aria-label={label} onClick={() => setOpen((o) => !o)} className="rounded-xl p-2 text-muted hover:bg-subtle hover:text-fg">
+      <button aria-haspopup="true" aria-expanded={open} aria-label={label} data-tooltip={label} onClick={() => setOpen((o) => !o)} className="rounded-xl p-2 text-muted hover:bg-subtle hover:text-fg">
         {button(open)}
       </button>
       {open && <div className="absolute right-0 top-full z-50 mt-2 w-80 max-w-[calc(100vw-2rem)] rounded-2xl border border-border bg-card shadow-xl">{children(() => setOpen(false))}</div>}
@@ -339,13 +342,13 @@ export function AppShell() {
       <a href="#conteudo" className="skip-link rounded-lg bg-primary px-3 py-2 text-primary-fg">
         Pular para o conteúdo
       </a>
-      <aside className="no-print fixed inset-y-0 left-0 z-40 hidden w-64 bg-surface lg:block">
+      <aside className="dark no-print fixed inset-y-0 left-0 z-40 hidden w-64 bg-surface lg:block">
         <Sidebar />
       </aside>
       {mobileOpen && (
         <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Menu">
           <div className="absolute inset-0 bg-black/50" onClick={() => setMobileOpen(false)} />
-          <aside className="absolute inset-y-0 left-0 w-72 max-w-[85vw] bg-surface shadow-2xl">
+          <aside className="dark absolute inset-y-0 left-0 w-72 max-w-[85vw] bg-surface shadow-2xl">
             <button onClick={() => setMobileOpen(false)} className="absolute right-3 top-4 rounded-lg p-1.5 text-white/70 hover:text-white" aria-label="Fechar menu">
               <X className="h-5 w-5" />
             </button>

@@ -119,7 +119,7 @@ const catalog: { code: string; name: string; icon: string; color: string; descri
     code: "A",
     name: "Institucional — Grupo Life Brasil",
     icon: "Landmark",
-    color: "#1FB873",
+    color: "#F36B22",
     description: "Cultura, estrutura, processos, ferramentas, conduta e segurança da informação.",
     tracks: [
       "Boas-vindas e onboarding",
@@ -138,7 +138,7 @@ const catalog: { code: string; name: string; icon: string; color: string; descri
     code: "B",
     name: "Planejamento Financeiro",
     icon: "LineChart",
-    color: "#3B82F6",
+    color: "#252522",
     description: "Da qualificação ao plano financeiro e ao relacionamento de longo prazo.",
     tracks: [
       "Formação de Planejador Financeiro",
@@ -157,7 +157,7 @@ const catalog: { code: string; name: string; icon: string; color: string; descri
     code: "C",
     name: "Consórcios",
     icon: "Building2",
-    color: "#10B981",
+    color: "#C83C35",
     description: "Conhecimento técnico e comercial para recomendar consórcios com segurança.",
     tracks: [
       "Formação de Especialista de Consórcios",
@@ -178,7 +178,7 @@ const catalog: { code: string; name: string; icon: string; color: string; descri
     code: "D",
     name: "Seguros e Proteção",
     icon: "ShieldCheck",
-    color: "#8B5CF6",
+    color: "#B44F19",
     description: "Análise de necessidades, produtos de proteção e pós-venda.",
     tracks: [
       "Formação de Especialista de Seguros",
@@ -197,7 +197,7 @@ const catalog: { code: string; name: string; icon: string; color: string; descri
     code: "E",
     name: "Investimentos",
     icon: "TrendingUp",
-    color: "#F59E0B",
+    color: "#3A3935",
     description: "Mercado financeiro, produtos, suitability e responsabilidade profissional.",
     tracks: [
       "Formação de Assessor de Investimentos",
@@ -215,7 +215,7 @@ const catalog: { code: string; name: string; icon: string; color: string; descri
     code: "F",
     name: "Academia Comercial",
     icon: "Target",
-    color: "#EF4444",
+    color: "#E0601C",
     description: "Prospecção, discovery, negociação, CRM e fidelização.",
     tracks: [
       "Rampagem Comercial — 7 dias",
@@ -238,7 +238,7 @@ const catalog: { code: string; name: string; icon: string; color: string; descri
     code: "G",
     name: "Liderança e Gestão",
     icon: "Users",
-    color: "#0EA5E9",
+    color: "#8A3A12",
     description: "Gestão de pessoas, indicadores e desenvolvimento de equipes.",
     tracks: [
       "Formação de Líderes",
@@ -254,7 +254,7 @@ const catalog: { code: string; name: string; icon: string; color: string; descri
     code: "H",
     name: "Biblioteca e Desenvolvimento",
     icon: "Library",
-    color: "#64748B",
+    color: "#77766F",
     description: "Leituras, artigos, podcasts e materiais de desenvolvimento pessoal e profissional.",
     tracks: [],
   },
@@ -344,8 +344,8 @@ const elisa = await addUser({ name: "Elisa Martins", email: "elisa.martins@exemp
 await addUser({ name: "Felipe Nunes", email: "felipe.nunes@exemplo.com.br", role: "collaborator", job: "Executivo Comercial", dept: "Comercial", team: "Comercial" });
 
 await db.insert(leaderAreas).values([
-  { userId: leaderCons.id, areaId: areaIds.C!, canEdit: true, canPublish: false },
-  { userId: leaderPlan.id, areaId: areaIds.B!, canEdit: false, canPublish: false },
+  { userId: leaderCons.id, areaId: areaIds.C! },
+  { userId: leaderPlan.id, areaId: areaIds.B! },
 ]);
 await db.insert(teamLeaders).values([
   { teamId: team("Consórcios"), userId: leaderCons.id },
@@ -557,7 +557,7 @@ await addActivity(ramp, mRamp.id, "Registre a primeira atividade comercial no CR
 
 // ---------------------------------------------------------------- Biblioteca
 await db.insert(libraryItems).values([
-  { title: "A Psicologia Financeira", author: "Morgan Housel", category: "Finanças pessoais", theme: "Comportamento e dinheiro", type: "book", license: "external_only", level: "basico", estimatedMinutes: 360, description: "Indicação de leitura: como emoções e hábitos influenciam decisões financeiras. Consulte a obra em livrarias ou bibliotecas.", coverColor: "#0E6B4A", sortOrder: 0 },
+  { title: "A Psicologia Financeira", author: "Morgan Housel", category: "Finanças pessoais", theme: "Comportamento e dinheiro", type: "book", license: "external_only", level: "basico", estimatedMinutes: 360, description: "Indicação de leitura: como emoções e hábitos influenciam decisões financeiras. Consulte a obra em livrarias ou bibliotecas.", coverColor: "#252522", sortOrder: 0 },
   { title: "Rápido e Devagar", author: "Daniel Kahneman", category: "Comportamento", theme: "Tomada de decisão", type: "book", license: "external_only", level: "intermediario", estimatedMinutes: 720, description: "Indicação de leitura sobre os dois sistemas de pensamento e vieses que afetam escolhas — útil para conversas com clientes.", coverColor: "#1E3A8A", sortOrder: 1 },
   { title: "Alcançando Excelência em Vendas: SPIN Selling", author: "Neil Rackham", category: "Vendas", theme: "Venda consultiva", type: "book", license: "external_only", level: "intermediario", estimatedMinutes: 420, description: "Indicação de leitura sobre perguntas de Situação, Problema, Implicação e Necessidade de solução.", coverColor: "#9A3412", sortOrder: 2 },
   { title: "O Investidor Inteligente", author: "Benjamin Graham", category: "Investimentos", theme: "Investimento em valor", type: "book", license: "external_only", level: "avancado", estimatedMinutes: 900, description: "Indicação clássica sobre disciplina e margem de segurança em investimentos.", coverColor: "#374151", sortOrder: 3 },

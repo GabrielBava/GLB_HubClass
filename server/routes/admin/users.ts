@@ -27,6 +27,8 @@ import { badRequest, conflict, notFound } from "../../lib/errors.js";
 import { audit, requireRole } from "../../lib/http.js";
 import { parse } from "../../lib/validate.js";
 import { inviteEmail, resetEmail } from "../../services/emails.js";
+import { notify } from "../../services/notifications.js";
+import { executeOffboarding } from "../../services/offboarding.js";
 
 const idParams = z.object({ id: z.string().uuid() });
 const optionalUuid = z.string().uuid().nullable().optional();
@@ -99,6 +101,8 @@ export async function adminUserRoutes(app: FastifyInstance) {
       lastLoginAt: u.lastLoginAt,
       lockedUntil: u.lockedUntil && u.lockedUntil.getTime() > Date.now() ? u.lockedUntil : null,
       createdAt: u.createdAt,
+      approvalRequired: u.approvalRequired,
+      offboardAt: u.offboardAt,
     }));
   });
 
@@ -109,6 +113,8 @@ export async function adminUserRoutes(app: FastifyInstance) {
     jobTitleId: optionalUuid,
     departmentId: optionalUuid,
     teamId: optionalUuid,
+    /** Após ativar o convite, aguardar a liberação do administrador (padrão: Configurações › Primeiro acesso). */
+    approvalRequired: z.boolean().optional(),
   });
 
   app.post("/api/admin/users", { config: { rateLimit: { max: 60, timeWindow: "1 minute" } } }, async (req) => {
@@ -116,6 +122,7 @@ export async function adminUserRoutes(app: FastifyInstance) {
     const body = parse(userBody, req.body);
     const [exists] = await db.select({ id: users.id }).from(users).where(sql`lower(${users.email}) = ${body.email}`);
     if (exists) throw conflict("Já existe um usuário com este e-mail.");
+    const onboarding = await settings.get("onboarding");
     const [user] = await db
       .insert(users)
       .values({
@@ -126,11 +133,12 @@ export async function adminUserRoutes(app: FastifyInstance) {
         departmentId: body.departmentId ?? null,
         teamId: body.teamId ?? null,
         status: "invited",
+        approvalRequired: body.approvalRequired ?? onboarding.approvalRequired,
         createdBy: admin.id,
       })
       .returning();
     const invite = await sendInvite(user!.id, admin.id);
-    await audit(req, "user.created", { targetType: "user", targetId: user!.id, metadata: { email: body.email, role: body.role } });
+    await audit(req, "user.created", { targetType: "user", targetId: user!.id, metadata: { email: body.email, role: body.role, approvalRequired: user!.approvalRequired } });
     return { id: user!.id, code: userCode(user!.seq), ...invite };
   });
 
@@ -140,7 +148,7 @@ export async function adminUserRoutes(app: FastifyInstance) {
     const [u] = await db.select().from(users).where(eq(users.id, id));
     if (!u) throw notFound("Usuário não encontrado.");
     const areas = await db
-      .select({ areaId: leaderAreas.areaId, name: knowledgeAreas.name, canEdit: leaderAreas.canEdit, canPublish: leaderAreas.canPublish })
+      .select({ areaId: leaderAreas.areaId, name: knowledgeAreas.name })
       .from(leaderAreas)
       .innerJoin(knowledgeAreas, eq(knowledgeAreas.id, leaderAreas.areaId))
       .where(eq(leaderAreas.userId, id));
@@ -173,6 +181,10 @@ export async function adminUserRoutes(app: FastifyInstance) {
         onboardingCompletedAt: u.onboardingCompletedAt,
         createdAt: u.createdAt,
         deactivatedAt: u.deactivatedAt,
+        approvalRequired: u.approvalRequired,
+        approvedAt: u.approvedAt,
+        offboardAt: u.offboardAt,
+        offboardReason: u.offboardReason,
       },
       leaderAreas: areas,
       leaderTeams: led,
@@ -196,6 +208,7 @@ export async function adminUserRoutes(app: FastifyInstance) {
         ...(body.jobTitleId !== undefined ? { jobTitleId: body.jobTitleId } : {}),
         ...(body.departmentId !== undefined ? { departmentId: body.departmentId } : {}),
         ...(body.teamId !== undefined ? { teamId: body.teamId } : {}),
+        ...(body.approvalRequired !== undefined && u.status === "invited" ? { approvalRequired: body.approvalRequired } : {}),
         updatedAt: new Date(),
       })
       .where(eq(users.id, id));
@@ -216,7 +229,7 @@ export async function adminUserRoutes(app: FastifyInstance) {
     const { id } = parse(idParams, req.params);
     const body = parse(
       z.object({
-        areas: z.array(z.object({ areaId: z.string().uuid(), canEdit: z.boolean().default(false), canPublish: z.boolean().default(false) })).max(50),
+        areas: z.array(z.object({ areaId: z.string().uuid() })).max(50),
         teamIds: z.array(z.string().uuid()).max(50),
       }),
       req.body,
@@ -227,7 +240,7 @@ export async function adminUserRoutes(app: FastifyInstance) {
     await db.transaction(async (tx) => {
       await tx.delete(leaderAreas).where(eq(leaderAreas.userId, id));
       if (body.areas.length) {
-        await tx.insert(leaderAreas).values(body.areas.map((a) => ({ userId: id, areaId: a.areaId, canEdit: a.canEdit || a.canPublish, canPublish: a.canPublish })));
+        await tx.insert(leaderAreas).values(body.areas.map((a) => ({ userId: id, areaId: a.areaId })));
       }
       await tx.delete(teamLeaders).where(eq(teamLeaders.userId, id));
       if (body.teamIds.length) await tx.insert(teamLeaders).values(body.teamIds.map((teamId) => ({ teamId, userId: id })));
@@ -253,7 +266,7 @@ export async function adminUserRoutes(app: FastifyInstance) {
     const { id } = parse(idParams, req.params);
     const [u] = await db.select().from(users).where(eq(users.id, id));
     if (!u) throw notFound();
-    if (u.status !== "active") throw badRequest("Disponível apenas para usuários ativos. Para convites pendentes, reenvie o convite.");
+    if (u.status !== "active" && u.status !== "pending_approval") throw badRequest("Disponível apenas para usuários ativos. Para convites pendentes, reenvie o convite.");
     const security = await settings.get("security");
     const branding = await settings.get("branding");
     const token = await issueAuthToken(db, { userId: id, type: "password_reset", ttlMinutes: security.resetExpiryMinutes, createdBy: admin.id });
@@ -261,6 +274,78 @@ export async function adminUserRoutes(app: FastifyInstance) {
     await mailer.send({ to: u.email, ...resetEmail({ name: u.name, link, platform: branding.platformName, expiresMinutes: security.resetExpiryMinutes }) });
     await audit(req, "user.password_reset_link", { targetType: "user", targetId: id, metadata: { emailed: mailer.configured } });
     return { emailed: mailer.configured, inviteLink: mailer.configured ? null : link, expiresMinutes: security.resetExpiryMinutes };
+  });
+
+  // ------------------------------------------------------------------ Liberação após o primeiro acesso
+  app.post("/api/admin/users/:id/approve", async (req) => {
+    const admin = requireRole(req, "admin");
+    const { id } = parse(idParams, req.params);
+    const [u] = await db.select().from(users).where(eq(users.id, id));
+    if (!u) throw notFound();
+    if (u.status !== "pending_approval") throw badRequest("Este usuário não está aguardando liberação.");
+    await db.update(users).set({ status: "active", approvedAt: new Date(), approvedBy: admin.id, updatedAt: new Date() }).where(eq(users.id, id));
+    await notify(app.ctx, {
+      userId: id,
+      type: "access_released",
+      title: "Acesso liberado",
+      body: "O administrador liberou o seu acesso. Bons estudos!",
+      link: "/",
+      dedupeKey: `access-released:${id}`,
+    });
+    await audit(req, "user.approved", { targetType: "user", targetId: id });
+    return { ok: true };
+  });
+
+  app.post("/api/admin/users/:id/reject", async (req) => {
+    requireRole(req, "admin");
+    const { id } = parse(idParams, req.params);
+    const [u] = await db.select().from(users).where(eq(users.id, id));
+    if (!u) throw notFound();
+    if (u.status !== "pending_approval") throw badRequest("Este usuário não está aguardando liberação.");
+    await db.update(users).set({ status: "inactive", deactivatedAt: new Date(), updatedAt: new Date() }).where(eq(users.id, id));
+    const revoked = await revokeUserSessions(db, id, "access_rejected");
+    await invalidateUserTokens(db, id);
+    await audit(req, "user.rejected", { targetType: "user", targetId: id, metadata: { sessionsRevoked: revoked } });
+    return { ok: true };
+  });
+
+  // ------------------------------------------------------------------ Desligamento (imediato ou agendado)
+  app.post("/api/admin/users/:id/offboard", async (req) => {
+    const admin = requireRole(req, "admin");
+    const { id } = parse(idParams, req.params);
+    const body = parse(
+      z.object({
+        reason: z.string().trim().min(3, "Informe o motivo (uso interno).").max(500),
+        /** Data e hora em que o acesso será trancado; vazio = agora. */
+        at: z.string().datetime({ offset: true }).nullable().optional(),
+      }),
+      req.body,
+    );
+    if (id === admin.id) throw badRequest("Você não pode desligar o próprio usuário.");
+    const [u] = await db.select().from(users).where(eq(users.id, id));
+    if (!u || u.anonymizedAt) throw notFound();
+    if (u.status === "inactive") throw badRequest("O usuário já está desligado ou desativado.");
+    if (u.role === "admin") await assertNotLastAdmin(id);
+    const at = body.at ? new Date(body.at) : null;
+    if (at && at.getTime() > Date.now() + 60_000) {
+      await db.update(users).set({ offboardAt: at, offboardReason: body.reason, offboardedBy: admin.id, updatedAt: new Date() }).where(eq(users.id, id));
+      await audit(req, "user.offboard_scheduled", { targetType: "user", targetId: id, metadata: { at: at.toISOString(), reason: body.reason } });
+      return { ok: true, scheduled: true, at };
+    }
+    const result = await executeOffboarding(db, id, { by: admin.id, reason: body.reason });
+    await audit(req, "user.offboarded", { targetType: "user", targetId: id, metadata: { scheduled: false, reason: body.reason, ...result } });
+    return { ok: true, scheduled: false, ...result };
+  });
+
+  app.delete("/api/admin/users/:id/offboard", async (req) => {
+    requireRole(req, "admin");
+    const { id } = parse(idParams, req.params);
+    const [u] = await db.select().from(users).where(eq(users.id, id));
+    if (!u) throw notFound();
+    if (u.status === "inactive") throw badRequest("O desligamento já foi executado. Use Reativar, se for o caso.");
+    await db.update(users).set({ offboardAt: null, offboardReason: null, offboardedBy: null, updatedAt: new Date() }).where(eq(users.id, id));
+    await audit(req, "user.offboard_canceled", { targetType: "user", targetId: id });
+    return { ok: true };
   });
 
   app.post("/api/admin/users/:id/deactivate", async (req) => {
@@ -283,7 +368,10 @@ export async function adminUserRoutes(app: FastifyInstance) {
     const [u] = await db.select().from(users).where(eq(users.id, id));
     if (!u || u.anonymizedAt) throw notFound();
     const status = u.passwordHash ? "active" : "invited";
-    await db.update(users).set({ status, deactivatedAt: null, failedLoginCount: 0, lockedUntil: null, updatedAt: new Date() }).where(eq(users.id, id));
+    await db
+      .update(users)
+      .set({ status, deactivatedAt: null, offboardAt: null, offboardReason: null, offboardedBy: null, failedLoginCount: 0, lockedUntil: null, updatedAt: new Date() })
+      .where(eq(users.id, id));
     const invite = status === "invited" ? await sendInvite(id, admin.id) : null;
     await audit(req, "user.reactivated", { targetType: "user", targetId: id });
     return { ok: true, status, invite };

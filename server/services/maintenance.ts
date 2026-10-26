@@ -2,6 +2,7 @@ import { and, lt, sql } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
 import type { DB } from "../db/client.js";
 import { auditLogs, notifications, readingSessions, sessions } from "../db/schema.js";
+import { applyDueOffboardings } from "./offboarding.js";
 
 const DAY = 86_400_000;
 
@@ -42,5 +43,15 @@ export function startMaintenance(app: FastifyInstance) {
   const timer = setInterval(run, DAY);
   timer.unref();
   setTimeout(run, 60_000).unref();
-  app.addHook("onClose", async () => clearInterval(timer));
+  // Desligamentos agendados: verificados a cada 10 minutos (login e sessões já recusam no horário exato).
+  const offboard = setInterval(() => {
+    applyDueOffboardings(app.ctx.db)
+      .then((n) => n && app.log.info({ n }, "desligamentos agendados executados"))
+      .catch((err) => app.log.error({ err }, "falha ao executar desligamentos agendados"));
+  }, 10 * 60_000);
+  offboard.unref();
+  app.addHook("onClose", async () => {
+    clearInterval(timer);
+    clearInterval(offboard);
+  });
 }

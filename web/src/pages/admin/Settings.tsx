@@ -3,9 +3,9 @@ import { ImageUp, Mail, Trash2 } from "lucide-react";
 import { NOTIFICATION_TYPES, NOTIFICATION_TYPE_LABEL } from "../../../../shared/domain";
 import { FONT_CHOICES, type AllSettings } from "../../../../shared/settings";
 import { Brand } from "../../components/Brand";
-import { Alert, Button, Card, CardHeader, Checkbox, ErrorState, Field, Input, PageHeader, PageLoader, Select, Switch, Tabs, Textarea } from "../../components/ui";
+import { Alert, Button, Card, CardHeader, Checkbox, ErrorState, Field, Input, PageHeader, PageLoader, Select, Switch, Tabs, Textarea, cx } from "../../components/ui";
 import { api } from "../../lib/api";
-import { readableOn, useBranding } from "../../lib/branding";
+import { readableOn } from "../../lib/branding";
 import { useAction, useApi, useDocumentTitle } from "../../lib/hooks";
 import { NumberFields, SaveBar, useSettingsGroup, type SettingsResponse } from "./Security";
 
@@ -70,15 +70,13 @@ function ColorField({ id, label, hint, value, onChange }: { id: string; label: s
 
 function BrandingTab({ data }: { data: SettingsResponse }) {
   const { value, setValue, save, dirty } = useSettingsGroup(data, "branding", [["branding"]]);
-  const { branding } = useBranding();
-  const fileRef = useRef<HTMLInputElement>(null);
   const brandingInv = { invalidate: ["/api/admin/settings", ["branding"]] };
-  const removeLogo = useAction(() => api.del("/api/admin/settings/logo"), { ...brandingInv, success: "Logotipo removido." });
+  const removeLogo = useAction((variant: LogoVariant) => api.del(`/api/admin/settings/logo?variant=${variant}`), { ...brandingInv, success: "Logotipo padrão restaurado." });
   const uploadLogo = useAction(
-    (file: File) => {
+    ({ file, variant }: { file: File; variant: LogoVariant }) => {
       const fd = new FormData();
       fd.append("file", file);
-      return api.upload("/api/admin/settings/logo", fd);
+      return api.upload(`/api/admin/settings/logo?variant=${variant}`, fd);
     },
     { ...brandingInv, success: "Logotipo atualizado." },
   );
@@ -88,8 +86,9 @@ function BrandingTab({ data }: { data: SettingsResponse }) {
   const onSurface = colorsOk ? contrast(value.colors.primary, value.colors.brandSurface) : 0;
   const onWhite = colorsOk ? contrast(value.colors.primary, "#FFFFFF") : 0;
 
-  const { logoFileId: _logo, ...payload } = value;
+  const { logoFileId: _logo, logoDarkFileId: _logoDark, ...payload } = value;
   void _logo;
+  void _logoDark;
 
   return (
     <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_380px]">
@@ -146,26 +145,63 @@ function BrandingTab({ data }: { data: SettingsResponse }) {
           {colorsOk && <p className="mt-2 text-xs text-muted">Contraste da cor principal sobre a cor institucional: {onSurface.toFixed(1)}:1</p>}
         </Card>
         <Card className="p-5">
-          <CardHeader flush title="Logotipo" description="PNG, JPEG ou WebP de até 1 MB. Sem logotipo, o nome da plataforma é exibido." />
-          <div className="mt-4 flex min-h-[72px] items-center justify-center rounded-xl p-4" style={{ background: branding.colors.brandSurface }}>
-            <Brand onDark />
-          </div>
-          <div className="mt-3 flex gap-2">
-            <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp" className="sr-only" onChange={(e) => {
-                const f = e.target.files?.[0];
-                if (f) uploadLogo.mutate(f);
-                e.target.value = "";
-              }} />
-            <Button variant="outline" icon={ImageUp} loading={uploadLogo.isPending} onClick={() => fileRef.current?.click()}>
-              Enviar logotipo
-            </Button>
-            {data.settings.branding.logoFileId && (
-              <Button variant="ghost" icon={Trash2} loading={removeLogo.isPending} onClick={() => removeLogo.mutate(undefined)}>
-                Remover
-              </Button>
-            )}
+          <CardHeader flush title="Logotipo" description="PNG, JPEG ou WebP de até 1 MB, com fundo transparente. Sem envio, vale o logotipo padrão do Grupo Life Brasil." />
+          <div className="mt-4 space-y-4">
+            <LogoSlot
+              variant="light"
+              label="Para fundos claros"
+              custom={!!data.settings.branding.logoFileId}
+              uploading={uploadLogo.isPending && uploadLogo.variables?.variant === "light"}
+              onUpload={(file) => uploadLogo.mutate({ file, variant: "light" })}
+              onReset={() => removeLogo.mutate("light")}
+            />
+            <LogoSlot
+              variant="dark"
+              label="Para fundos escuros (menu e telas de acesso)"
+              custom={!!data.settings.branding.logoDarkFileId}
+              uploading={uploadLogo.isPending && uploadLogo.variables?.variant === "dark"}
+              onUpload={(file) => uploadLogo.mutate({ file, variant: "dark" })}
+              onReset={() => removeLogo.mutate("dark")}
+            />
           </div>
         </Card>
+      </div>
+    </div>
+  );
+}
+
+type LogoVariant = "light" | "dark";
+
+function LogoSlot({ variant, label, custom, uploading, onUpload, onReset }: { variant: LogoVariant; label: string; custom: boolean; uploading: boolean; onUpload: (f: File) => void; onReset: () => void }) {
+  const ref = useRef<HTMLInputElement>(null);
+  return (
+    <div>
+      <p className="mb-1.5 text-sm font-medium">{label}</p>
+      <div className={cx("flex min-h-[76px] items-center justify-center rounded-xl border p-4", variant === "dark" ? "border-transparent bg-surface" : "light-scope border-border bg-[#f6f3ed]")}>
+        {/* Prévia fixa de cada versão, independente do tema atual. */}
+        <Brand variant={variant} />
+      </div>
+      <div className="mt-2 flex flex-wrap gap-2">
+        <input
+          ref={ref}
+          type="file"
+          accept="image/png,image/jpeg,image/webp"
+          className="sr-only"
+          aria-label={`Enviar logotipo ${label.toLowerCase()}`}
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) onUpload(f);
+            e.target.value = "";
+          }}
+        />
+        <Button size="sm" variant="outline" icon={ImageUp} loading={uploading} onClick={() => ref.current?.click()}>
+          Enviar
+        </Button>
+        {custom && (
+          <Button size="sm" variant="ghost" icon={Trash2} onClick={onReset}>
+            Restaurar padrão
+          </Button>
+        )}
       </div>
     </div>
   );

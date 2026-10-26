@@ -20,7 +20,9 @@ const data = readFileSync(DATA, "utf8")
 const safeJs = (code) => code.replace(/<\/script/gi, "<\\/script");
 
 html = html.replace(/<script src="\/theme-init\.js"><\/script>/, () => `<script>${safeJs(read("theme-init.js"))}</script>`);
-html = html.replace(/<link rel="icon"[^>]*href="\/favicon\.svg"[^>]*>/, () => `<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,${Buffer.from(read("favicon.svg")).toString("base64")}">`);
+const png = (p) => `data:image/png;base64,${readFileSync(path.join(DIST, p)).toString("base64")}`;
+html = html.replace(/<link rel="icon"[^>]*href="\/favicon\.png"[^>]*>/, () => `<link rel="icon" type="image/png" href="${png("favicon.png")}">`);
+html = html.replace(/<link rel="apple-touch-icon"[^>]*>/, () => `<link rel="apple-touch-icon" href="${png("apple-touch-icon.png")}">`);
 html = html.replace(/<link rel="stylesheet"[^>]*href="(\/assets\/[^"]+\.css)"[^>]*>/, (_, href) => `<style>${read(href)}</style>`);
 html = html.replace(/<script type="module" crossorigin src="(\/assets\/[^"]+\.js)"><\/script>/, (_, src) => `<script>window.__LC_DEMO__=${data};</script>\n<script type="module">${safeJs(read(src))}</script>`);
 

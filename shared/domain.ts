@@ -9,12 +9,13 @@ export const ROLE_LABEL: Record<Role, string> = {
   collaborator: "Colaborador",
 };
 
-export const USER_STATUS = ["invited", "active", "inactive"] as const;
+export const USER_STATUS = ["invited", "pending_approval", "active", "inactive"] as const;
 export type UserStatus = (typeof USER_STATUS)[number];
 export const USER_STATUS_LABEL: Record<UserStatus, string> = {
   invited: "Convidado",
+  pending_approval: "Aguardando liberação",
   active: "Ativo",
-  inactive: "Desativado",
+  inactive: "Desligado / desativado",
 };
 
 export const PUBLICATION_STATUS = ["draft", "review", "published", "archived"] as const;
@@ -211,6 +212,8 @@ export const NOTIFICATION_TYPES = [
   "comment_reply",
   "validation_pending",
   "request_received",
+  "access_pending",
+  "access_released",
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 export const NOTIFICATION_TYPE_LABEL: Record<NotificationType, string> = {
@@ -228,6 +231,8 @@ export const NOTIFICATION_TYPE_LABEL: Record<NotificationType, string> = {
   comment_reply: "Resposta à sua dúvida",
   validation_pending: "Atividade aguardando validação",
   request_received: "Nova solicitação recebida",
+  access_pending: "Novo acesso aguardando liberação",
+  access_released: "Acesso liberado",
 };
 
 export function userCode(seq: number): string {

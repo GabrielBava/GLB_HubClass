@@ -1,7 +1,7 @@
 import { and, count, desc, eq, gt, isNull, sql } from "drizzle-orm";
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { z } from "zod";
-import { createSession, MFA_REQUIRED_ROLES, revokeSession, revokeUserSessions, sessionCookieName } from "../auth/sessions.js";
+import { createSession, MFA_REQUIRED_ROLES, revokeSession, revokeUserSessions, SESSION_STATUSES, sessionCookieName } from "../auth/sessions.js";
 import { dummyVerify, hashPassword, passwordProblems, verifyPassword } from "../auth/password.js";
 import { generateMfaSecret, generateRecoveryCodes, hashRecoveryCode, mfaEnrollmentData, verifyTotp } from "../auth/mfa.js";
 import { consumeToken, findValidToken, issueAuthToken } from "../auth/tokens.js";
@@ -11,6 +11,8 @@ import { audit, currentUser } from "../lib/http.js";
 import { parse } from "../lib/validate.js";
 import { resetEmail } from "../services/emails.js";
 import { buildMe } from "../services/me.js";
+import { notifyMany } from "../services/notifications.js";
+import { executeOffboarding, offboardingDue } from "../services/offboarding.js";
 import { sha256 } from "../lib/crypto.js";
 
 const INVALID_LOGIN = "E-mail ou senha inválidos.";
@@ -85,9 +87,17 @@ export async function authRoutes(app: FastifyInstance) {
         throw new HttpError(429, "locked", LOCKED_LOGIN);
       }
 
+      // Desligamento agendado que venceu: executa agora e recusa o acesso (a rotina periódica faria o mesmo).
+      if (offboardingDue(user, now)) {
+        await executeOffboarding(db, user.id, { by: user.offboardedBy, reason: user.offboardReason, at: user.offboardAt! });
+        await audit(req, "user.offboarded", { targetType: "user", targetId: user.id, metadata: { scheduled: true, trigger: "login" } });
+        user.status = "inactive";
+      }
+
       const valid = user.passwordHash ? await verifyPassword(user.passwordHash, body.password) : await dummyVerify(body.password);
-      if (!valid || user.status !== "active") {
-        if (user.status === "active") {
+      const canSignIn = SESSION_STATUSES.includes(user.status);
+      if (!valid || !canSignIn) {
+        if (canSignIn) {
           const failed = user.failedLoginCount + 1;
           const lock = failed >= security.maxFailedLogins;
           await db
@@ -100,7 +110,7 @@ export async function authRoutes(app: FastifyInstance) {
           outcome: "failure",
           actorId: user.id,
           actorEmail: user.email,
-          metadata: { reason: user.status !== "active" ? `status_${user.status}` : "bad_password" },
+          metadata: { reason: !canSignIn ? `status_${user.status}` : "bad_password" },
         });
         throw new HttpError(401, "invalid_credentials", INVALID_LOGIN);
       }
@@ -291,13 +301,29 @@ export async function authRoutes(app: FastifyInstance) {
       if (problems.length) throw badRequest(problems[0]!, problems.map((message) => ({ path: "password", message })));
       if (!(await consumeToken(db, row.id))) throw notFound("Convite já utilizado.");
       const hash = await hashPassword(body.password);
+      // Se o administrador exigiu liberação, a pessoa conclui o primeiro acesso e aguarda; o conteúdo fica bloqueado.
+      const status = user.approvalRequired ? "pending_approval" : "active";
       const [activated] = await db
         .update(users)
-        .set({ passwordHash: hash, passwordChangedAt: new Date(), status: "active", failedLoginCount: 0, lockedUntil: null, lastLoginAt: new Date() })
+        .set({ passwordHash: hash, passwordChangedAt: new Date(), status, failedLoginCount: 0, lockedUntil: null, lastLoginAt: new Date() })
         .where(eq(users.id, user.id))
         .returning();
       await db.insert(passwordHistory).values({ userId: user.id, hash });
-      await audit(req, "auth.invite.accepted", { actorId: user.id, actorEmail: user.email });
+      await audit(req, "auth.invite.accepted", { actorId: user.id, actorEmail: user.email, metadata: { awaitingApproval: status === "pending_approval" } });
+      if (status === "pending_approval") {
+        const admins = await db.select({ id: users.id }).from(users).where(and(eq(users.role, "admin"), eq(users.status, "active")));
+        await notifyMany(
+          app.ctx,
+          admins.map((a) => a.id),
+          {
+            type: "access_pending",
+            title: "Acesso aguardando liberação",
+            body: `${user.name} concluiu a ativação do convite e aguarda a sua liberação.`,
+            link: `/admin/usuarios/${user.id}`,
+            dedupeKey: `access-pending:${user.id}`,
+          },
+        );
+      }
       return loginResponse(req, reply, activated!);
     },
   );
@@ -311,7 +337,7 @@ export async function authRoutes(app: FastifyInstance) {
     async (req) => {
       const { email } = parse(z.object({ email: emailSchema }), req.body);
       const [user] = await db.select().from(users).where(sql`lower(${users.email}) = ${email}`).limit(1);
-      if (user && user.status === "active") {
+      if (user && SESSION_STATUSES.includes(user.status)) {
         // Limita a 3 pedidos por hora por conta.
         const [recent] = await db
           .select({ n: count() })
@@ -360,7 +386,7 @@ export async function authRoutes(app: FastifyInstance) {
       const row = await findValidToken(db, body.token, "password_reset");
       if (!row) throw notFound("Link inválido ou expirado. Solicite uma nova redefinição.");
       const [user] = await db.select().from(users).where(eq(users.id, row.userId));
-      if (!user || user.status !== "active") throw notFound("Link inválido ou expirado.");
+      if (!user || !SESSION_STATUSES.includes(user.status)) throw notFound("Link inválido ou expirado.");
       const security = await settings.get("security");
       const problems = passwordProblems(body.password, { minLength: security.passwordMinLength, name: user.name, email: user.email });
       if (problems.length) throw badRequest(problems[0]!, problems.map((message) => ({ path: "password", message })));

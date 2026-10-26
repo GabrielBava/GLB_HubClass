@@ -57,9 +57,9 @@ function RequireAuth() {
   return <Outlet />;
 }
 
-function RequireRole({ roles, contentManager }: { roles: Role[]; contentManager?: boolean }) {
+function RequireRole({ roles }: { roles: Role[] }) {
   const { me } = useAuth();
-  const allowed = !!me && (roles.includes(me.user.role) || (contentManager && me.canManageContent));
+  const allowed = !!me && roles.includes(me.user.role);
   return allowed ? (
     <Suspense fallback={<PageLoader />}>
       <Outlet />
@@ -110,7 +110,8 @@ export function App() {
             <Route path="/lider/duvidas" element={<LeaderQuestionsPage />} />
           </Route>
 
-          <Route element={<RequireRole roles={["admin"]} contentManager />}>
+          {/* Áreas, trilhas, conteúdos, avaliações e banco de questões: somente o administrador. */}
+          <Route element={<RequireRole roles={["admin"]} />}>
             <Route path="/admin/conteudos" element={<ContentTreePage />} />
             <Route path="/admin/trilhas/:id" element={<TrackEditorPage />} />
             <Route path="/admin/conteudos/:id" element={<ContentEditorPage />} />

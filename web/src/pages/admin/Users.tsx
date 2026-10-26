@@ -142,7 +142,7 @@ export function UsersPage() {
 
 interface UserDetail {
   user: { id: string; code: string; name: string; email: string; role: Role; status: UserStatus; jobTitleId: string | null; departmentId: string | null; teamId: string | null; mfaEnabled: boolean; lastLoginAt: string | null; lockedUntil: string | null; onboardingCompletedAt: string | null; createdAt: string; deactivatedAt: string | null };
-  leaderAreas: { areaId: string; name: string; canEdit: boolean; canPublish: boolean }[];
+  leaderAreas: { areaId: string; name: string }[];
   leaderTeams: { teamId: string; name: string }[];
   sessions: { id: string; createdAt: string; lastSeenAt: string; ip: string | null; userAgent: string | null; mfa: boolean }[];
   enrollments: { id: string; trackId: string; title: string; status: LearnerTrackStatus; percent: number; source: string; dueDate: string | null; isMandatory: boolean }[];
@@ -156,7 +156,7 @@ export function UserDetailPage() {
   const areas = useApi<{ id: string; name: string }[]>("/api/areas/simple");
   const access = useApi<{ trackId: string; title: string; areaName: string; access: string; explanation: string }[]>(`/api/admin/access/user/${id}`, { enabled: false });
   const [edit, setEdit] = useState<{ name: string; role: Role; jobTitleId: string; departmentId: string; teamId: string } | null>(null);
-  const [scope, setScope] = useState<{ areas: Record<string, { on: boolean; canEdit: boolean; canPublish: boolean }>; teams: string[] } | null>(null);
+  const [scope, setScope] = useState<{ areas: string[]; teams: string[] } | null>(null);
   const [invite, setInvite] = useState<{ link: string | null; kind: "invite" | "reset" } | null>(null);
   const [anon, setAnon] = useState("");
   useDocumentTitle(data?.user.name);
@@ -164,7 +164,7 @@ export function UserDetailPage() {
   const saveScope = useAction(
     () =>
       api.put(`${url}/leader-scope`, {
-        areas: Object.entries(scope!.areas).filter(([, v]) => v.on).map(([areaId, v]) => ({ areaId, canEdit: v.canEdit, canPublish: v.canPublish })),
+        areas: scope!.areas.map((areaId) => ({ areaId })),
         teamIds: scope!.teams,
       }),
     { invalidate: [url], success: "Escopo do líder atualizado.", onSuccess: () => setScope(null) },
@@ -264,29 +264,17 @@ export function UserDetailPage() {
           <Card className="lg:col-span-2">
             <CardHeader
               title="Escopo do líder"
-              description="Áreas pelas quais responde (e se pode editar ou publicar conteúdos) e equipes que acompanha."
-              action={!scope && <Button size="sm" variant="outline" onClick={() => setScope({ areas: Object.fromEntries(data.leaderAreas.map((a) => [a.areaId, { on: true, canEdit: a.canEdit, canPublish: a.canPublish }])), teams: data.leaderTeams.map((t) => t.teamId) })}>Editar escopo</Button>}
+              description="Áreas e equipes que o líder acompanha. Áreas, trilhas, conteúdos e o banco de questões são alterados somente pelo administrador."
+              action={!scope && <Button size="sm" variant="outline" onClick={() => setScope({ areas: data.leaderAreas.map((a) => a.areaId), teams: data.leaderTeams.map((t) => t.teamId) })}>Editar escopo</Button>}
             />
             <div className="p-5">
               {scope ? (
                 <div className="grid gap-6 md:grid-cols-2">
                   <fieldset className="space-y-2">
                     <legend className="mb-1 text-sm font-medium">Áreas</legend>
-                    {(areas.data ?? []).map((a) => {
-                      const v = scope.areas[a.id] ?? { on: false, canEdit: false, canPublish: false };
-                      const set = (patch: Partial<typeof v>) => setScope({ ...scope, areas: { ...scope.areas, [a.id]: { ...v, ...patch } } });
-                      return (
-                        <div key={a.id} className="rounded-xl border border-border p-3">
-                          <Checkbox label={a.name} checked={v.on} onChange={(on) => set({ on })} />
-                          {v.on && (
-                            <div className="ml-7 mt-2 flex flex-wrap gap-4">
-                              <Checkbox label="Pode editar" checked={v.canEdit} onChange={(canEdit) => set({ canEdit })} />
-                              <Checkbox label="Pode publicar" checked={v.canPublish} onChange={(canPublish) => set({ canPublish, canEdit: canPublish || v.canEdit })} />
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
+                    {(areas.data ?? []).map((a) => (
+                      <Checkbox key={a.id} label={a.name} checked={scope.areas.includes(a.id)} onChange={(on) => setScope({ ...scope, areas: on ? [...scope.areas, a.id] : scope.areas.filter((x) => x !== a.id) })} />
+                    ))}
                   </fieldset>
                   <fieldset className="space-y-2">
                     <legend className="mb-1 text-sm font-medium">Equipes</legend>
@@ -300,7 +288,7 @@ export function UserDetailPage() {
                 <div className="grid gap-4 text-sm md:grid-cols-2">
                   <div>
                     <p className="font-medium">Áreas</p>
-                    {data.leaderAreas.length ? data.leaderAreas.map((a) => <p key={a.areaId} className="text-muted">{a.name}{a.canPublish ? " · edita e publica" : a.canEdit ? " · edita" : " · acompanha"}</p>) : <p className="text-muted">Nenhuma área.</p>}
+                    {data.leaderAreas.length ? data.leaderAreas.map((a) => <p key={a.areaId} className="text-muted">{a.name}</p>) : <p className="text-muted">Nenhuma área.</p>}
                   </div>
                   <div>
                     <p className="font-medium">Equipes</p>

@@ -1,5 +1,5 @@
 import { and, eq, isNull, ne } from "drizzle-orm";
-import type { Role } from "../../shared/domain.js";
+import type { Role, UserStatus } from "../../shared/domain.js";
 import type { SecuritySettings } from "../../shared/settings.js";
 import type { DB } from "../db/client.js";
 import { sessions, users } from "../db/schema.js";
@@ -19,12 +19,17 @@ export interface AuthUser {
   email: string;
   name: string;
   role: Role;
+  /** "active" ou "pending_approval" (aguardando liberação do administrador após o primeiro acesso). */
+  status: UserStatus;
   teamId: string | null;
   departmentId: string | null;
   jobTitleId: string | null;
   mfaEnabled: boolean;
   onboardingCompletedAt: Date | null;
 }
+
+/** Status que podem manter sessão. Quem aguarda liberação entra, mas só alcança o primeiro acesso e o perfil. */
+export const SESSION_STATUSES: readonly UserStatus[] = ["active", "pending_approval"];
 
 export interface AuthState {
   session: { id: string; csrfToken: string; mfaVerifiedAt: Date | null; createdAt: Date; expiresAt: Date };
@@ -72,7 +77,9 @@ export async function resolveSession(db: DB, token: string, security: SecuritySe
   const { session, user } = row;
   const now = Date.now();
   if (session.revokedAt || session.expiresAt.getTime() <= now || session.idleExpiresAt.getTime() <= now) return null;
-  if (user.status !== "active") return null;
+  if (!SESSION_STATUSES.includes(user.status)) return null;
+  // Desligamento agendado que já venceu: recusa antes mesmo da rotina periódica executá-lo.
+  if (user.offboardAt && user.offboardAt.getTime() <= now) return null;
 
   // Renova a janela de inatividade no máximo uma vez por minuto.
   if (now - session.lastSeenAt.getTime() > 60_000) {
@@ -98,6 +105,7 @@ export async function resolveSession(db: DB, token: string, security: SecuritySe
       email: user.email,
       name: user.name,
       role: user.role,
+      status: user.status,
       teamId: user.teamId,
       departmentId: user.departmentId,
       jobTitleId: user.jobTitleId,

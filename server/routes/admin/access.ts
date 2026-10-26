@@ -26,7 +26,6 @@ import { refreshEnrollment } from "../../services/progress.js";
 const REASON_LABEL: Record<string, string> = {
   admin: "Administrador acessa tudo",
   leader_area: "Líder responsável pela área",
-  leader_preview: "Pré-visualização do líder (rascunho)",
   free: "Trilha livre para todos os usuários ativos",
   enrolled: "Trilha atribuída ao usuário",
   rule: "Regra de permissão",
@@ -145,6 +144,7 @@ export async function adminAccessRoutes(app: FastifyInstance) {
       email: u.email,
       name: u.name,
       role: u.role,
+      status: u.status,
       teamId: u.teamId,
       departmentId: u.departmentId,
       jobTitleId: u.jobTitleId,
@@ -210,6 +210,7 @@ export async function adminAccessRoutes(app: FastifyInstance) {
         email: u.email,
         name: u.name,
         role: u.role,
+        status: u.status,
         teamId: u.teamId,
         departmentId: u.departmentId,
         jobTitleId: u.jobTitleId,

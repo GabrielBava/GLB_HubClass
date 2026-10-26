@@ -61,7 +61,9 @@ const schemas: { [K in SettingsKey]: z.ZodType<Partial<AllSettings[K]>> } = {
     })
     .partial(),
   community: z.object({ commentsEnabledDefault: z.boolean() }).partial(),
-  onboarding: z.object({ welcomeMessage: z.string().trim().min(10).max(3000), supportContact: z.string().trim().max(200) }).partial(),
+  onboarding: z
+    .object({ welcomeMessage: z.string().trim().min(10).max(3000), supportContact: z.string().trim().max(200), required: z.boolean(), approvalRequired: z.boolean() })
+    .partial(),
 };
 
 export async function adminSettingsRoutes(app: FastifyInstance) {
@@ -93,6 +95,9 @@ export async function adminSettingsRoutes(app: FastifyInstance) {
     return saved;
   });
 
+  // Logotipo para fundo claro (padrão) ou escuro (?variant=dark).
+  const logoField = (req: { query: unknown }) => ((req.query as { variant?: string }).variant === "dark" ? "logoDarkFileId" : "logoFileId");
+
   app.post("/api/admin/settings/logo", async (req) => {
     const admin = requireRole(req, "admin");
     const file = await readSingleFile(req, 1024 * 1024);
@@ -100,16 +105,18 @@ export async function adminSettingsRoutes(app: FastifyInstance) {
     if (!img) throw badRequest("Envie o logotipo em PNG, JPEG ou WebP (até 1 MB).");
     const stored = await storePrivateFile(app.ctx, { buffer: file.buffer, originalName: file.filename, mimeType: img.mime, purpose: "logo", userId: admin.id, extension: img.ext });
     const branding = await settings.get("branding");
-    await settings.set("branding", { ...branding, logoFileId: stored.id }, admin.id);
-    await audit(req, "settings.logo_updated");
+    const field = logoField(req);
+    await settings.set("branding", { ...branding, [field]: stored.id }, admin.id);
+    await audit(req, "settings.logo_updated", { metadata: { variant: field === "logoDarkFileId" ? "dark" : "light" } });
     return { ok: true };
   });
 
   app.delete("/api/admin/settings/logo", async (req) => {
     const admin = requireRole(req, "admin");
     const branding = await settings.get("branding");
-    await settings.set("branding", { ...branding, logoFileId: null }, admin.id);
-    await audit(req, "settings.logo_removed");
+    const field = logoField(req);
+    await settings.set("branding", { ...branding, [field]: null }, admin.id);
+    await audit(req, "settings.logo_removed", { metadata: { variant: field === "logoDarkFileId" ? "dark" : "light" } });
     return { ok: true };
   });
 

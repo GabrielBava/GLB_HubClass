@@ -45,18 +45,18 @@ export function DemoBar() {
     return (
       <button
         onClick={() => setOpen(true)}
-        className="fixed bottom-4 right-4 z-[200] flex items-center gap-2 rounded-full border border-white/10 bg-[#0b1210] px-3 py-2 text-xs font-semibold text-white shadow-xl"
+        className="fixed bottom-4 right-4 z-[200] flex items-center gap-2 rounded-full border border-white/10 bg-[#171716] px-3 py-2 text-xs font-semibold text-white shadow-xl"
         aria-label="Abrir painel da demonstração"
       >
-        <FlaskConical className="h-4 w-4 text-[#1fb873]" aria-hidden /> Demonstração
+        <FlaskConical className="h-4 w-4 text-[#f36b22]" aria-hidden /> Demonstração
       </button>
     );
   }
 
   return (
-    <div className="fixed bottom-4 right-4 z-[200] w-[min(360px,calc(100vw-2rem))] rounded-2xl border border-white/10 bg-[#0b1210] p-4 text-white shadow-2xl" role="region" aria-label="Demonstração">
+    <div className="fixed bottom-4 right-4 z-[200] w-[min(360px,calc(100vw-2rem))] rounded-2xl border border-white/10 bg-[#171716] p-4 text-white shadow-2xl" role="region" aria-label="Demonstração">
       <div className="flex items-start gap-2">
-        <FlaskConical className="mt-0.5 h-4 w-4 shrink-0 text-[#1fb873]" aria-hidden />
+        <FlaskConical className="mt-0.5 h-4 w-4 shrink-0 text-[#f36b22]" aria-hidden />
         <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold">Demonstração sem servidor</p>
           <p className="mt-0.5 text-xs leading-relaxed text-white/65">
@@ -77,7 +77,7 @@ export function DemoBar() {
               onClick={() => void enter(r)}
               className={cx(
                 "flex flex-col items-center gap-1 rounded-xl border px-2 py-2 text-xs font-medium transition",
-                active ? "border-[#1fb873] bg-[#1fb873]/15 text-white" : "border-white/10 text-white/80 hover:bg-white/5",
+                active ? "border-[#f36b22] bg-[#f36b22]/15 text-white" : "border-white/10 text-white/80 hover:bg-white/5",
               )}
               aria-pressed={!!active}
             >

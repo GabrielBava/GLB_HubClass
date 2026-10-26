@@ -1,8 +1,8 @@
 import { Link, useSearchParams } from "react-router";
-import { ArrowRight, Filter, Search, X } from "lucide-react";
+import { Filter, Search, X } from "lucide-react";
 import { AreaIcon } from "../../components/AreaIcon";
 import { TrackCard, type TrackCardData } from "../../components/learning";
-import { Button, Card, EmptyState, ErrorState, Input, PageHeader, PageLoader, Progress, Select, Skeleton } from "../../components/ui";
+import { Button, Card, EmptyState, ErrorState, Input, PageHeader, PageLoader, Select, Skeleton } from "../../components/ui";
 import { LEARNER_TRACK_STATUS, LEARNER_TRACK_STATUS_LABEL, LEVELS, LEVEL_LABEL } from "../../../../shared/domain";
 import { useApi, useDebounced, useDocumentTitle } from "../../lib/hooks";
 import { useEffect, useState } from "react";
@@ -32,38 +32,21 @@ export function AreasPage() {
       ) : error || !data ? (
         <ErrorState error={error} retry={refetch} />
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {data.map((a) => {
-            const pct = a.availableCount ? Math.round((a.completedCount / a.availableCount) * 100) : 0;
-            return (
-              <Card key={a.id} as="article" className="group overflow-hidden transition hover:shadow-lg">
-                <Link to={a.slug.includes("biblioteca") && a.trackCount === 0 ? "/biblioteca" : `/trilhas?area=${a.slug}`} className="flex h-full flex-col p-5">
-                  <div className="flex items-start gap-4">
-                    <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl text-white" style={{ background: a.color }}>
-                      <AreaIcon name={a.icon} className="h-6 w-6" />
-                    </span>
-                    <div className="min-w-0">
-                      {a.code && <p className="text-xs font-semibold text-muted">Área {a.code}</p>}
-                      <h2 className="font-heading text-lg font-semibold leading-snug group-hover:text-primary">{a.name}</h2>
-                    </div>
-                  </div>
-                  <p className="mt-3 line-clamp-2 text-sm text-muted">{a.description}</p>
-                  <div className="mt-auto pt-4">
-                    <div className="flex items-center justify-between text-xs text-muted">
-                      <span>
-                        {a.trackCount} trilha{a.trackCount === 1 ? "" : "s"} · {a.availableCount} liberada{a.availableCount === 1 ? "" : "s"}
-                      </span>
-                      <span>{a.completedCount} concluída{a.completedCount === 1 ? "" : "s"}</span>
-                    </div>
-                    <Progress value={pct} size="sm" className="mt-2" label={`Conclusão na área ${a.name}`} />
-                    <span className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-primary">
-                      {a.trackCount === 0 ? "Abrir biblioteca" : "Ver trilhas"} <ArrowRight className="h-4 w-4" aria-hidden />
-                    </span>
-                  </div>
-                </Link>
-              </Card>
-            );
-          })}
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 xl:grid-cols-4">
+          {data.map((a) => (
+            <Card key={a.id} as="article" className="group transition hover:border-brand/60 hover:shadow-md">
+              <Link
+                to={a.slug.includes("biblioteca") && a.trackCount === 0 ? "/biblioteca" : `/trilhas?area=${a.slug}`}
+                className="flex h-full flex-col items-start gap-4 p-5"
+                aria-label={`${a.name}: ver trilhas`}
+              >
+                <span className="grid h-12 w-12 place-items-center rounded-xl bg-brand/10 text-brand transition group-hover:bg-brand group-hover:text-white">
+                  <AreaIcon name={a.icon} className="h-6 w-6" />
+                </span>
+                <h2 className="font-heading text-lg font-medium leading-snug">{a.name}</h2>
+              </Link>
+            </Card>
+          ))}
         </div>
       )}
     </div>

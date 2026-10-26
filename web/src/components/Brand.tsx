@@ -1,26 +1,51 @@
-import { GraduationCap } from "lucide-react";
 import { useBranding } from "../lib/branding";
 import { cx } from "./ui";
+import defaultLogoForLight from "../assets/brand/glb-logo-claro.png";
+import defaultLogoForDark from "../assets/brand/glb-logo-escuro.png";
 
-/** Logotipo configurável: imagem enviada pelo administrador ou marca nominativa com a cor primária. */
-export function Brand({ size = "md", onDark = false, className }: { size?: "sm" | "md" | "lg" | "xl"; onDark?: boolean; className?: string }) {
-  const { branding } = useBranding();
-  const text = { sm: "text-lg", md: "text-xl", lg: "text-3xl", xl: "text-5xl" }[size];
-  const icon = { sm: "h-7 w-7", md: "h-8 w-8", lg: "h-11 w-11", xl: "h-16 w-16" }[size];
-  if (branding.logoUrl) {
-    const h = { sm: "h-7", md: "h-8", lg: "h-12", xl: "h-20" }[size];
-    return <img src={branding.logoUrl} alt={branding.platformName} className={cx(h, "w-auto object-contain", className)} />;
-  }
-  const [first, ...rest] = branding.platformName.split(" ");
+const HEIGHTS = { sm: "h-7", md: "h-8", lg: "h-12", xl: "h-16" } as const;
+
+/**
+ * Assinatura da plataforma: logotipo da organização (versão para fundo claro ou escuro, configurável
+ * pelo administrador; padrão do Grupo Life Brasil) e o nome do produto (ex.: LIFE CLASS) como rótulo.
+ * `onDark` indica um contêiner sempre escuro (menu lateral, telas de acesso); fora dele, segue o tema.
+ */
+export function Brand({
+  size = "md",
+  onDark = false,
+  product = true,
+  align = "center",
+  variant,
+  className,
+}: {
+  size?: "sm" | "md" | "lg" | "xl";
+  onDark?: boolean;
+  product?: boolean;
+  /** Alinhamento quando o nome do produto fica abaixo do logotipo (tamanhos lg e xl). */
+  align?: "center" | "start";
+  /** Força a versão do logotipo (prévias na tela de configurações). */
+  variant?: "light" | "dark";
+  className?: string;
+}) {
+  const { branding, isDark } = useBranding();
+  const dark = variant ? variant === "dark" : onDark || isDark;
+  const src = dark ? (branding.logoDarkUrl ?? defaultLogoForDark) : (branding.logoUrl ?? defaultLogoForLight);
+  const stacked = size === "lg" || size === "xl";
   return (
-    <span className={cx("inline-flex items-center gap-2.5", className)} aria-label={branding.platformName}>
-      <span className={cx("grid place-items-center rounded-xl bg-primary text-primary-fg", icon)} aria-hidden>
-        <GraduationCap className="h-[58%] w-[58%]" />
-      </span>
-      <span className={cx("font-heading font-extrabold tracking-tight leading-none", text)} aria-hidden>
-        <span className={onDark ? "text-white" : "text-fg"}>{first}</span>
-        {rest.length > 0 && <span className="text-primary"> {rest.join(" ")}</span>}
-      </span>
+    <span className={cx("inline-flex min-w-0", stacked ? cx("flex-col gap-3", align === "start" ? "items-start" : "items-center") : "items-center gap-3", className)}>
+      <img src={src} alt={branding.organizationName} className={cx(HEIGHTS[size], "w-auto shrink-0 object-contain")} draggable={false} />
+      {product && (
+        <span
+          className={cx(
+            "font-body font-bold uppercase leading-none",
+            dark ? "text-brand" : "text-primary",
+            stacked ? (size === "xl" ? "text-lg tracking-[0.32em]" : "text-sm tracking-[0.28em]") : "border-l pl-3 text-[11px] tracking-[0.18em]",
+            !stacked && (dark ? "border-white/20" : "border-border"),
+          )}
+        >
+          {branding.platformName}
+        </span>
+      )}
     </span>
   );
 }

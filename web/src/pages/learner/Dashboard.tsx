@@ -74,7 +74,7 @@ export function DashboardPage() {
     <div className="space-y-6">
       <header className="flex flex-col gap-1">
         <p className="text-sm text-muted">{[data.user.jobTitle, data.user.department].filter(Boolean).join(" · ") || "Colaborador"}</p>
-        <h1 className="font-heading text-2xl font-bold sm:text-3xl">
+        <h1 className="font-heading text-3xl font-medium sm:text-[34px]">
           {greeting()}, {firstName}!
         </h1>
       </header>
@@ -82,12 +82,12 @@ export function DashboardPage() {
       <div className="grid gap-4 lg:grid-cols-3">
         <Card className="relative overflow-hidden lg:col-span-2">
           <div className="brand-backdrop dark absolute inset-0" aria-hidden />
-          <div className="relative flex h-full flex-col justify-between gap-6 p-6 text-white sm:p-7">
+          <div className="dark relative flex h-full flex-col justify-between gap-6 p-6 pl-8 text-white sm:p-7 sm:pl-9">
             {data.continue ? (
               <>
                 <div>
-                  <p className="text-sm font-medium text-primary">Continuar de onde parei</p>
-                  <h2 className="mt-1 font-heading text-2xl font-bold">{data.continue.title}</h2>
+                  <p className="eyebrow">Continuar de onde parei</p>
+                  <h2 className="mt-2 font-heading text-[28px] font-medium leading-tight">{data.continue.title}</h2>
                   <p className="mt-1 text-sm text-white/65">
                     {data.continue.trackTitle} · página {data.continue.lastPage} · {data.continue.percent}% lido
                   </p>
@@ -106,8 +106,8 @@ export function DashboardPage() {
             ) : data.next ? (
               <>
                 <div>
-                  <p className="text-sm font-medium text-primary">Próxima atividade recomendada</p>
-                  <h2 className="mt-1 font-heading text-2xl font-bold">{data.next.title}</h2>
+                  <p className="eyebrow">Próxima atividade recomendada</p>
+                  <h2 className="mt-2 font-heading text-[28px] font-medium leading-tight">{data.next.title}</h2>
                   <p className="mt-1 text-sm text-white/65">
                     {nextLabel[data.next.kind]} · {data.next.trackTitle}
                   </p>
@@ -120,8 +120,8 @@ export function DashboardPage() {
               </>
             ) : (
               <div>
-                <p className="text-sm font-medium text-primary">Seu ambiente de aprendizado</p>
-                <h2 className="mt-1 font-heading text-2xl font-bold">Explore o catálogo de trilhas</h2>
+                <p className="eyebrow">Seu ambiente de aprendizado</p>
+                <h2 className="mt-2 font-heading text-[28px] font-medium leading-tight">Explore o catálogo de trilhas</h2>
                 <p className="mt-1 text-sm text-white/65">Quando você iniciar um conteúdo, ele aparecerá aqui para retomar.</p>
                 <Link to="/trilhas" className="mt-5 inline-block">
                   <Button size="lg" glow icon={BookOpen}>

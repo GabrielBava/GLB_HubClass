@@ -61,6 +61,8 @@ function originAllowed(req: FastifyRequest, allowed: string[]): boolean {
   return false;
 }
 
+const PENDING_APPROVAL_ROUTES = ["/api/auth/", "/api/onboarding", "/api/profile", "/api/notifications"];
+
 export async function buildApp(config: AppConfig, opts: { database?: Database } = {}): Promise<FastifyInstance> {
   const app = Fastify({
     logger: config.env === "test" ? false : { level: config.logLevel, redact: ["req.headers.cookie", "req.headers['x-csrf-token']"] },
@@ -147,6 +149,10 @@ export async function buildApp(config: AppConfig, opts: { database?: Database } 
     if (!req.auth) throw new HttpError(401, "unauthorized", "Sessão expirada. Entre novamente.");
     if (!req.auth.mfaSatisfied && !routeConfig.allowPartial) {
       throw new HttpError(403, "mfa_required", "Conclua a verificação em duas etapas para continuar.");
+    }
+    // Aguardando liberação do administrador: só autenticação, primeiro acesso, perfil e avisos.
+    if (req.auth.user.status === "pending_approval" && !PENDING_APPROVAL_ROUTES.some((p) => req.url.startsWith(p))) {
+      throw new HttpError(403, "awaiting_approval", "Seu acesso aguarda a liberação do administrador.");
     }
   });
 

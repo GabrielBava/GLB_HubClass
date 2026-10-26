@@ -209,9 +209,35 @@ describe("escopo do líder e privilégios", () => {
     expect((await leaderC.post("/api/admin/areas", { name: "Nova área" })).statusCode).toBe(403);
   });
 
-  it("líder sem permissão de edição não altera nem publica conteúdo da área", async () => {
-    expect((await leaderC.patch(`/api/admin/tracks/${t1.track.id}`, { title: "Alterado" })).statusCode).toBe(403);
-    expect((await leaderC.post(`/api/admin/contents/${t1.content.id}/status`, { status: "draft" })).statusCode).toBe(403);
+  it("líder não altera áreas, trilhas, conteúdos, avaliações nem o banco de questões, nem na própria área", async () => {
+    const area = t1.area.id;
+    const assessment = (await admin.post("/api/admin/assessments", { trackId: t1.track.id, moduleId: t1.module.id, title: "Fixação" })).json();
+    const question = (
+      await admin.post(`/api/admin/assessments/${assessment.id}/questions`, {
+        type: "true_false",
+        prompt: "O consórcio cobra juros?",
+        options: {},
+        answerKey: { value: false },
+      })
+    ).json();
+    const attempts: [string, Promise<{ statusCode: number }>][] = [
+      ["editar área", leaderC.patch(`/api/admin/areas/${area}`, { name: "Alterada" })],
+      ["criar trilha", leaderC.post("/api/admin/tracks", { areaId: area, title: "Nova trilha" })],
+      ["editar trilha", leaderC.patch(`/api/admin/tracks/${t1.track.id}`, { title: "Alterado" })],
+      ["publicar trilha", leaderC.post(`/api/admin/tracks/${t1.track.id}/status`, { status: "draft" })],
+      ["criar módulo", leaderC.post("/api/admin/modules", { trackId: t1.track.id, title: "Novo módulo" })],
+      ["criar conteúdo", leaderC.post("/api/admin/contents", { moduleId: t1.module.id, type: "text", title: "Novo" })],
+      ["status do conteúdo", leaderC.post(`/api/admin/contents/${t1.content.id}/status`, { status: "draft" })],
+      ["criar avaliação", leaderC.post("/api/admin/assessments", { trackId: t1.track.id, title: "Nova" })],
+      ["editar avaliação", leaderC.patch(`/api/admin/assessments/${assessment.id}`, { title: "Alterada" })],
+      ["criar questão", leaderC.post(`/api/admin/assessments/${assessment.id}/questions`, { type: "true_false", prompt: "Pergunta?", options: {}, answerKey: { value: true } })],
+      ["editar questão", leaderC.patch(`/api/admin/questions/${question.id}`, { prompt: "Alterada?" })],
+      ["excluir questão", leaderC.delete(`/api/admin/questions/${question.id}`)],
+      ["copiar questão", leaderC.post(`/api/admin/questions/${question.id}/copy`, { assessmentId: assessment.id })],
+    ];
+    for (const [label, req] of attempts) expect((await req).statusCode, label).toBe(403);
+    const me = (await leaderC.get("/api/auth/me")).json();
+    expect(me.canManageContent).toBe(false);
   });
 
   it("líder libera e revoga acesso dentro do escopo", async () => {

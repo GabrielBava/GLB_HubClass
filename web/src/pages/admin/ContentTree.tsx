@@ -92,7 +92,7 @@ export function ContentTreePage() {
         actions={
           <>
             {isAdmin && (
-              <Button variant="outline" icon={Plus} onClick={() => setArea({ name: "", code: "", description: "", icon: "BookOpen", color: "#1FB873", isVisible: true, wpm: "", passingScore: "", commentsEnabled: true })}>
+              <Button variant="outline" icon={Plus} onClick={() => setArea({ name: "", code: "", description: "", icon: "BookOpen", color: "#F36B22", isVisible: true, wpm: "", passingScore: "", commentsEnabled: true })}>
                 Nova área
               </Button>
             )}

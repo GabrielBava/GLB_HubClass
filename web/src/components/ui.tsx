@@ -23,7 +23,7 @@ type Variant = "primary" | "secondary" | "outline" | "ghost" | "danger";
 type Size = "sm" | "md" | "lg" | "icon";
 
 const variants: Record<Variant, string> = {
-  primary: "bg-primary text-primary-fg hover:brightness-105 active:brightness-95 shadow-sm",
+  primary: "bg-primary text-primary-fg hover:brightness-110 active:brightness-95 shadow-sm",
   secondary: "bg-subtle text-fg hover:bg-border/70",
   outline: "border border-border bg-card text-fg hover:bg-subtle",
   ghost: "text-fg hover:bg-subtle",
@@ -209,7 +209,7 @@ export function Switch({ checked, onChange, label, description, disabled }: { ch
 // ---------------------------------------------------------------- Estrutura
 export function Card({ className, children, as: As = "div", ...rest }: { className?: string; children: ReactNode; as?: "div" | "section" | "article" } & Record<string, unknown>) {
   return (
-    <As className={cx("rounded-2xl border border-border bg-card", className)} {...rest}>
+    <As className={cx("rounded-xl border border-border bg-card", className)} {...rest}>
       {children}
     </As>
   );
@@ -221,7 +221,7 @@ export function CardHeader({ title, description, action, icon: Icon, flush }: { 
     <div className={cx("flex items-start justify-between gap-3", !flush && "px-5 pt-5")}>
       <div className="flex items-start gap-3 min-w-0">
         {Icon && (
-          <span className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-primary/12 text-primary">
+          <span className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-brand/10 text-brand">
             <Icon className="h-4 w-4" aria-hidden />
           </span>
         )}
@@ -239,8 +239,10 @@ export function PageHeader({ title, description, actions, eyebrow, children }: {
   return (
     <header className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
       <div className="min-w-0">
-        {eyebrow && <div className="mb-1 text-xs font-semibold uppercase tracking-wider text-primary">{eyebrow}</div>}
-        <h1 className="font-heading text-2xl font-bold sm:text-[28px] leading-tight">{title}</h1>
+        {eyebrow && <div className="eyebrow mb-1.5">{eyebrow}</div>}
+        <h1 className="font-heading text-[28px] font-medium leading-tight sm:text-[34px]">{title}</h1>
+        {/* Traço curto em laranja sob o título (guia de identidade: "título que diz a ideia"). */}
+        <span className="mt-2.5 block h-[3px] w-12 rounded-full bg-brand" aria-hidden />
         {description && <p className="mt-1.5 max-w-3xl text-sm text-muted sm:text-base">{description}</p>}
         {children}
       </div>
@@ -295,7 +297,7 @@ export function Progress({ value, label, className, size = "md" }: { value: numb
       aria-label={label ?? "Progresso"}
       className={cx("w-full overflow-hidden rounded-full bg-subtle", size === "sm" ? "h-1.5" : "h-2.5", className)}
     >
-      <div className="h-full rounded-full bg-primary transition-[width] duration-500" style={{ width: `${v}%` }} />
+      <div className="h-full rounded-full bg-brand transition-[width] duration-500" style={{ width: `${v}%` }} />
     </div>
   );
 }
@@ -312,7 +314,7 @@ export function ProgressRing({ value, size = 88, stroke = 9, label, children }: 
           cx={size / 2}
           cy={size / 2}
           r={r}
-          stroke="var(--primary)"
+          stroke="var(--brand)"
           strokeWidth={stroke}
           fill="none"
           strokeLinecap="round"

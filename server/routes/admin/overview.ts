@@ -1,4 +1,4 @@
-import { and, count, desc, eq, gt, isNull } from "drizzle-orm";
+import { and, count, desc, eq, gt, isNotNull, isNull, ne } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
 import { attempts, auditLogs, contentVersions, practicalSubmissions, requests, sessions, tracks, users } from "../../db/schema.js";
 import { requireRole } from "../../lib/http.js";
@@ -19,6 +19,10 @@ export async function adminOverviewRoutes(app: FastifyInstance) {
     const [openRequests] = await db.select({ n: count() }).from(requests).where(eq(requests.status, "open"));
     const [pendingSubs] = await db.select({ n: count() }).from(practicalSubmissions).where(eq(practicalSubmissions.status, "submitted"));
     const [pendingReviews] = await db.select({ n: count() }).from(attempts).where(eq(attempts.status, "pending_review"));
+    const [scheduledOffboardings] = await db
+      .select({ n: count() })
+      .from(users)
+      .where(and(isNotNull(users.offboardAt), ne(users.status, "inactive")));
     const [adminsWithoutMfa] = await db.select({ n: count() }).from(users).where(and(eq(users.role, "admin"), eq(users.status, "active"), eq(users.mfaEnabled, false)));
     const denials = await db
       .select()
@@ -34,7 +38,13 @@ export async function adminOverviewRoutes(app: FastifyInstance) {
     if (config.storage.driver === "local") warnings.push("Arquivos em disco local: em produção, prefira armazenamento S3 privado com backup.");
     const n = (rows: { status: string; n: number }[], s: string) => Number(rows.find((r) => r.status === s)?.n ?? 0);
     return {
-      users: { active: n(byStatus, "active"), invited: n(byStatus, "invited"), inactive: n(byStatus, "inactive") },
+      users: {
+        active: n(byStatus, "active"),
+        invited: n(byStatus, "invited"),
+        inactive: n(byStatus, "inactive"),
+        pendingApproval: n(byStatus, "pending_approval"),
+        scheduledOffboardings: Number(scheduledOffboardings?.n ?? 0),
+      },
       tracks: { published: n(trackStatus, "published"), draft: n(trackStatus, "draft"), review: n(trackStatus, "review"), archived: n(trackStatus, "archived") },
       activeSessions: Number(activeSessions?.n ?? 0),
       documents: { failed: Number(failedDocs?.n ?? 0), processing: Number(processing?.n ?? 0) },

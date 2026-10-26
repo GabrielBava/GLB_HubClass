@@ -23,6 +23,9 @@ export async function learnerContext(req: FastifyRequest): Promise<LearnerContex
 }
 
 export async function requireTerms(req: FastifyRequest, userId: string) {
+  // Com o primeiro acesso opcional (decisão do administrador), a ciência dos termos não bloqueia os conteúdos.
+  const onboarding = await req.server.ctx.settings.get("onboarding");
+  if (!onboarding.required) return;
   if (!(await hasAcceptedCurrentTerms(req.server.ctx.db, userId))) {
     throw new HttpError(403, "terms_required", "Para acessar os conteúdos, confirme a ciência dos termos de uso e confidencialidade.");
   }
@@ -51,7 +54,7 @@ export async function trackForUser(req: FastifyRequest, trackId: string, lcIn?: 
   const base = await loadTrackChain(db, trackId);
   if (!base) throw notFound("Trilha não encontrada.");
   const decision = lc.evaluator.decide(base.chain);
-  const preview = decision.reason === "admin" || decision.reason === "leader_preview";
+  const preview = decision.reason === "admin";
   const structureAll = await loadTrackStructure(db, trackId, preview);
   if (!structureAll) throw notFound("Trilha não encontrada.");
   const access = evaluateTrackAccess(

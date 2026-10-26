@@ -492,7 +492,7 @@ export function ReaderPage() {
               <ZoomIn className="h-5 w-5" />
             </button>
             {data.content.allowTextMode && (
-              <button className={toolbarBtn(textMode)} onClick={() => setTextMode((t) => !t)} aria-pressed={textMode} aria-label="Modo texto: leitura confortável e acessível" title="Modo texto (leitura confortável e acessível)">
+              <button className={toolbarBtn(textMode)} onClick={() => setTextMode((t) => !t)} aria-pressed={textMode} aria-label="Modo texto: leitura confortável e acessível">
                 <Type className="h-5 w-5" />
               </button>
             )}

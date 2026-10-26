@@ -50,7 +50,7 @@ const blank: Form = {
   estimatedMinutes: null,
   type: "book",
   license: "external_only",
-  coverColor: "#0E6B4A",
+  coverColor: "#252522",
   externalUrl: "",
   allowDownload: false,
   areaId: null,
@@ -245,7 +245,7 @@ export function LibraryAdminPage() {
               <Input id="l-url" type="url" placeholder="https://" value={form.externalUrl ?? ""} onChange={(e) => setForm({ ...form, externalUrl: e.target.value })} />
             </Field>
             <Field label="Cor da capa" htmlFor="l-color" hint="Usada quando não houver imagem de capa.">
-              <Input id="l-color" type="color" className="h-11 p-1" value={form.coverColor ?? "#0E6B4A"} onChange={(e) => setForm({ ...form, coverColor: e.target.value })} />
+              <Input id="l-color" type="color" className="h-11 p-1" value={form.coverColor ?? "#252522"} onChange={(e) => setForm({ ...form, coverColor: e.target.value })} />
             </Field>
             <div className="pt-7">
               <Checkbox label="Permitir download do PDF" disabled={form.license === "external_only"} checked={form.allowDownload} onChange={(v) => setForm({ ...form, allowDownload: v })} />

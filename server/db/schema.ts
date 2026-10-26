@@ -134,6 +134,14 @@ export const users = pgTable(
     updatedAt: updatedAt(),
     deactivatedAt: ts("deactivated_at"),
     anonymizedAt: ts("anonymized_at"),
+    /** Após ativar o convite, aguarda a liberação do administrador. */
+    approvalRequired: boolean("approval_required").notNull().default(false),
+    approvedAt: ts("approved_at"),
+    approvedBy: uuid("approved_by"),
+    /** Desligamento: data e hora em que o acesso é trancado (agendado ou já executado). */
+    offboardAt: ts("offboard_at"),
+    offboardReason: text("offboard_reason"),
+    offboardedBy: uuid("offboarded_by"),
   },
   (t) => [uniqueIndex("users_email_unique").on(sql`lower(${t.email})`), index("users_team_idx").on(t.teamId)],
 );
@@ -161,7 +169,7 @@ export const knowledgeAreas = pgTable("knowledge_areas", {
   name: text("name").notNull(),
   description: text("description").notNull().default(""),
   icon: text("icon").notNull().default("BookOpen"),
-  color: text("color").notNull().default("#1FB873"),
+  color: text("color").notNull().default("#F36B22"),
   sortOrder: integer("sort_order").notNull().default(0),
   isVisible: boolean("is_visible").notNull().default(true),
   /** Configurações por área: palavras por minuto, nota mínima padrão etc. */
@@ -180,8 +188,6 @@ export const leaderAreas = pgTable(
     areaId: uuid("area_id")
       .notNull()
       .references(() => knowledgeAreas.id, { onDelete: "cascade" }),
-    canEdit: boolean("can_edit").notNull().default(false),
-    canPublish: boolean("can_publish").notNull().default(false),
   },
   (t) => [primaryKey({ columns: [t.userId, t.areaId] })],
 );

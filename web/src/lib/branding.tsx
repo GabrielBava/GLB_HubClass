@@ -10,7 +10,10 @@ export interface Branding {
   colors: { primary: string; brandSurface: string; accent: string };
   fonts: { heading: string; body: string };
   defaultMode: "light" | "dark" | "system";
+  /** Logotipo para fundos claros (enviado pelo administrador); sem ele, usa o logotipo padrão. */
   logoUrl: string | null;
+  /** Logotipo para fundos escuros (menu lateral e telas de acesso). */
+  logoDarkUrl: string | null;
 }
 
 export const FALLBACK_BRANDING: Branding = {
@@ -18,10 +21,11 @@ export const FALLBACK_BRANDING: Branding = {
   organizationName: "Grupo Life Brasil",
   tagline: "Universidade corporativa do Grupo Life Brasil. Aprender, praticar e executar.",
   loginMessage: "Acesse seu ambiente de aprendizado e desenvolvimento.",
-  colors: { primary: "#1FB873", brandSurface: "#0B1210", accent: "#0E6B4A" },
-  fonts: { heading: "Bricolage Grotesque", body: "Inter" },
+  colors: { primary: "#F36B22", brandSurface: "#171716", accent: "#FF9C42" },
+  fonts: { heading: "Newsreader", body: "DM Sans" },
   defaultMode: "light",
   logoUrl: null,
+  logoDarkUrl: null,
 };
 
 type ThemePref = "light" | "dark" | "system";
@@ -35,26 +39,71 @@ interface BrandingContextValue {
 
 const BrandingContext = createContext<BrandingContextValue | null>(null);
 
-/** Escolhe texto claro ou escuro sobre a cor primária, conforme o contraste (WCAG). */
-export function readableOn(hex: string): string {
+const INK = "#171716";
+const SERIF_FONTS = new Set(["Newsreader", "Fraunces"]);
+
+function rgb(hex: string): [number, number, number] | null {
   const m = /^#?([0-9a-f]{6})$/i.exec(hex);
-  if (!m) return "#04140c";
+  if (!m) return null;
   const n = parseInt(m[1]!, 16);
-  const lin = (c: number) => {
-    const s = c / 255;
-    return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+}
+
+function luminance(hex: string): number {
+  const c = rgb(hex);
+  if (!c) return 0;
+  const lin = (v: number) => {
+    const x = v / 255;
+    return x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4;
   };
-  const L = 0.2126 * lin((n >> 16) & 255) + 0.7152 * lin((n >> 8) & 255) + 0.0722 * lin(n & 255);
-  return L > 0.36 ? "#04140c" : "#ffffff";
+  return 0.2126 * lin(c[0]) + 0.7152 * lin(c[1]) + 0.0722 * lin(c[2]);
+}
+
+/** Razão de contraste WCAG entre duas cores. */
+export function contrastRatio(a: string, b: string): number {
+  const [x, y] = [luminance(a), luminance(b)].sort((p, q) => q - p);
+  return (x! + 0.05) / (y! + 0.05);
+}
+
+function mix(hex: string, target: string, amount: number): string {
+  const a = rgb(hex)!;
+  const b = rgb(target)!;
+  return `#${a.map((v, i) => Math.round(v + (b[i]! - v) * amount).toString(16).padStart(2, "0")).join("")}`;
+}
+
+/** Ajusta a cor em direção a `target` até atingir o contraste mínimo com todos os fundos. */
+function untilContrast(hex: string, target: string, backgrounds: string[], min = 4.5): string {
+  if (!rgb(hex)) return hex;
+  for (let i = 0; i <= 50; i++) {
+    const c = mix(hex, target, i * 0.02);
+    if (backgrounds.every((bg) => contrastRatio(c, bg) >= min)) return c;
+  }
+  return target;
+}
+
+/** Texto (branco ou carvão) com maior contraste sobre a cor informada. */
+export function readableOn(hex: string): string {
+  if (!rgb(hex)) return "#ffffff";
+  return contrastRatio(hex, "#ffffff") >= contrastRatio(hex, INK) ? "#ffffff" : INK;
 }
 
 export function applyBrandingVars(b: Branding, target: HTMLElement = document.documentElement) {
-  target.style.setProperty("--primary", b.colors.primary);
-  target.style.setProperty("--primary-fg", readableOn(b.colors.primary));
+  const brand = b.colors.primary;
+  // Modo claro: laranja escurecido para texto e botões legíveis sobre papel/branco (e texto branco no botão).
+  const light = untilContrast(brand, "#000000", ["#ffffff", "#f6f3ed"]);
+  // Modo escuro: a cor da marca como está, clareada só se faltar contraste sobre o carvão.
+  const dark = untilContrast(brand, "#ffffff", ["#171716", "#201f1e"]);
+  target.style.setProperty("--brand", brand);
+  target.style.setProperty("--primary-light", light);
+  target.style.setProperty("--primary-fg-light", readableOn(light));
+  target.style.setProperty("--primary-dark", dark);
+  target.style.setProperty("--primary-fg-dark", readableOn(dark));
   target.style.setProperty("--surface", b.colors.brandSurface);
+  if (rgb(b.colors.brandSurface)) target.style.setProperty("--surface-2", mix(b.colors.brandSurface, "#ffffff", 0.06));
   target.style.setProperty("--accent", b.colors.accent);
-  target.style.setProperty("--font-heading", `"${b.fonts.heading}", "${b.fonts.body}", system-ui, sans-serif`);
-  target.style.setProperty("--font-body", `"${b.fonts.body}", system-ui, -apple-system, "Segoe UI", sans-serif`);
+  const fallback = (f: string) => (SERIF_FONTS.has(f) ? `Georgia, "Times New Roman", serif` : `system-ui, -apple-system, "Segoe UI", sans-serif`);
+  target.style.setProperty("--font-heading", `"${b.fonts.heading}", ${fallback(b.fonts.heading)}`);
+  target.style.setProperty("--font-body", `"${b.fonts.body}", ${fallback(b.fonts.body)}`);
 }
 
 function loadFonts(b: Branding) {

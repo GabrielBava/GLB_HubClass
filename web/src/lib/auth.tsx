@@ -12,7 +12,7 @@ export interface Me {
   onboardingCompleted: boolean;
   termsAccepted: boolean;
   currentTermsVersion: string | null;
-  leader: { areas: { id: string; name: string; canEdit: boolean; canPublish: boolean }[]; teams: { id: string; name: string }[] } | null;
+  leader: { areas: { id: string; name: string }[]; teams: { id: string; name: string }[] } | null;
   canManageContent: boolean;
 }
 

@@ -26,9 +26,8 @@ export interface UserScope {
   teamId: string | null;
   departmentId: string | null;
   jobTitleId: string | null;
+  /** Áreas que o líder acompanha (somente leitura: líder não altera áreas, trilhas nem questões). */
   leaderAreaIds: Set<string>;
-  leaderEditAreaIds: Set<string>;
-  leaderPublishAreaIds: Set<string>;
   leaderTeamIds: Set<string>;
 }
 
@@ -40,17 +39,11 @@ export async function loadScope(db: DB, user: AuthUser): Promise<UserScope> {
     departmentId: user.departmentId,
     jobTitleId: user.jobTitleId,
     leaderAreaIds: new Set(),
-    leaderEditAreaIds: new Set(),
-    leaderPublishAreaIds: new Set(),
     leaderTeamIds: new Set(),
   };
   if (user.role === "leader") {
     const areas = await db.select().from(leaderAreas).where(eq(leaderAreas.userId, user.id));
-    for (const a of areas) {
-      scope.leaderAreaIds.add(a.areaId);
-      if (a.canEdit) scope.leaderEditAreaIds.add(a.areaId);
-      if (a.canPublish) scope.leaderPublishAreaIds.add(a.areaId);
-    }
+    for (const a of areas) scope.leaderAreaIds.add(a.areaId);
     const ts = await db.select().from(teamLeaders).where(eq(teamLeaders.userId, user.id));
     for (const t of ts) scope.leaderTeamIds.add(t.teamId);
   }
@@ -94,7 +87,7 @@ export interface ChainNode {
   content?: { id: string; status: string };
 }
 
-export type AccessReason = "admin" | "leader_area" | "leader_preview" | "free" | "enrolled" | "rule" | "denied_rule" | "unpublished" | "no_rule";
+export type AccessReason = "admin" | "leader_area" | "free" | "enrolled" | "rule" | "denied_rule" | "unpublished" | "no_rule";
 
 export interface AccessDecision {
   allowed: boolean;
@@ -142,10 +135,7 @@ export class AccessEvaluator {
   decide(chain: ChainNode): AccessDecision {
     const s = this.scope;
     if (s.role === "admin") return { allowed: true, reason: "admin" };
-    if (!this.isPublished(chain)) {
-      if (s.role === "leader" && s.leaderEditAreaIds.has(chain.area.id)) return { allowed: true, reason: "leader_preview" };
-      return { allowed: false, reason: "unpublished" };
-    }
+    if (!this.isPublished(chain)) return { allowed: false, reason: "unpublished" };
     const keys = this.keys(chain);
     if (keys.some((k) => this.deny.has(k))) return { allowed: false, reason: "denied_rule" };
     if (s.role === "leader" && s.leaderAreaIds.has(chain.area.id)) return { allowed: true, reason: "leader_area" };
@@ -241,12 +231,13 @@ export async function assertCanManageUser(db: DB, scope: UserScope, targetUserId
   if (!(await canManageUser(db, scope, targetUserId))) throw notFound("Colaborador não encontrado na sua equipe.");
 }
 
+/**
+ * Gestão de conteúdo: só o administrador cria, edita e publica áreas, trilhas, conteúdos, avaliações
+ * e questões. O líder apenas consulta (nível "view") as áreas que acompanha.
+ */
 export function canManageArea(scope: UserScope, areaId: string, level: "view" | "edit" | "publish" = "view"): boolean {
   if (scope.role === "admin") return true;
-  if (scope.role !== "leader") return false;
-  if (level === "publish") return scope.leaderPublishAreaIds.has(areaId);
-  if (level === "edit") return scope.leaderEditAreaIds.has(areaId);
-  return scope.leaderAreaIds.has(areaId);
+  return scope.role === "leader" && level === "view" && scope.leaderAreaIds.has(areaId);
 }
 
 export function assertCanManageArea(scope: UserScope, areaId: string, level: "view" | "edit" | "publish" = "view") {

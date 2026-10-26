@@ -8,8 +8,10 @@ export interface BrandingSettings {
   organizationName: string;
   tagline: string;
   loginMessage: string;
-  /** Arquivo de logotipo enviado pelo administrador (PNG/JPEG/WebP). */
+  /** Logotipo para fundos claros enviado pelo administrador (PNG/JPEG/WebP). Sem ele, usa o padrão do Grupo Life Brasil. */
   logoFileId: string | null;
+  /** Logotipo para fundos escuros (menu lateral e telas de acesso). */
+  logoDarkFileId: string | null;
   colors: {
     /** Cor de destaque (botões, links, progresso). Hex #RRGGBB. */
     primary: string;
@@ -82,6 +84,10 @@ export interface CommunitySettings {
 export interface OnboardingSettings {
   welcomeMessage: string;
   supportContact: string;
+  /** O primeiro acesso (boas-vindas e ciência dos termos) é obrigatório antes de liberar os conteúdos. */
+  required: boolean;
+  /** Após ativar o convite, o acesso aguarda a liberação do administrador (padrão para novos convites). */
+  approvalRequired: boolean;
 }
 
 export interface AllSettings {
@@ -105,14 +111,16 @@ export const DEFAULT_SETTINGS: AllSettings = {
     tagline: "Universidade corporativa do Grupo Life Brasil. Aprender, praticar e executar.",
     loginMessage: "Acesse seu ambiente de aprendizado e desenvolvimento.",
     logoFileId: null,
+    logoDarkFileId: null,
+    // Identidade do Grupo Life Brasil (guia de identidade visual, edição 02): laranja, carvão e âmbar.
     colors: {
-      primary: "#1FB873",
-      brandSurface: "#0B1210",
-      accent: "#0E6B4A",
+      primary: "#F36B22",
+      brandSurface: "#171716",
+      accent: "#FF9C42",
     },
     fonts: {
-      heading: "Bricolage Grotesque",
-      body: "Inter",
+      heading: "Newsreader",
+      body: "DM Sans",
     },
     defaultMode: "light",
   },
@@ -161,17 +169,20 @@ export const DEFAULT_SETTINGS: AllSettings = {
     welcomeMessage:
       "Bem-vindo ao LIFE CLASS! Este é o seu ambiente de aprendizado e desenvolvimento dentro do Grupo Life Brasil. Aqui você encontrará o conhecimento, as metodologias e as ferramentas para evoluir profissionalmente e transformar aprendizado em resultados.",
     supportContact: "suporte.lifeclass@exemplo.com.br",
+    required: true,
+    approvalRequired: false,
   },
 };
 
 /** Fontes disponíveis no seletor de identidade visual (carregadas do Google Fonts). */
 export const FONT_CHOICES = [
+  "DM Sans",
+  "Newsreader",
   "Inter",
   "Bricolage Grotesque",
   "Geist",
   "Manrope",
   "Plus Jakarta Sans",
-  "DM Sans",
   "Sora",
   "Montserrat",
   "Poppins",
