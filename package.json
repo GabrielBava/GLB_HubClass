@@ -5,7 +5,7 @@
   "description": "LIFE CLASS — plataforma corporativa de educação do Grupo Life Brasil",
   "type": "module",
   "engines": {
-    "node": ">=22.13.0"
+    "node": "22.x"
   },
   "scripts": {
     "dev": "concurrently -k -n api,web -c cyan,magenta \"npm:dev:api\" \"npm:dev:web\"",
