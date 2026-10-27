@@ -1,14 +1,20 @@
 // Função da Vercel: atende todas as rotas /api/* com o mesmo servidor Fastify da aplicação.
 // O servidor é compilado em dist/server durante o build (npm run vercel-build) e reaproveitado
 // entre requisições enquanto a instância estiver ativa.
-import { buildApp } from "../dist/server/server/app.js";
-import { loadConfig } from "../dist/server/server/config.js";
+
+// Uma promessa rejeitada sem tratamento não pode derrubar a instância (na Vercel, isso vira
+// "A server error has occurred"): registra o erro, que aparece no filtro "Error" da aba Logs.
+process.on("unhandledRejection", (reason) => {
+  console.error("Erro não tratado na API:", reason);
+});
 
 let ready = null;
 
 function getApp() {
   if (!ready) {
     ready = (async () => {
+      // Importação dinâmica: uma falha ao carregar o servidor vira resposta legível, não queda da função.
+      const [{ buildApp }, { loadConfig }] = await Promise.all([import("../dist/server/server/app.js"), import("../dist/server/server/config.js")]);
       let config;
       try {
         config = loadConfig();
@@ -39,7 +45,7 @@ export default async function handler(req, res) {
     res.setHeader("Cache-Control", "no-store");
     const message = err.configError
       ? `A plataforma ainda não está configurada: ${err.message} Depois de ajustar, publique de novo (Deployments › Redeploy).`
-      : "A plataforma não conseguiu iniciar. Veja os logs da função na Vercel.";
+      : `A plataforma não conseguiu iniciar: ${String(err?.message ?? err).split("\n")[0]} Veja os detalhes na aba Logs da Vercel (filtro Error).`;
     res.end(JSON.stringify({ error: { code: "not_configured", message } }));
     return;
   }

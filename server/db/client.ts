@@ -32,6 +32,9 @@ export async function openDatabase(opts: { databaseUrl: string | null; embeddedD
     const { migrate } = await import("drizzle-orm/node-postgres/migrator");
     // Em funções sem servidor, poucas conexões por instância (o Neon agrupa as conexões no "pooler").
     const pool = new pg.Pool({ connectionString: opts.databaseUrl, max: opts.serverless ? 3 : 10, idleTimeoutMillis: opts.serverless ? 5_000 : 10_000 });
+    // O banco pode encerrar conexões ociosas (a Neon faz isso ao suspender por inatividade). Sem este
+    // tratamento, o evento derruba o processo inteiro; com ele, a conexão é descartada e a próxima consulta abre outra.
+    pool.on("error", (err) => console.error("Conexão com o banco encerrada pelo servidor; uma nova será aberta na próxima consulta:", err.message));
     if (opts.serverless) {
       // Fecha conexões ociosas antes de a Vercel suspender a instância.
       const { attachDatabasePool } = await import("@vercel/functions");
