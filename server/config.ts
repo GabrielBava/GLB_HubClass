@@ -113,16 +113,16 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
   const production = e.NODE_ENV === "production" || serverless;
   const dataDir = path.resolve(e.DATA_DIR);
 
-  let appSecret = e.APP_SECRET;
-  if (!appSecret) {
-    if (production) throw new Error("APP_SECRET é obrigatório em produção (mínimo de 32 caracteres).");
-    appSecret = devSecret(dataDir);
-  }
-  if (appSecret.length < 32) throw new Error("APP_SECRET deve ter pelo menos 32 caracteres.");
-
+  // Em produção, aponta de uma vez tudo o que falta (na Vercel, cada ajuste exige um novo deploy).
+  const missing: string[] = [];
+  if (production && !e.APP_SECRET) missing.push("APP_SECRET (segredo aleatório de pelo menos 32 caracteres)");
   if (production && !e.DATABASE_URL && (serverless || !e.ALLOW_EMBEDDED_DB_IN_PRODUCTION)) {
-    throw new Error("DATABASE_URL (PostgreSQL) é obrigatório em produção. Na Vercel, conecte o banco Neon ao projeto.");
+    missing.push(serverless ? "DATABASE_URL (conecte o banco Neon ao projeto em Storage)" : "DATABASE_URL (PostgreSQL)");
   }
+  if (missing.length) throw new Error(`Faltam variáveis de ambiente obrigatórias: ${missing.join("; ")}.`);
+
+  const appSecret = e.APP_SECRET || devSecret(dataDir);
+  if (appSecret.length < 32) throw new Error("APP_SECRET deve ter pelo menos 32 caracteres.");
 
   let storage: AppConfig["storage"];
   const driver = e.STORAGE_DRIVER ?? (serverless ? "vercel-blob" : "local");

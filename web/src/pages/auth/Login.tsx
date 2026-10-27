@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { AlertTriangle } from "lucide-react";
 import { AuthLayout, AuthTitle } from "../../components/AuthLayout";
 import { Alert, Button, Field, Input, PasswordInput } from "../../components/ui";
-import { api, errorMessage, safeNext } from "../../lib/api";
+import { api, ApiError, errorMessage, safeNext } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
 import { useBranding } from "../../lib/branding";
 
@@ -72,6 +72,13 @@ export function LoginPage() {
           Entrar
         </Button>
       </form>
+      {setup.error instanceof ApiError && setup.error.code === "not_configured" && (
+        <div className="mt-6">
+          <Alert tone="danger" title="Plataforma ainda não configurada">
+            {setup.error.message}
+          </Alert>
+        </div>
+      )}
       {setup.data?.available && (
         <div className="mt-6">
           <Alert tone="primary" title="Plataforma ainda sem administrador">

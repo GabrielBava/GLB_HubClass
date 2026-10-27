@@ -11,7 +11,7 @@ Nenhum dado fictício vai para produção. O seed de demonstração só roda em 
 ## Antes de começar
 
 - **Plano da Vercel.** O plano Hobby é só para uso pessoal e não comercial. Uma plataforma corporativa precisa do plano **Pro**.
-- **Repositório.** O repositório `GLB_HubClass` precisa estar no GitHub, com a branch que vai para produção.
+- **Repositório.** O repositório `GLB_HubClass` precisa estar no GitHub. Hoje ele tem uma única branch, `claude/magical-lamport-rv0j50`, e é ela que a Vercel publica como produção. Se depois for criada uma branch `main`, ajuste em **Settings → Git → Production Branch**.
 - **Segredos.** Gere três valores aleatórios e guarde-os num cofre de senhas. Este comando gera um valor por vez:
 
   ```bash
@@ -26,13 +26,19 @@ Nenhum dado fictício vai para produção. O seed de demonstração só roda em 
 
 ### 1. Importar o projeto
 
-1. Na Vercel, abra **Add New → Project** e importe o repositório do GitHub.
-2. Em **Framework Preset**, deixe **Other**. O arquivo `vercel.json` já define tudo:
-   - a instalação (`npm ci`);
-   - o build (`npm run vercel-build`);
-   - a saída da interface (`dist/web`);
-   - a função da API (`api/index.js`), a rotina diária e os cabeçalhos de segurança.
-3. **Ainda não clique em Deploy.** Primeiro conecte o banco e o armazenamento, nos passos 2 e 3.
+1. Entre em [vercel.com](https://vercel.com) com a conta do GitHub, em **Continue with GitHub**. Se já tiver conta, conecte o GitHub em **Account Settings → Authentication**.
+2. No painel, clique em **Add New… → Project**.
+3. Em **Import Git Repository**, encontre `GLB_HubClass` e clique em **Import**. Se ele não aparecer:
+   - clique em **Adjust GitHub App Permissions** (ou **Configure GitHub App**);
+   - no GitHub, em *Repository access*, marque `GabrielBava/GLB_HubClass` e salve;
+   - volte para a Vercel; o repositório passa a aparecer na lista.
+4. Na tela **Configure Project**:
+   - **Project Name**: por exemplo `life-class`; vira o endereço `life-class.vercel.app`;
+   - **Framework Preset**: **Other**;
+   - **Root Directory**: deixe `./`;
+   - **Build and Output Settings**: não altere. O `vercel.json` já define a instalação (`npm ci`), o build (`npm run vercel-build`), a pasta da interface (`dist/web`), a função da API (`api/index.js`), a rotina diária e os cabeçalhos de segurança;
+   - **Environment Variables**: dá para cadastrar aqui `APP_SECRET`, `CRON_SECRET` e `SETUP_TOKEN` (veja o passo 4) ou depois, em Settings.
+5. Clique em **Deploy**. O primeiro deploy termina mesmo sem banco. Ao abrir o site, a tela de login avisa "Plataforma ainda não configurada" e lista o que falta. Siga os passos 2 a 5.
 
 ### 2. Banco de dados (Neon)
 
@@ -40,7 +46,7 @@ Nenhum dado fictício vai para produção. O seed de demonstração só roda em 
 2. Escolha a região **mais próxima do Brasil** disponível e conecte ao projeto, nos ambientes Production, Preview e Development.
 3. A integração cria as variáveis `DATABASE_URL` (com pooler) e `DATABASE_URL_UNPOOLED`.
 
-O build aplica as migrações automaticamente, pela conexão direta. Ative o **Preview Branching** da Neon se quiser que as prévias usem uma cópia isolada do banco.
+O build aplica as migrações automaticamente, pela conexão direta. Sem banco conectado, o build apenas avisa e segue. Ative o **Preview Branching** da Neon se quiser que as prévias usem uma cópia isolada do banco.
 
 ### 3. Armazenamento de arquivos (Vercel Blob privado)
 
@@ -67,14 +73,16 @@ Sem `APP_ORIGIN`, vale o domínio de produção da Vercel (`seu-projeto.vercel.a
 
 Sem SMTP, a plataforma funciona normalmente. Os links de convite e de redefinição de senha aparecem para o administrador enviar por um canal seguro.
 
-### 5. Publicar
+### 5. Publicar de novo
 
-Clique em **Deploy**. O build segue esta ordem:
+Variáveis novas e bancos conectados só valem para os **próximos** deploys. Abra **Deployments**, clique nos três pontos do deploy mais recente e escolha **Redeploy**.
+
+O build segue esta ordem:
 1. verifica os tipos;
 2. compila a interface e o servidor;
-3. aplica as migrações no Neon.
+3. cria as tabelas no Neon.
 
-Se o build falhar com "DATABASE_URL não definido", o banco do passo 2 não está conectado ao ambiente do deploy.
+Para conferir, abra o log do build e procure "Migrações aplicadas (PostgreSQL)". Se aparecer "AVISO: banco de dados não conectado", o Neon do passo 2 não está ligado ao ambiente desse deploy (Production ou Preview).
 
 ### 6. Configuração inicial (primeiro administrador)
 
@@ -121,6 +129,16 @@ Se o build falhar com "DATABASE_URL não definido", o banco do passo 2 não est�
 - **Banco.** A Neon oferece restauração para um ponto no tempo, conforme o plano contratado. Defina a janela de retenção com a TI.
 - **Arquivos.** O Blob não tem backup automático entre lojas. Para uma cópia de segurança, a TI pode agendar a exportação periódica da loja com o SDK `@vercel/blob` (`list` e `get`).
 - **Monitoramento.** Em **Logs** e **Observability**, acompanhe erros da função e a execução da rotina diária, em **Settings → Cron Jobs**.
+
+## Problemas comuns
+
+| Sintoma | Causa provável | O que fazer |
+| --- | --- | --- |
+| `Command "npm run vercel-build" exited with 1` | Veja a primeira linha em vermelho do log de build (Deployments › deploy › **Building**). | Siga as linhas abaixo conforme a mensagem. |
+| Log com "Falha ao aplicar as migrações no banco" | O Neon não aceitou a conexão: banco pausado ou removido, ou variáveis antigas. | Em Storage, confira se o Neon está ligado ao ambiente do deploy e faça **Redeploy**. |
+| Log com `tsc: not found` ou `vite: not found` | Existe uma variável `NODE_ENV=production` cadastrada, e as ferramentas de build não foram instaladas. | Apague `NODE_ENV` das variáveis; a Vercel e a plataforma já tratam o ambiente. Faça **Redeploy**. |
+| Login mostra "Plataforma ainda não configurada" | Falta `APP_SECRET` ou o banco (a mensagem diz qual). | Cadastre ou conecte o que falta e faça **Redeploy**. |
+| Envio de PDF grande falha | Loja Blob ausente, pública ou não conectada à produção. | Crie a loja como **Private** e conecte ao ambiente Production; faça **Redeploy**. |
 
 ## Desenvolvimento local
 

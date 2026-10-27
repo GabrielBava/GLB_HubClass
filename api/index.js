@@ -8,11 +8,19 @@ let ready = null;
 
 function getApp() {
   if (!ready) {
-    ready = buildApp(loadConfig()).then(async (app) => {
+    ready = (async () => {
+      let config;
+      try {
+        config = loadConfig();
+      } catch (err) {
+        // Configuração incompleta (ex.: banco não conectado, APP_SECRET ausente): a mensagem não contém segredos.
+        throw Object.assign(new Error(err.message), { configError: true });
+      }
+      const app = await buildApp(config);
       await app.ready();
       return app;
-    });
-    // Falha na inicialização (ex.: variável de ambiente ausente): tenta de novo na próxima requisição.
+    })();
+    // Falha na inicialização: tenta de novo na próxima requisição.
     ready.catch(() => {
       ready = null;
     });
@@ -21,6 +29,19 @@ function getApp() {
 }
 
 export default async function handler(req, res) {
-  const app = await getApp();
+  let app;
+  try {
+    app = await getApp();
+  } catch (err) {
+    console.error("Falha ao iniciar a API:", err);
+    res.statusCode = 503;
+    res.setHeader("Content-Type", "application/json; charset=utf-8");
+    res.setHeader("Cache-Control", "no-store");
+    const message = err.configError
+      ? `A plataforma ainda não está configurada: ${err.message} Depois de ajustar, publique de novo (Deployments › Redeploy).`
+      : "A plataforma não conseguiu iniciar. Veja os logs da função na Vercel.";
+    res.end(JSON.stringify({ error: { code: "not_configured", message } }));
+    return;
+  }
   app.server.emit("request", req, res);
 }
