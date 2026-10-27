@@ -84,7 +84,20 @@ O build segue esta ordem:
 
 Para conferir, abra o log do build e procure "Migrações aplicadas (PostgreSQL)". Se aparecer "AVISO: banco de dados não conectado", o Neon do passo 2 não está ligado ao ambiente desse deploy (Production ou Preview).
 
-### 6. Configuração inicial (primeiro administrador)
+### 6. Primeiro administrador
+
+Há duas formas. Escolha uma.
+
+**A. Pelas variáveis de ambiente, criado no próprio deploy.**
+1. Em **Settings → Environment Variables** (ambiente Production), cadastre:
+   - `BOOTSTRAP_ADMIN_EMAIL`: o e-mail do administrador;
+   - `BOOTSTRAP_ADMIN_PASSWORD`: a senha inicial, com pelo menos 10 caracteres, letras e números. Marque como **Sensitive**;
+   - `BOOTSTRAP_ADMIN_NAME`: opcional; sem ele, o nome sai do e-mail.
+2. Faça **Redeploy**. Logo após criar as tabelas, o build cria o administrador já ativo. No log aparece "Administrador … criado". Se a senha não seguir toda a política (por exemplo, por ter datas), o log mostra um aviso.
+3. Entre com esse e-mail e senha. No primeiro login, a plataforma pede a verificação em duas etapas.
+4. Depois do primeiro login, **apague as variáveis `BOOTSTRAP_ADMIN_*`**. Elas só agem enquanto não existe administrador, então os próximos deploys não mudam nada, mas não precisam ficar guardadas.
+
+**B. Pela tela de configuração inicial.**
 
 1. Abra `https://seu-projeto.vercel.app/configuracao-inicial`. A tela de login também mostra o atalho enquanto não houver administrador.
 2. Informe o `SETUP_TOKEN`, o nome e o e-mail corporativo do administrador.

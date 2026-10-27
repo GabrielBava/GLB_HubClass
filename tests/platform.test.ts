@@ -129,3 +129,32 @@ describe("envio direto e download por link assinado (Vercel Blob)", () => {
     expect(await app.ctx.storage.exists(fake)).toBe(false);
   });
 });
+
+describe("administrador inicial por variáveis de ambiente (deploy)", () => {
+  let app: FastifyInstance;
+  beforeAll(async () => {
+    app = await createTestApp();
+  });
+  afterAll(() => app.close());
+
+  it("cria o administrador ativo uma única vez; ele entra com a senha e precisa configurar o MFA", async () => {
+    const { bootstrapAdmin } = await import("../server/services/bootstrap.js");
+    expect((await bootstrapAdmin(app.ctx.db, {})).status).toBe("skipped");
+    await expect(bootstrapAdmin(app.ctx.db, { email: "pessoa.adm@empresa.com.br", password: "curta1" })).rejects.toThrow(/10 caracteres/);
+
+    // Senha com sequência longa de números: aceita na criação inicial, com aviso no log do deploy.
+    const created = await bootstrapAdmin(app.ctx.db, { email: "Pessoa.Adm@empresa.com.br", password: "@Teste12345678" });
+    expect(created.status).toBe("created");
+    expect(created.warnings.join(" ")).toMatch(/datas ou sequências/);
+
+    const login = await new Client(app).post("/api/auth/login", { email: "pessoa.adm@empresa.com.br", password: "@Teste12345678" });
+    expect(login.statusCode).toBe(200);
+    expect(login.json().status).toBe("mfa_setup_required");
+
+    // Deploys seguintes não alteram nada.
+    const again = await bootstrapAdmin(app.ctx.db, { email: "pessoa.adm@empresa.com.br", password: "Outra-senha-forte-99" });
+    expect(again.status).toBe("skipped");
+    const relogin = await new Client(app).post("/api/auth/login", { email: "pessoa.adm@empresa.com.br", password: "@Teste12345678" });
+    expect(relogin.statusCode).toBe(200);
+  });
+});
