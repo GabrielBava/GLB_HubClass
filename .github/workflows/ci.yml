@@ -24,5 +24,7 @@ jobs:
         run: npm test
       - name: Build de produção
         run: npx vite build && npx tsc -p tsconfig.server.json
+      - name: Servidor carrega no runtime da Vercel (sem require() de ESM)
+        run: node --no-experimental-require-module dist/server/server/scripts/check-runtime.js
       - name: Dependências com vulnerabilidades altas ou críticas
         run: npm audit --omit=dev --audit-level=high

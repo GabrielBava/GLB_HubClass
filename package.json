@@ -13,7 +13,7 @@
     "dev:web": "vite",
     "build": "npm run typecheck && vite build && tsc -p tsconfig.server.json",
     "start": "node dist/server/server/index.js",
-    "vercel-build": "npm run build && node dist/server/server/scripts/migrate.js && node dist/server/server/scripts/bootstrap-admin.js",
+    "vercel-build": "npm run build && node --no-experimental-require-module dist/server/server/scripts/check-runtime.js && node dist/server/server/scripts/migrate.js && node dist/server/server/scripts/bootstrap-admin.js",
     "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.server.json",
     "test": "vitest run",
     "test:watch": "vitest",

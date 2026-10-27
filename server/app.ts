@@ -5,7 +5,9 @@ import cookie from "@fastify/cookie";
 import helmet from "@fastify/helmet";
 import multipart from "@fastify/multipart";
 import rateLimit from "@fastify/rate-limit";
-import fastifyStatic from "@fastify/static";
+// Só os tipos: o plugin é carregado sob demanda (fora da Vercel), pois depende de um
+// módulo ESM que o runtime da Vercel não aceita via require().
+import type {} from "@fastify/static";
 import pino from "pino";
 import type { AppConfig } from "./config.js";
 import { openDatabase, type Database, type DB } from "./db/client.js";
@@ -187,6 +189,7 @@ export async function buildApp(config: AppConfig, opts: { database?: Database; s
   const webDir = path.resolve(process.cwd(), "dist/web");
   const hasWeb = config.env !== "test" && !config.serverless && existsSync(path.join(webDir, "index.html"));
   if (hasWeb) {
+    const { default: fastifyStatic } = await import("@fastify/static");
     await app.register(fastifyStatic, {
       root: webDir,
       wildcard: false,

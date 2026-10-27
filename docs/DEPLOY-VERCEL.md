@@ -198,6 +198,7 @@ Copie a **primeira linha em vermelho** do build e as cerca de 10 linhas ao redor
 | Build com "AVISO: banco de dados não conectado" | O Neon não está ligado ao ambiente do deploy (Production ou Preview). | Conecte em Storage e faça **Redeploy**. |
 | Build com `tsc: not found` ou `vite: not found` | Existe uma variável `NODE_ENV=production` cadastrada, e as ferramentas de build não foram instaladas. | Apague `NODE_ENV` das variáveis; a Vercel e a plataforma já tratam o ambiente. Faça **Redeploy**. |
 | Build com `npm ci` falhando ("lock file", "ERESOLVE") | `package-lock.json` diferente do `package.json`. | Não edite dependências pelo GitHub; peça o ajuste e envie os dois arquivos juntos. |
+| Build com "o servidor não carrega no runtime da Vercel", ou login com "require() of ES Module … not supported" | Uma dependência passou a exigir um recurso do Node que o runtime de funções da Vercel não tem. Desde esta versão, o build detecta isso e a versão anterior continua no ar. | Envie a mensagem do log para ajuste no código; não é configuração do painel. |
 | Login mostra "Plataforma ainda não configurada" | Falta `APP_SECRET` ou o banco (a mensagem diz qual). | Cadastre ou conecte o que falta e faça **Redeploy**. |
 | `/api/health` com "tabelas não existem" | O banco foi conectado depois do último deploy. | Faça **Redeploy**. |
 | `/api/health` com "Nenhum administrador" | As variáveis `BOOTSTRAP_ADMIN_*` não estavam cadastradas no deploy. | Cadastre e faça **Redeploy**, ou use `/configuracao-inicial`. |
