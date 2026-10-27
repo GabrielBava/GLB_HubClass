@@ -47,6 +47,23 @@ describe("configuração inicial (banco vazio)", () => {
   });
 });
 
+describe("diagnóstico da implantação (/api/health)", () => {
+  it("aponta o que falta sem expor segredos e passa a ok quando há administrador", async () => {
+    const app = await createTestApp();
+    try {
+      const c = new Client(app);
+      const empty = await c.get("/api/health");
+      expect(empty.statusCode).toBe(200);
+      expect(empty.json()).toMatchObject({ ok: false, checks: { database: "ok", administrator: false } });
+      expect(empty.json().problems.join(" ")).toMatch(/Nenhum administrador/);
+      await createUser(app, { role: "admin" });
+      expect((await c.get("/api/health")).json()).toMatchObject({ ok: true, checks: { administrator: true }, problems: [] });
+    } finally {
+      await app.close();
+    }
+  });
+});
+
 describe("sem código de configuração", () => {
   it("a configuração inicial não existe", async () => {
     const app = await createTestApp();

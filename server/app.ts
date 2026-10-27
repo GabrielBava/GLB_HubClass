@@ -6,6 +6,7 @@ import helmet from "@fastify/helmet";
 import multipart from "@fastify/multipart";
 import rateLimit from "@fastify/rate-limit";
 import fastifyStatic from "@fastify/static";
+import pino from "pino";
 import type { AppConfig } from "./config.js";
 import { openDatabase, type Database, type DB } from "./db/client.js";
 import { resolveSession, sessionCookieName, type AuthState } from "./auth/sessions.js";
@@ -64,11 +65,15 @@ function originAllowed(req: FastifyRequest, allowed: string[]): boolean {
 const PENDING_APPROVAL_ROUTES = ["/api/auth/", "/api/onboarding", "/api/profile", "/api/notifications"];
 
 export async function buildApp(config: AppConfig, opts: { database?: Database; storage?: StorageDriver } = {}): Promise<FastifyInstance> {
-  const app = Fastify({
-    logger: config.env === "test" ? false : { level: config.logLevel, redact: ["req.headers.cookie", "req.headers['x-csrf-token']"] },
-    trustProxy: config.trustProxy,
-    bodyLimit: 1_048_576,
-  });
+  const logOptions = { level: config.logLevel, redact: ["req.headers.cookie", "req.headers['x-csrf-token']", "req.headers.authorization"] };
+  // Na Vercel, o nível do log vem da saída usada: erros vão para stderr (filtro "Error" do painel), o resto para stdout.
+  const logger =
+    config.env === "test"
+      ? undefined
+      : config.serverless
+        ? pino(logOptions, pino.multistream([{ level: "trace", stream: process.stdout }, { level: "error", stream: process.stderr }], { dedupe: true }))
+        : pino(logOptions);
+  const app = Fastify({ loggerInstance: logger, trustProxy: config.trustProxy, bodyLimit: 1_048_576 }) as unknown as FastifyInstance;
 
   const database = opts.database ?? (await openDatabase({ databaseUrl: config.databaseUrl, embeddedDir: config.embeddedDbDir, serverless: config.serverless }));
   // Na Vercel as migrações rodam no build (npm run vercel-build), não a cada instância nova.

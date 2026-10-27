@@ -143,15 +143,67 @@ Há duas formas. Escolha uma.
 - **Arquivos.** O Blob não tem backup automático entre lojas. Para uma cópia de segurança, a TI pode agendar a exportação periódica da loja com o SDK `@vercel/blob` (`list` e `get`).
 - **Monitoramento.** Em **Logs** e **Observability**, acompanhe erros da função e a execução da rotina diária, em **Settings → Cron Jobs**.
 
+## Logs e diagnóstico
+
+Há quatro lugares para olhar, cada um para um tipo de problema.
+
+### 1. Diagnóstico rápido: `/api/health`
+
+Abra `https://seu-projeto.vercel.app/api/health` no navegador. A resposta diz, em português, o que falta configurar, sem mostrar segredos:
+- `"ok": true`: está tudo configurado;
+- `"problems"`: o que impede o uso. Por exemplo: banco sem tabelas, sem conexão com o banco, nenhum administrador, armazenamento de arquivos não conectado. Cada item diz o que fazer;
+- `"warnings"`: o que convém ajustar. Por exemplo: `CRON_SECRET` ausente ou variáveis `BOOTSTRAP_ADMIN_*` esquecidas.
+
+Comece sempre por aqui. Depois de cada correção, faça **Redeploy** e abra o endereço de novo.
+
+### 2. Erros do deploy (build)
+
+1. Abra **Deployments** e clique no deploy com status **Error**.
+2. Abra a aba **Building** (ou **Build Logs**).
+3. Role até a **primeira linha em vermelho**. As linhas seguintes costumam ser consequência dela.
+4. A tabela de problemas comuns, abaixo, diz o que fazer com cada mensagem.
+
+As mensagens da plataforma no build começam com "Migrações aplicadas", "AVISO" ou "Falha". Elas aparecem no fim do log, depois da compilação.
+
+### 3. Erros com o site no ar (funções)
+
+1. Abra a aba **Logs** do projeto.
+2. Filtre **Level → Error**. A plataforma grava os próprios erros na saída de erro, que a Vercel classifica como Error. Requisições com status 5xx também aparecem marcadas.
+3. Ajuste o período (**Last hour**, **Last 24 hours**) e, se quiser, filtre por caminho (ex.: `/api/admin`).
+4. Clique numa linha para ver os detalhes. A mensagem vem em JSON e o campo `msg` resume o erro (ex.: "erro inesperado", "falha ao reprocessar documento").
+
+### 4. Rotina diária
+
+Em **Settings → Cron Jobs**, clique em **View Logs** ao lado de `/api/cron/maintenance`. A resposta mostra quantos desligamentos, documentos e envios foram tratados.
+
+### Pela linha de comando (opcional)
+
+```bash
+npx vercel login
+npx vercel inspect https://seu-projeto.vercel.app   # detalhes e saída do build da implantação
+npx vercel logs https://seu-projeto.vercel.app      # logs das funções (consulte "npx vercel logs --help" para filtrar por nível)
+```
+
+### Para pedir ajuda
+
+Copie a **primeira linha em vermelho** do build e as cerca de 10 linhas ao redor, ou a linha de erro da aba Logs, junto com o resultado de `/api/health`. Antes de enviar, confira se não há senhas ou tokens no trecho.
+
 ## Problemas comuns
 
 | Sintoma | Causa provável | O que fazer |
 | --- | --- | --- |
-| `Command "npm run vercel-build" exited with 1` | Veja a primeira linha em vermelho do log de build (Deployments › deploy › **Building**). | Siga as linhas abaixo conforme a mensagem. |
-| Log com "Falha ao aplicar as migrações no banco" | O Neon não aceitou a conexão: banco pausado ou removido, ou variáveis antigas. | Em Storage, confira se o Neon está ligado ao ambiente do deploy e faça **Redeploy**. |
-| Log com `tsc: not found` ou `vite: not found` | Existe uma variável `NODE_ENV=production` cadastrada, e as ferramentas de build não foram instaladas. | Apague `NODE_ENV` das variáveis; a Vercel e a plataforma já tratam o ambiente. Faça **Redeploy**. |
+| `Command "npm run vercel-build" exited with 1` | Veja a primeira linha em vermelho do log de build. | Siga as linhas abaixo conforme a mensagem. |
+| Build com "Falha ao aplicar as migrações no banco" | O Neon não aceitou a conexão: banco pausado ou removido, ou variáveis antigas. | Em Storage, confira se o Neon está ligado ao ambiente do deploy e faça **Redeploy**. |
+| Build com "Falha ao criar o administrador inicial" | `BOOTSTRAP_ADMIN_EMAIL` inválido ou senha com menos de 10 caracteres, ou sem letras e números. | Corrija a variável e faça **Redeploy**. |
+| Build com "AVISO: banco de dados não conectado" | O Neon não está ligado ao ambiente do deploy (Production ou Preview). | Conecte em Storage e faça **Redeploy**. |
+| Build com `tsc: not found` ou `vite: not found` | Existe uma variável `NODE_ENV=production` cadastrada, e as ferramentas de build não foram instaladas. | Apague `NODE_ENV` das variáveis; a Vercel e a plataforma já tratam o ambiente. Faça **Redeploy**. |
+| Build com `npm ci` falhando ("lock file", "ERESOLVE") | `package-lock.json` diferente do `package.json`. | Não edite dependências pelo GitHub; peça o ajuste e envie os dois arquivos juntos. |
 | Login mostra "Plataforma ainda não configurada" | Falta `APP_SECRET` ou o banco (a mensagem diz qual). | Cadastre ou conecte o que falta e faça **Redeploy**. |
-| Envio de PDF grande falha | Loja Blob ausente, pública ou não conectada à produção. | Crie a loja como **Private** e conecte ao ambiente Production; faça **Redeploy**. |
+| `/api/health` com "tabelas não existem" | O banco foi conectado depois do último deploy. | Faça **Redeploy**. |
+| `/api/health` com "Nenhum administrador" | As variáveis `BOOTSTRAP_ADMIN_*` não estavam cadastradas no deploy. | Cadastre e faça **Redeploy**, ou use `/configuracao-inicial`. |
+| Login recusado com e-mail e senha certos | A conta foi bloqueada por tentativas (15 min) ou o administrador já existia antes do `BOOTSTRAP_ADMIN_*`. | Aguarde 15 minutos. Se o administrador já existia, use "Esqueceu sua senha?" (precisa de SMTP) ou peça a outro administrador um link de redefinição. |
+| Envio de PDF grande falha | Loja Blob ausente, pública ou não conectada à produção. | Crie a loja como **Private**, conecte ao ambiente Production e faça **Redeploy**. |
+| Erros "Task timed out" / 504 ao enviar apostila | PDF muito longo para os 300 s da função. | Divida o PDF em partes. A rotina diária retoma o que ficou pendente. |
 
 ## Desenvolvimento local
 
